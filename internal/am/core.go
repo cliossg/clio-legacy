@@ -2,6 +2,7 @@ package am
 
 import (
 	"context"
+	"sync"
 	"time"
 )
 
@@ -40,6 +41,18 @@ type BaseCore struct {
 	cfg  *Config
 }
 
+var (
+	defaultLogger     Logger
+	defaultLoggerOnce sync.Once
+)
+
+func getDefaultLogger() Logger {
+	defaultLoggerOnce.Do(func() {
+		defaultLogger = NewLogger("info")
+	})
+	return defaultLogger
+}
+
 // NewCore creates a new BaseCore instance with the provided opts.
 func NewCore(name string, opts ...Option) *BaseCore {
 	core := &BaseCore{name: name}
@@ -66,8 +79,10 @@ func (c *BaseCore) SetName(name string) {
 	c.name = name
 }
 
-// Log returns the Logger in BaseCore.
 func (c *BaseCore) Log() Logger {
+	if c.log == nil {
+		return getDefaultLogger()
+	}
 	return c.log
 }
 
