@@ -1,5 +1,6 @@
 build/
 main
+clio
 /clio.db
 /clio.db*
 /bak/
