@@ -23,17 +23,9 @@ type BaseService struct {
 	repo Repo
 }
 
-func NewService(repo Repo, opts ...am.Option) *BaseService {
+func NewService(repo Repo, params am.XParams) *BaseService {
 	return &BaseService{
-		Service: am.NewService("auth-svc", opts...),
-		repo:    repo,
-	}
-}
-
-// NewServiceWithParams creates an Auth Service with XParams.
-func NewServiceWithParams(repo Repo, params am.XParams) *BaseService {
-	return &BaseService{
-		Service: am.NewServiceWithParams("auth-svc", params),
+		Service: am.NewService("auth-svc", params),
 		repo:    repo,
 	}
 }

@@ -38,12 +38,12 @@ func main() {
 
 	fm := am.NewFlashManager()
 	workspace := core.NewWorkspace(opts...)
-	app := core.NewAppWithParams(name, version, assetsFS, xparams)
-	queryManager := am.NewQueryManagerWithParams(assetsFS, engine, xparams)
-	templateManager := am.NewTemplateManagerWithParams(assetsFS, xparams)
+	app := core.NewApp(name, version, assetsFS, xparams)
+	queryManager := am.NewQueryManager(assetsFS, engine, xparams)
+	templateManager := am.NewTemplateManager(assetsFS, xparams)
 	repo := sqlite.NewClioRepo(queryManager)
 	migrator := am.NewMigrator(assetsFS, engine)
-	fileServer := am.NewFileServerWithParams(assetsFS, xparams)
+	fileServer := am.NewFileServer(assetsFS, xparams)
 
 	app.MountFileServer("/", fileServer)
 
@@ -52,25 +52,25 @@ func main() {
 	imageFileServer := http.FileServer(http.Dir(imagesPath))
 	app.Router.Handle("/static/images/*", http.StripPrefix("/static/images/", imageFileServer))
 
-	apiRouter := am.NewAPIRouterWithParams("api-router", xparams)
+	apiRouter := am.NewAPIRouter("api-router", xparams)
 
 	// GitAuth feature
 	authSeeder := auth.NewSeeder(assetsFS, engine, repo)
-	authService := auth.NewServiceWithParams(repo, xparams)
+	authService := auth.NewService(repo, xparams)
 	authAPIHandler := auth.NewAPIHandler("auth-api-handler", authService, opts...)
-	authAPIRouter := auth.NewAPIRouter(authAPIHandler, nil) // No middleware for now
+	authAPIRouter := auth.NewAPIRouter(authAPIHandler, nil, xparams) // No middleware for now
 	apiRouter.Mount("/auth", authAPIRouter)
 
 	// SSG feature
-	gitClient := github.NewClientWithParams(xparams)
-	ssgPublisher := ssg.NewPublisherWithParams(gitClient, xparams)
+	gitClient := github.NewClient(xparams)
+	ssgPublisher := ssg.NewPublisher(gitClient, xparams)
 	ssgSeeder := ssg.NewSeeder(assetsFS, engine, repo)
-	ssgGenerator := ssg.NewGeneratorWithParams(xparams)
-	ssgParamManager := ssg.NewParamManagerWithParams(repo, xparams)
-	ssgImageManager := ssg.NewImageManagerWithParams(xparams)
-	ssgService := ssg.NewServiceWithParams(assetsFS, repo, ssgGenerator, ssgPublisher, ssgParamManager, ssgImageManager, xparams)
+	ssgGenerator := ssg.NewGenerator(xparams)
+	ssgParamManager := ssg.NewParamManager(repo, xparams)
+	ssgImageManager := ssg.NewImageManager(xparams)
+	ssgService := ssg.NewService(assetsFS, repo, ssgGenerator, ssgPublisher, ssgParamManager, ssgImageManager, xparams)
 	ssgAPIHandler := ssg.NewAPIHandler("ssg-api-handler", ssgService)
-	ssgAPIRouter := ssg.NewAPIRouter(ssgAPIHandler, []am.Middleware{am.CORSMw})
+	ssgAPIRouter := ssg.NewAPIRouter(ssgAPIHandler, []am.Middleware{am.CORSMw}, xparams)
 	apiRouter.Mount("/ssg", ssgAPIRouter)
 
 app.MountAPI("/api/v1", apiRouter)

@@ -41,15 +41,13 @@ func NewWebRouter(name string, opts ...Option) *Router {
 	return r
 }
 
-func NewAPIRouter(name string, opts ...Option) *Router {
-	core := NewCore(name, opts...)
+func NewAPIRouter(name string, params XParams) *Router {
+	core := NewCoreWithParams(name, params)
 
 	r := &Router{
 		Core:   core,
 		Router: chi.NewRouter(),
 	}
-
-	// r.Use(MethodOverrideMw)
 
 	return r
 }
@@ -66,17 +64,6 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 // NewRouterWithParams creates a Router with XParams.
 func NewRouterWithParams(name string, params XParams) *Router {
-	core := NewCoreWithParams(name, params)
-	router := &Router{
-		Core:   core,
-		Router: chi.NewRouter(),
-	}
-
-	return router
-}
-
-// NewAPIRouterWithParams creates an API Router with XParams.
-func NewAPIRouterWithParams(name string, params XParams) *Router {
 	core := NewCoreWithParams(name, params)
 
 	r := &Router{

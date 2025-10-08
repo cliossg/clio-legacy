@@ -27,19 +27,7 @@ type FileServer struct {
 	fs embed.FS
 }
 
-// NewFileServer creates a new FileServer.
-func NewFileServer(fs embed.FS, opts ...Option) *FileServer {
-	routerName := fmt.Sprintf("%s-router", fileServerName)
-
-	r := NewRouter(routerName, opts...)
-	return &FileServer{
-		Router: r,
-		fs:     fs,
-	}
-}
-
-// NewFileServerWithParams creates a FileServer with XParams.
-func NewFileServerWithParams(fs embed.FS, params XParams) *FileServer {
+func NewFileServer(fs embed.FS, params XParams) *FileServer {
 	routerName := fmt.Sprintf("%s-router", fileServerName)
 
 	r := NewRouterWithParams(routerName, params)

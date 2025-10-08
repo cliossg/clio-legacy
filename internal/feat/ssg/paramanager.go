@@ -11,16 +11,9 @@ type ParamManager struct {
 	repo Repo
 }
 
-func NewParamManager(repo Repo, opts ...am.Option) *ParamManager {
-	core := am.NewCore("param-manager", opts...)
-	return &ParamManager{
-		Core: core,
-		repo: repo,
-	}
-}
 
 // NewParamManagerWithParams creates a ParamManager with XParams.
-func NewParamManagerWithParams(repo Repo, params am.XParams) *ParamManager {
+func NewParamManager(repo Repo, params am.XParams) *ParamManager {
 	core := am.NewCoreWithParams("param-manager", params)
 	return &ParamManager{
 		Core: core,

@@ -43,17 +43,9 @@ type ImageManager struct {
 }
 
 // NewImageManager creates a new ImageManager instance
-func NewImageManager(opts ...am.Option) *ImageManager {
-	core := am.NewCore("image-manager", opts...)
-	imagesPath := core.Cfg().StrValOrDef(am.Key.SSGImagesPath, "_workspace/documents/assets/images")
-	return &ImageManager{
-		Core:          core,
-		baseImagePath: imagesPath,
-	}
-}
 
 // NewImageManagerWithParams creates an ImageManager with XParams.
-func NewImageManagerWithParams(params am.XParams) *ImageManager {
+func NewImageManager(params am.XParams) *ImageManager {
 	core := am.NewCoreWithParams("image-manager", params)
 	imagesPath := core.Cfg().StrValOrDef(am.Key.SSGImagesPath, "_workspace/documents/assets/images")
 	return &ImageManager{

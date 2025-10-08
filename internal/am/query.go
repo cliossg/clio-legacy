@@ -17,18 +17,7 @@ type QueryManager struct {
 	engine   string
 }
 
-func NewQueryManager(assetsFS embed.FS, engine string, opts ...Option) *QueryManager {
-	core := NewCore("query-manager", opts...)
-	qm := &QueryManager{
-		Core:     core,
-		assetsFS: assetsFS,
-		engine:   engine,
-	}
-	return qm
-}
-
-// NewQueryManagerWithParams creates a QueryManager with XParams.
-func NewQueryManagerWithParams(assetsFS embed.FS, engine string, params XParams) *QueryManager {
+func NewQueryManager(assetsFS embed.FS, engine string, params XParams) *QueryManager {
 	core := NewCoreWithParams("query-manager", params)
 	qm := &QueryManager{
 		Core:     core,

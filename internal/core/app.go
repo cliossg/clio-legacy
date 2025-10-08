@@ -13,16 +13,7 @@ type App struct {
 	*am.App
 }
 
-func NewApp(name, version string, fs embed.FS, opts ...am.Option) *App {
-	core := am.NewApp(name, version, fs, opts...)
-	app := &App{
-		App: core,
-	}
-	return app
-}
-
-// NewAppWithParams creates a core.App with XParams.
-func NewAppWithParams(name, version string, fs embed.FS, params am.XParams) *App {
+func NewApp(name, version string, fs embed.FS, params am.XParams) *App {
 	core := am.NewAppWithParams(name, version, fs, params)
 	app := &App{
 		App: core,

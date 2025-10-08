@@ -4,8 +4,8 @@ import (
 	"github.com/adrianpk/clio/internal/am"
 )
 
-func NewAPIRouter(handler *APIHandler, mw []am.Middleware, opts ...am.Option) *am.Router {
-	core := am.NewAPIRouter("api-router", opts...)
+func NewAPIRouter(handler *APIHandler, mw []am.Middleware, params am.XParams) *am.Router {
+	core := am.NewAPIRouter("api-router", params)
 	core.SetMiddlewares(mw)
 
 	// User API routes

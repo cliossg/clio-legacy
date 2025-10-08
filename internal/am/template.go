@@ -27,18 +27,7 @@ type TemplateManager struct {
 	templates sync.Map
 }
 
-func NewTemplateManager(assetsFS embed.FS, opts ...Option) *TemplateManager {
-	core := NewCore("template-manager", opts...)
-	tm := &TemplateManager{
-		Core:     core,
-		assetsFS: assetsFS,
-	}
-
-	return tm
-}
-
-// NewTemplateManagerWithParams creates a TemplateManager with XParams.
-func NewTemplateManagerWithParams(assetsFS embed.FS, params XParams) *TemplateManager {
+func NewTemplateManager(assetsFS embed.FS, params XParams) *TemplateManager {
 	core := NewCoreWithParams("template-manager", params)
 	tm := &TemplateManager{
 		Core:     core,

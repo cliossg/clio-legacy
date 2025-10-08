@@ -58,7 +58,7 @@ func NewApp(name, version string, fs embed.FS, opts ...Option) *App {
 		opts:       opts,
 		Core:       core,
 		Router:     NewWebRouter("web-router", opts...),
-		APIRouter:  NewAPIRouter("api-router", opts...),
+		APIRouter:  NewAPIRouter("api-router", XParams{Cfg: core.Cfg(), Log: core.Log()}),
 
 		fs:            fs,
 		deps:          make(map[string]*Dep),
@@ -80,7 +80,7 @@ func NewAppWithParams(name, version string, fs embed.FS, params XParams) *App {
 		opts:       opts,
 		Core:       core,
 		Router:     NewWebRouter("web-router", opts...),
-		APIRouter:  NewAPIRouter("api-router", opts...),
+		APIRouter:  NewAPIRouter("api-router", params),
 		Version:    version,
 		fs:         fs,
 		deps:       make(map[string]*Dep),

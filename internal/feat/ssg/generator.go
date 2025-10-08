@@ -14,16 +14,7 @@ type Generator struct {
 	am.Core
 }
 
-func NewGenerator(opts ...am.Option) *Generator {
-	core := am.NewCore("ssg-generator", opts...)
-	g := &Generator{
-		Core: core,
-	}
-	return g
-}
-
-// NewGeneratorWithParams creates a Generator with XParams.
-func NewGeneratorWithParams(params am.XParams) *Generator {
+func NewGenerator(params am.XParams) *Generator {
 	core := am.NewCoreWithParams("ssg-generator", params)
 	g := &Generator{
 		Core: core,

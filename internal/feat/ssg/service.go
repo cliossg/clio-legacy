@@ -102,23 +102,9 @@ type BaseService struct {
 	im       *ImageManager
 }
 
-// NewService creates a new BaseService.
-func NewService(assetsFS embed.FS, repo Repo, gen *Generator, publisher Publisher, pm *ParamManager, im *ImageManager, opts ...am.Option) *BaseService {
+func NewService(assetsFS embed.FS, repo Repo, gen *Generator, publisher Publisher, pm *ParamManager, im *ImageManager, params am.XParams) *BaseService {
 	return &BaseService{
-		Service:  am.NewService("ssg-svc", opts...),
-		assetsFS: assetsFS,
-		repo:     repo,
-		gen:      gen,
-		pub:      publisher,
-		pm:       pm,
-		im:       im,
-	}
-}
-
-// NewServiceWithParams creates a new BaseService with XParams.
-func NewServiceWithParams(assetsFS embed.FS, repo Repo, gen *Generator, publisher Publisher, pm *ParamManager, im *ImageManager, params am.XParams) *BaseService {
-	return &BaseService{
-		Service:  am.NewServiceWithParams("ssg-svc", params),
+		Service:  am.NewService("ssg-svc", params),
 		assetsFS: assetsFS,
 		repo:     repo,
 		gen:      gen,

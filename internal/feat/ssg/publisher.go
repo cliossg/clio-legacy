@@ -46,15 +46,9 @@ type publisher struct {
 	gitClient am.GitClient
 }
 
-func NewPublisher(gitClient am.GitClient, opts ...am.Option) *publisher {
-	return &publisher{
-		Core:      am.NewCore("ssg-pub", opts...),
-		gitClient: gitClient,
-	}
-}
 
 // NewPublisherWithParams creates a Publisher with XParams.
-func NewPublisherWithParams(gitClient am.GitClient, params am.XParams) *publisher {
+func NewPublisher(gitClient am.GitClient, params am.XParams) *publisher {
 	return &publisher{
 		Core:      am.NewCoreWithParams("ssg-pub", params),
 		gitClient: gitClient,

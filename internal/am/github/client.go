@@ -16,15 +16,7 @@ type Client struct {
 	am.Core
 }
 
-// NewClient creates a new git Client.
-func NewClient(opts ...am.Option) *Client {
-	return &Client{
-		Core: am.NewCore("github-client", opts...),
-	}
-}
-
-// NewClientWithParams creates a GitHub Client with XParams.
-func NewClientWithParams(params am.XParams) *Client {
+func NewClient(params am.XParams) *Client {
 	return &Client{
 		Core: am.NewCoreWithParams("github-client", params),
 	}
