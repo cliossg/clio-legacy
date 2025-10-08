@@ -7,16 +7,12 @@ import (
 	hm "github.com/hermesgen/hm"
 )
 
-const (
-	paramType = "param"
-)
 
 // Param represents a dynamic configuration entry.
 type Param struct {
 	// Common
 	ID      uuid.UUID `json:"id" db:"id"`
-	mType   string
-	ShortID string `json:"-" db:"short_id"` // Note: short_id was removed from DB migration, but kept here for consistency with other models' Go struct definitions.
+	ShortID string    `json:"-" db:"short_id"` // Note: short_id was removed from DB migration, but kept here for consistency with other models' Go struct definitions.
 	ref     string `json:"-"`
 
 	Name        string `json:"name" db:"name"`
@@ -35,7 +31,6 @@ type Param struct {
 // NewParam creates a new Param instance with default values.
 func NewParam(name, value string) Param {
 	p := Param{
-		mType: paramType,
 		Name:  name,
 		Value: value,
 	}
@@ -47,10 +42,6 @@ func (p *Param) Type() string {
 	return "param"
 }
 
-// SetType sets the type of the entity.
-func (p *Param) SetType(t string) {
-	p.mType = t
-}
 
 // GetID returns the unique identifier of the entity.
 func (p Param) GetID() uuid.UUID {

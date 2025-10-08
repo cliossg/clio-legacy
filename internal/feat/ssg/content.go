@@ -52,7 +52,6 @@ func (c *Content) Type() string {
 	return "content"
 }
 
-// SetType sets the type of the entity.
 
 // GetID returns the unique identifier of the entity.
 func (c *Content) GetID() uuid.UUID {

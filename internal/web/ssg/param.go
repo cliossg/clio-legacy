@@ -6,9 +6,6 @@ import (
 	feat "github.com/hermesgen/clio/internal/feat/ssg"
 )
 
-const (
-	paramType = "param"
-)
 
 // Param model for web layer.
 type Param struct {
@@ -31,7 +28,7 @@ func NewParam(name, value string) Param {
 
 // Type returns the type of the entity.
 func (p *Param) Type() string {
-	return hm.DefaultType(paramType)
+	return "param"
 }
 
 // GetID returns the unique identifier of the entity.

@@ -7,15 +7,11 @@ import (
 	hm "github.com/hermesgen/hm"
 )
 
-const (
-	userType = "user"
-)
 
 type User struct {
 	// Common
-	ID       uuid.UUID `json:"id" db:"id"`
-	mType    string
-	ShortID  string `json:"-" db:"short_id"`
+	ID      uuid.UUID `json:"id" db:"id"`
+	ShortID string    `json:"-" db:"short_id"`
 	RefValue string `json:"ref"`
 
 	Username string `json:"username" db:"username"`
@@ -32,7 +28,6 @@ type User struct {
 // NewUser creates a user with default values.
 func NewUser(username, name, email string) User {
 	u := User{
-		mType:    userType,
 		Username: username,
 		Name:     name,
 		Email:    email,
@@ -45,10 +40,6 @@ func (u *User) Type() string {
 	return "user"
 }
 
-// SetType sets the type of the entity.
-func (u *User) SetType(t string) {
-	u.mType = t
-}
 
 // GetID returns the unique identifier of the entity.
 func (u User) GetID() uuid.UUID {

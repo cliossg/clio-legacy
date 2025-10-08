@@ -7,16 +7,12 @@ import (
 	hm "github.com/hermesgen/hm"
 )
 
-const (
-	imageType = "image"
-)
 
 // Image represents an image asset with its metadata.
 type Image struct {
 	// Common
 	ID      uuid.UUID `json:"id" db:"id"`
-	mType   string
-	ShortID string `json:"-" db:"short_id"`
+	ShortID string    `json:"-" db:"short_id"`
 	ref     string `json:"-"`
 
 	ContentHash  string `json:"content_hash" db:"content_hash"`
@@ -49,8 +45,7 @@ type Image struct {
 // NewImage creates a new Image instance with default values.
 func NewImage() Image {
 	return Image{
-		ID:    uuid.New(),
-		mType: imageType,
+		ID: uuid.New(),
 	}
 }
 
@@ -59,10 +54,6 @@ func (i *Image) Type() string {
 	return "image"
 }
 
-// SetType sets the type of the entity.
-func (i *Image) SetType(t string) {
-	// Not directly used for Image, as imageType is constant
-}
 
 // GetID returns the unique identifier of the entity.
 func (i Image) GetID() uuid.UUID {
