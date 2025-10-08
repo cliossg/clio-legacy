@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/adrianpk/clio/internal/am"
-	feat "github.com/adrianpk/clio/internal/feat/ssg"
+	hm "github.com/hermesgen/hm"
+	feat "github.com/hermesgen/clio/internal/feat/ssg"
 )
 
 func (h *WebHandler) NewTag(w http.ResponseWriter, r *http.Request) {
@@ -44,15 +44,15 @@ func (h *WebHandler) CreateTag(w http.ResponseWriter, r *http.Request) {
 	}
 	createdTag := ToWebTag(response.Tag)
 
-	if am.IsHTMXRequest(r) {
-		redirectURL := am.EditPath(&createdTag, createdTag.GetID())
+	if hm.IsHTMXRequest(r) {
+		redirectURL := hm.EditPath(&createdTag, createdTag.GetID())
 		w.Header().Set("HX-Redirect", redirectURL)
 		w.WriteHeader(http.StatusOK)
 		return
 	}
 
 	h.FlashInfo(w, r, "Tag created")
-	h.Redir(w, r, am.EditPath(&createdTag, createdTag.GetID()), http.StatusSeeOther)
+	h.Redir(w, r, hm.EditPath(&createdTag, createdTag.GetID()), http.StatusSeeOther)
 }
 
 func (h *WebHandler) EditTag(w http.ResponseWriter, r *http.Request) {
@@ -105,15 +105,15 @@ func (h *WebHandler) UpdateTag(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if am.IsHTMXRequest(r) {
+	if hm.IsHTMXRequest(r) {
 		w.Header().Set("Content-Type", "text/html")
-		_, _ = w.Write([]byte("<div id=\"save-status\" data-timestamp=\"" + am.Now().Format(am.TimeFormat) + "\"></div>"))
+		_, _ = w.Write([]byte("<div id=\"save-status\" data-timestamp=\"" + hm.Now().Format(hm.TimeFormat) + "\"></div>"))
 		return
 	}
 
 	h.FlashInfo(w, r, "Tag updated successfully")
 	webTag := ToWebTag(featTag)
-	h.Redir(w, r, am.EditPath(&webTag, webTag.GetID()), http.StatusSeeOther)
+	h.Redir(w, r, hm.EditPath(&webTag, webTag.GetID()), http.StatusSeeOther)
 }
 
 func (h *WebHandler) ListTags(w http.ResponseWriter, r *http.Request) {
@@ -129,7 +129,7 @@ func (h *WebHandler) ListTags(w http.ResponseWriter, r *http.Request) {
 	}
 	webTags := ToWebTags(response.Tags)
 
-	page := am.NewPage(r, webTags)
+	page := hm.NewPage(r, webTags)
 	page.Form.SetAction(ssgPath)
 
 	menu := page.NewMenu(ssgPath)
@@ -137,14 +137,14 @@ func (h *WebHandler) ListTags(w http.ResponseWriter, r *http.Request) {
 
 	tmpl, err := h.Tmpl().Get(ssgFeat, "list-tags")
 	if err != nil {
-		h.Err(w, err, am.ErrTemplateNotFound, http.StatusInternalServerError)
+		h.Err(w, err, hm.ErrTemplateNotFound, http.StatusInternalServerError)
 		return
 	}
 
 	var buf bytes.Buffer
 	err = tmpl.Execute(&buf, page)
 	if err != nil {
-		h.Err(w, err, am.ErrCannotRenderTemplate, http.StatusInternalServerError)
+		h.Err(w, err, hm.ErrCannotRenderTemplate, http.StatusInternalServerError)
 		return
 	}
 
@@ -172,7 +172,7 @@ func (h *WebHandler) ShowTag(w http.ResponseWriter, r *http.Request) {
 	}
 	tag := ToWebTag(response.Tag)
 
-	page := am.NewPage(r, tag)
+	page := hm.NewPage(r, tag)
 	page.Name = "Show Tag"
 
 	menu := page.NewMenu(ssgPath)
@@ -180,13 +180,13 @@ func (h *WebHandler) ShowTag(w http.ResponseWriter, r *http.Request) {
 
 	tmpl, err := h.Tmpl().Get(ssgFeat, "show-tag")
 	if err != nil {
-		h.Err(w, err, am.ErrTemplateNotFound, http.StatusInternalServerError)
+		h.Err(w, err, hm.ErrTemplateNotFound, http.StatusInternalServerError)
 		return
 	}
 
 	var buf bytes.Buffer
 	if err := tmpl.Execute(&buf, page); err != nil {
-		h.Err(w, err, am.ErrCannotRenderTemplate, http.StatusInternalServerError)
+		h.Err(w, err, hm.ErrCannotRenderTemplate, http.StatusInternalServerError)
 		return
 	}
 
@@ -214,22 +214,22 @@ func (h *WebHandler) DeleteTag(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.FlashInfo(w, r, "Tag deleted successfully")
-	h.Redir(w, r, am.ListPath(&Tag{}), http.StatusSeeOther)
+	h.Redir(w, r, hm.ListPath(&Tag{}), http.StatusSeeOther)
 }
 
 func (h *WebHandler) renderTagForm(w http.ResponseWriter, r *http.Request, form TagForm, tag Tag, errorMessage string, statusCode int) {
-	page := am.NewPage(r, tag)
+	page := hm.NewPage(r, tag)
 	page.SetForm(&form)
 
 	if tag.IsZero() {
 		page.Name = "New Tag"
 		page.IsNew = true
-		page.Form.SetAction(am.CreatePath(&Tag{}))
+		page.Form.SetAction(hm.CreatePath(&Tag{}))
 		page.Form.SetSubmitButtonText("Create")
 	} else {
 		page.Name = "Edit Tag"
 		page.IsNew = false
-		page.Form.SetAction(am.UpdatePath(&Tag{}))
+		page.Form.SetAction(hm.UpdatePath(&Tag{}))
 		page.Form.SetSubmitButtonText("Update")
 	}
 
@@ -238,7 +238,7 @@ func (h *WebHandler) renderTagForm(w http.ResponseWriter, r *http.Request, form 
 
 	tmpl, err := h.Tmpl().Get(ssgFeat, "new-tag")
 	if err != nil {
-		h.Err(w, err, am.ErrTemplateNotFound, http.StatusInternalServerError)
+		h.Err(w, err, hm.ErrTemplateNotFound, http.StatusInternalServerError)
 		return
 	}
 
@@ -247,7 +247,7 @@ func (h *WebHandler) renderTagForm(w http.ResponseWriter, r *http.Request, form 
 	var buf bytes.Buffer
 	err = tmpl.Execute(&buf, page)
 	if err != nil {
-		h.Err(w, err, am.ErrCannotRenderTemplate, http.StatusInternalServerError)
+		h.Err(w, err, hm.ErrCannotRenderTemplate, http.StatusInternalServerError)
 		return
 	}
 

@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/adrianpk/clio/internal/feat/ssg"
 	"github.com/google/uuid"
+	"github.com/hermesgen/clio/internal/feat/ssg"
 )
 
 func TestBuildIndexes(t *testing.T) {

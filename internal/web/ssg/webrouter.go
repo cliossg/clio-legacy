@@ -1,11 +1,11 @@
 package ssg
 
 import (
-	"github.com/adrianpk/clio/internal/am"
+	hm "github.com/hermesgen/hm"
 )
 
-func NewWebRouter(handler *WebHandler, mw []am.Middleware, opts ...am.Option) *am.Router {
-	core := am.NewWebRouter("app-ssg-web-router", opts...)
+func NewWebRouter(handler *WebHandler, mw []hm.Middleware, opts ...hm.Option) *hm.Router {
+	core := hm.NewWebRouter("app-ssg-web-router", opts...)
 	core.SetMiddlewares(mw)
 
 	// Content routes

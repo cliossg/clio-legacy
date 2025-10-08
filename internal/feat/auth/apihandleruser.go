@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/adrianpk/clio/internal/am"
+	hm "github.com/hermesgen/hm"
 )
 
 // User related API handlers
@@ -17,12 +17,12 @@ func (h *APIHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
 
 	users, err := h.svc.GetUsers(r.Context())
 	if err != nil {
-		msg := fmt.Sprintf(am.ErrCannotGetResources, resUserName)
+		msg := fmt.Sprintf(hm.ErrCannotGetResources, resUserName)
 		h.Err(w, http.StatusInternalServerError, msg, err)
 		return
 	}
 
-	msg := fmt.Sprintf(am.MsgGetAllItems, resUserNameCap)
+	msg := fmt.Sprintf(hm.MsgGetAllItems, resUserNameCap)
 	h.OK(w, msg, users)
 }
 
@@ -31,7 +31,7 @@ func (h *APIHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 
 	id, err := h.ID(w, r)
 	if err != nil {
-		msg := fmt.Sprintf(am.ErrInvalidID, resUserNameCap)
+		msg := fmt.Sprintf(hm.ErrInvalidID, resUserNameCap)
 		h.Err(w, http.StatusBadRequest, msg, err)
 		return
 	}
@@ -43,12 +43,12 @@ func (h *APIHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 			h.Err(w, http.StatusNotFound, msg, err)
 			return
 		}
-		msg := fmt.Sprintf(am.ErrCannotGetResource, resUserName)
+		msg := fmt.Sprintf(hm.ErrCannotGetResource, resUserName)
 		h.Err(w, http.StatusInternalServerError, msg, err)
 		return
 	}
 
-	msg := fmt.Sprintf(am.MsgGetItem, resUserNameCap)
+	msg := fmt.Sprintf(hm.MsgGetItem, resUserNameCap)
 	h.OK(w, msg, user)
 }
 
@@ -58,7 +58,7 @@ func (h *APIHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	var form UserForm
 	err := json.NewDecoder(r.Body).Decode(&form)
 	if err != nil {
-		h.Err(w, http.StatusBadRequest, am.ErrInvalidBody, err)
+		h.Err(w, http.StatusBadRequest, hm.ErrInvalidBody, err)
 		return
 	}
 
@@ -66,19 +66,19 @@ func (h *APIHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	err = h.svc.CreateUser(r.Context(), &newUser)
 	if err != nil {
-		msg := fmt.Sprintf(am.ErrCannotCreateResource, resUserName)
+		msg := fmt.Sprintf(hm.ErrCannotCreateResource, resUserName)
 		h.Err(w, http.StatusInternalServerError, msg, err)
 		return
 	}
 
 	createdUser, err := h.svc.GetUser(r.Context(), newUser.ID)
 	if err != nil {
-		msg := fmt.Sprintf(am.ErrCannotGetResource, resUserName)
+		msg := fmt.Sprintf(hm.ErrCannotGetResource, resUserName)
 		h.Err(w, http.StatusInternalServerError, msg, err)
 		return
 	}
 
-	msg := fmt.Sprintf(am.MsgCreateItem, resUserNameCap)
+	msg := fmt.Sprintf(hm.MsgCreateItem, resUserNameCap)
 	h.Created(w, msg, createdUser)
 }
 
@@ -87,7 +87,7 @@ func (h *APIHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 
 	id, err := h.ID(w, r)
 	if err != nil {
-		msg := fmt.Sprintf(am.ErrInvalidID, resUserNameCap)
+		msg := fmt.Sprintf(hm.ErrInvalidID, resUserNameCap)
 		h.Err(w, http.StatusBadRequest, msg, err)
 		return
 	}
@@ -95,7 +95,7 @@ func (h *APIHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	var form UserForm
 	err = json.NewDecoder(r.Body).Decode(&form)
 	if err != nil {
-		h.Err(w, http.StatusBadRequest, am.ErrInvalidBody, err)
+		h.Err(w, http.StatusBadRequest, hm.ErrInvalidBody, err)
 		return
 	}
 
@@ -104,19 +104,19 @@ func (h *APIHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 
 	err = h.svc.UpdateUser(r.Context(), &updatedUser)
 	if err != nil {
-		msg := fmt.Sprintf(am.ErrCannotUpdateResource, resUserName)
+		msg := fmt.Sprintf(hm.ErrCannotUpdateResource, resUserName)
 		h.Err(w, http.StatusInternalServerError, msg, err)
 		return
 	}
 
 	finalUser, err := h.svc.GetUser(r.Context(), updatedUser.ID)
 	if err != nil {
-		msg := fmt.Sprintf(am.ErrCannotGetResource, resUserName)
+		msg := fmt.Sprintf(hm.ErrCannotGetResource, resUserName)
 		h.Err(w, http.StatusInternalServerError, msg, err)
 		return
 	}
 
-	msg := fmt.Sprintf(am.MsgUpdateItem, resUserNameCap)
+	msg := fmt.Sprintf(hm.MsgUpdateItem, resUserNameCap)
 	h.OK(w, msg, finalUser)
 }
 
@@ -125,18 +125,18 @@ func (h *APIHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 
 	id, err := h.ID(w, r)
 	if err != nil {
-		msg := fmt.Sprintf(am.ErrInvalidID, resUserNameCap)
+		msg := fmt.Sprintf(hm.ErrInvalidID, resUserNameCap)
 		h.Err(w, http.StatusBadRequest, msg, err)
 		return
 	}
 
 	err = h.svc.DeleteUser(r.Context(), id)
 	if err != nil {
-		msg := fmt.Sprintf(am.ErrCannotDeleteResource, resUserName)
+		msg := fmt.Sprintf(hm.ErrCannotDeleteResource, resUserName)
 		h.Err(w, http.StatusInternalServerError, msg, err)
 		return
 	}
 
-	msg := fmt.Sprintf(am.MsgDeleteItem, resUserNameCap)
+	msg := fmt.Sprintf(hm.MsgDeleteItem, resUserNameCap)
 	h.OK(w, msg, json.RawMessage("null"))
 }

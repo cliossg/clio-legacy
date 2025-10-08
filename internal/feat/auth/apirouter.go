@@ -1,11 +1,11 @@
 package auth
 
 import (
-	"github.com/adrianpk/clio/internal/am"
+	hm "github.com/hermesgen/hm"
 )
 
-func NewAPIRouter(handler *APIHandler, mw []am.Middleware, params am.XParams) *am.Router {
-	core := am.NewAPIRouter("api-router", params)
+func NewAPIRouter(handler *APIHandler, mw []hm.Middleware, params hm.XParams) *hm.Router {
+	core := hm.NewAPIRouter("api-router", params)
 	core.SetMiddlewares(mw)
 
 	// User API routes

@@ -3,8 +3,8 @@ package ssg
 import (
 	"github.com/google/uuid"
 
-	"github.com/adrianpk/clio/internal/am"
-	feat "github.com/adrianpk/clio/internal/feat/ssg"
+	hm "github.com/hermesgen/hm"
+	feat "github.com/hermesgen/clio/internal/feat/ssg"
 )
 
 const (
@@ -34,7 +34,7 @@ func Newlayout(name, description, code string) Layout {
 
 // Type returns the type of the entity.
 func (l *Layout) Type() string {
-	return am.DefaultType(layoutType)
+	return hm.DefaultType(layoutType)
 }
 
 // GetID returns the unique identifier of the entity.
@@ -44,7 +44,7 @@ func (l *Layout) GetID() uuid.UUID {
 
 // GenID delegates to the functional helper.
 func (l *Layout) GenID() {
-	am.GenID(l)
+	hm.GenID(l)
 }
 
 // SetID sets the unique identifier of the entity.
@@ -62,7 +62,7 @@ func (l *Layout) GetShortID() string {
 
 // GenShortID delegates to the functional helper.
 func (l *Layout) GenShortID() {
-	am.GenShortID(l)
+	hm.GenShortID(l)
 }
 
 // SetShortID sets the short ID of the entity.
@@ -75,7 +75,7 @@ func (l *Layout) SetShortID(shortID string, force ...bool) {
 
 // TypeID returns a universal identifier for a specific model instance.
 func (l *Layout) TypeID() string {
-	return am.Normalize(l.Type()) + "-" + l.GetShortID()
+	return hm.Normalize(l.Type()) + "-" + l.GetShortID()
 }
 
 // IsZero returns true if the Layout is uninitialized.
@@ -85,7 +85,7 @@ func (l *Layout) IsZero() bool {
 
 // Slug returns a human-readable, URL-friendly string identifier for the entity.
 func (l *Layout) Slug() string {
-	return am.Normalize(l.Name) + "-" + l.GetShortID()
+	return hm.Normalize(l.Name) + "-" + l.GetShortID()
 }
 
 func (l *Layout) OptValue() string {

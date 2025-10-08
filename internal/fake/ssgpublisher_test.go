@@ -5,8 +5,8 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/adrianpk/clio/internal/fake"
-	"github.com/adrianpk/clio/internal/feat/ssg"
+	"github.com/hermesgen/clio/internal/fake"
+	"github.com/hermesgen/clio/internal/feat/ssg"
 )
 
 func TestSSGPublisherPublish(t *testing.T) {

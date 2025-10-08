@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/adrianpk/clio/internal/am"
+	hm "github.com/hermesgen/hm"
 
 	"github.com/google/uuid"
 )
@@ -17,7 +17,7 @@ func (h *APIHandler) CreateTag(w http.ResponseWriter, r *http.Request) {
 	var err error
 	err = json.NewDecoder(r.Body).Decode(&tag)
 	if err != nil {
-		h.Err(w, http.StatusBadRequest, am.ErrInvalidBody, err)
+		h.Err(w, http.StatusBadRequest, hm.ErrInvalidBody, err)
 		return
 	}
 
@@ -26,12 +26,12 @@ func (h *APIHandler) CreateTag(w http.ResponseWriter, r *http.Request) {
 
 	err = h.svc.CreateTag(r.Context(), newTag)
 	if err != nil {
-		msg := fmt.Sprintf(am.ErrCannotCreateResource, resTagName)
+		msg := fmt.Sprintf(hm.ErrCannotCreateResource, resTagName)
 		h.Err(w, http.StatusInternalServerError, msg, err)
 		return
 	}
 
-	msg := fmt.Sprintf(am.MsgCreateItem, am.Cap(resTagName))
+	msg := fmt.Sprintf(hm.MsgCreateItem, hm.Cap(resTagName))
 	h.Created(w, msg, newTag)
 }
 
@@ -42,7 +42,7 @@ func (h *APIHandler) GetTag(w http.ResponseWriter, r *http.Request) {
 	var id uuid.UUID
 	id, err = h.ID(w, r)
 	if err != nil {
-		msg := fmt.Sprintf(am.ErrInvalidID, am.Cap(resTagName))
+		msg := fmt.Sprintf(hm.ErrInvalidID, hm.Cap(resTagName))
 		h.Err(w, http.StatusBadRequest, msg, err)
 		return
 	}
@@ -50,12 +50,12 @@ func (h *APIHandler) GetTag(w http.ResponseWriter, r *http.Request) {
 	var tag Tag
 	tag, err = h.svc.GetTag(r.Context(), id)
 	if err != nil {
-		msg := fmt.Sprintf(am.ErrCannotGetResource, resTagName)
+		msg := fmt.Sprintf(hm.ErrCannotGetResource, resTagName)
 		h.Err(w, http.StatusInternalServerError, msg, err)
 		return
 	}
 
-	msg := fmt.Sprintf(am.MsgGetItem, am.Cap(resTagName))
+	msg := fmt.Sprintf(hm.MsgGetItem, hm.Cap(resTagName))
 	h.OK(w, msg, tag)
 }
 
@@ -66,7 +66,7 @@ func (h *APIHandler) GetTagByName(w http.ResponseWriter, r *http.Request) {
 	var name string
 	name, err = h.Param(w, r, "name")
 	if err != nil {
-		msg := fmt.Sprintf("%s: %s", am.ErrInvalidParam, "name")
+		msg := fmt.Sprintf("%s: %s", hm.ErrInvalidParam, "name")
 		h.Err(w, http.StatusBadRequest, msg, err)
 		return
 	}
@@ -74,12 +74,12 @@ func (h *APIHandler) GetTagByName(w http.ResponseWriter, r *http.Request) {
 	var tag Tag
 	tag, err = h.svc.GetTagByName(r.Context(), name)
 	if err != nil {
-		msg := fmt.Sprintf(am.ErrCannotGetResource, resTagName)
+		msg := fmt.Sprintf(hm.ErrCannotGetResource, resTagName)
 		h.Err(w, http.StatusInternalServerError, msg, err)
 		return
 	}
 
-	msg := fmt.Sprintf(am.MsgGetItem, am.Cap(resTagName))
+	msg := fmt.Sprintf(hm.MsgGetItem, hm.Cap(resTagName))
 	h.OK(w, msg, tag)
 }
 
@@ -90,12 +90,12 @@ func (h *APIHandler) GetAllTags(w http.ResponseWriter, r *http.Request) {
 	var err error
 	tags, err = h.svc.GetAllTags(r.Context())
 	if err != nil {
-		msg := fmt.Sprintf(am.ErrCannotGetResources, resTagName)
+		msg := fmt.Sprintf(hm.ErrCannotGetResources, resTagName)
 		h.Err(w, http.StatusInternalServerError, msg, err)
 		return
 	}
 
-	msg := fmt.Sprintf(am.MsgGetAllItems, am.Cap(resTagName))
+	msg := fmt.Sprintf(hm.MsgGetAllItems, hm.Cap(resTagName))
 	h.OK(w, msg, tags)
 }
 
@@ -106,7 +106,7 @@ func (h *APIHandler) UpdateTag(w http.ResponseWriter, r *http.Request) {
 	var id uuid.UUID
 	id, err = h.ID(w, r)
 	if err != nil {
-		msg := fmt.Sprintf(am.ErrInvalidID, am.Cap(resTagName))
+		msg := fmt.Sprintf(hm.ErrInvalidID, hm.Cap(resTagName))
 		h.Err(w, http.StatusBadRequest, msg, err)
 		return
 	}
@@ -114,7 +114,7 @@ func (h *APIHandler) UpdateTag(w http.ResponseWriter, r *http.Request) {
 	var tag Tag
 	err = json.NewDecoder(r.Body).Decode(&tag)
 	if err != nil {
-		h.Err(w, http.StatusBadRequest, am.ErrInvalidBody, err)
+		h.Err(w, http.StatusBadRequest, hm.ErrInvalidBody, err)
 		return
 	}
 
@@ -124,12 +124,12 @@ func (h *APIHandler) UpdateTag(w http.ResponseWriter, r *http.Request) {
 
 	err = h.svc.UpdateTag(r.Context(), updatedTag)
 	if err != nil {
-		msg := fmt.Sprintf(am.ErrCannotUpdateResource, resTagName)
+		msg := fmt.Sprintf(hm.ErrCannotUpdateResource, resTagName)
 		h.Err(w, http.StatusInternalServerError, msg, err)
 		return
 	}
 
-	msg := fmt.Sprintf(am.MsgUpdateItem, am.Cap(resTagName))
+	msg := fmt.Sprintf(hm.MsgUpdateItem, hm.Cap(resTagName))
 	h.OK(w, msg, updatedTag)
 }
 
@@ -140,18 +140,18 @@ func (h *APIHandler) DeleteTag(w http.ResponseWriter, r *http.Request) {
 	var id uuid.UUID
 	id, err = h.ID(w, r)
 	if err != nil {
-		msg := fmt.Sprintf(am.ErrInvalidID, am.Cap(resTagName))
+		msg := fmt.Sprintf(hm.ErrInvalidID, hm.Cap(resTagName))
 		h.Err(w, http.StatusBadRequest, msg, err)
 		return
 	}
 
 	err = h.svc.DeleteTag(r.Context(), id)
 	if err != nil {
-		msg := fmt.Sprintf(am.ErrCannotDeleteResource, resTagName)
+		msg := fmt.Sprintf(hm.ErrCannotDeleteResource, resTagName)
 		h.Err(w, http.StatusInternalServerError, msg, err)
 		return
 	}
 
-	msg := fmt.Sprintf(am.MsgDeleteItem, am.Cap(resTagName))
+	msg := fmt.Sprintf(hm.MsgDeleteItem, hm.Cap(resTagName))
 	h.OK(w, msg, json.RawMessage("null"))
 }

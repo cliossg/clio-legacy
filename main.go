@@ -5,13 +5,13 @@ import (
 	"embed"
 	"net/http"
 
-	"github.com/adrianpk/clio/internal/am"
-	"github.com/adrianpk/clio/internal/am/github"
-	"github.com/adrianpk/clio/internal/core"
-	"github.com/adrianpk/clio/internal/feat/auth"
-	"github.com/adrianpk/clio/internal/feat/ssg"
-	"github.com/adrianpk/clio/internal/repo/sqlite"
-	webssg "github.com/adrianpk/clio/internal/web/ssg"
+	hm "github.com/hermesgen/hm"
+	"github.com/hermesgen/hm/github"
+	"github.com/hermesgen/clio/internal/core"
+	"github.com/hermesgen/clio/internal/feat/auth"
+	"github.com/hermesgen/clio/internal/feat/ssg"
+	"github.com/hermesgen/clio/internal/repo/sqlite"
+	webssg "github.com/hermesgen/clio/internal/web/ssg"
 )
 
 const (
@@ -26,33 +26,32 @@ var assetsFS embed.FS
 
 func main() {
 	ctx := context.Background()
-	log := am.NewLogger("info")
-	cfg := am.LoadCfg(namespace, am.Flags)
-	
-	
-	// XParams for components that only need log + config
-	xparams := am.XParams{Cfg: cfg, Log: log}
-	
-	// Opts for legacy components still using variadic pattern
-	opts := []am.Option{}
+	log := hm.NewLogger("info")
+	cfg := hm.LoadCfg(namespace, hm.Flags)
 
-	fm := am.NewFlashManager()
+	// XParams for components that only need log + config
+	xparams := hm.XParams{Cfg: cfg, Log: log}
+
+	// Opts for legacy components still using variadic pattern
+	opts := []hm.Option{}
+
+	fm := hm.NewFlashManager()
 	workspace := core.NewWorkspace(opts...)
 	app := core.NewApp(name, version, assetsFS, xparams)
-	queryManager := am.NewQueryManager(assetsFS, engine, xparams)
-	templateManager := am.NewTemplateManager(assetsFS, xparams)
+	queryManager := hm.NewQueryManager(assetsFS, engine, xparams)
+	templateManager := hm.NewTemplateManager(assetsFS, xparams)
 	repo := sqlite.NewClioRepo(queryManager)
-	migrator := am.NewMigrator(assetsFS, engine)
-	fileServer := am.NewFileServer(assetsFS, xparams)
+	migrator := hm.NewMigrator(assetsFS, engine)
+	fileServer := hm.NewFileServer(assetsFS, xparams)
 
 	app.MountFileServer("/", fileServer)
 
 	// Serve uploaded images from the filesystem
-	imagesPath := cfg.StrValOrDef(am.Key.SSGImagesPath, "_workspace/documents/assets/images")
+	imagesPath := cfg.StrValOrDef(hm.Key.SSGImagesPath, "_workspace/documents/assets/images")
 	imageFileServer := http.FileServer(http.Dir(imagesPath))
 	app.Router.Handle("/static/images/*", http.StripPrefix("/static/images/", imageFileServer))
 
-	apiRouter := am.NewAPIRouter("api-router", xparams)
+	apiRouter := hm.NewAPIRouter("api-router", xparams)
 
 	// GitAuth feature
 	authSeeder := auth.NewSeeder(assetsFS, engine, repo)
@@ -70,14 +69,14 @@ func main() {
 	ssgImageManager := ssg.NewImageManager(xparams)
 	ssgService := ssg.NewService(assetsFS, repo, ssgGenerator, ssgPublisher, ssgParamManager, ssgImageManager, xparams)
 	ssgAPIHandler := ssg.NewAPIHandler("ssg-api-handler", ssgService)
-	ssgAPIRouter := ssg.NewAPIRouter(ssgAPIHandler, []am.Middleware{am.CORSMw}, xparams)
+	ssgAPIRouter := ssg.NewAPIRouter(ssgAPIHandler, []hm.Middleware{hm.CORSMw}, xparams)
 	apiRouter.Mount("/ssg", ssgAPIRouter)
 
-app.MountAPI("/api/v1", apiRouter)
+	app.MountAPI("/api/v1", apiRouter)
 
 	// Web app
 	ssgWebHandler := webssg.NewWebHandler(templateManager, fm, opts...)
-	ssgWebRouter := webssg.NewWebRouter(ssgWebHandler, append(fm.Middlewares(), am.LogHeadersMw))
+	ssgWebRouter := webssg.NewWebRouter(ssgWebHandler, append(fm.Middlewares(), hm.LogHeadersMw))
 
 	app.MountWeb("/ssg", ssgWebRouter)
 

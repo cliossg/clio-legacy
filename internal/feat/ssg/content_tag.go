@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/adrianpk/clio/internal/am"
+	hm "github.com/hermesgen/hm"
 )
 
 // ContentTag model represents the many-to-many relationship between Content and Tag.
@@ -48,7 +48,7 @@ func (ct *ContentTag) GetID() uuid.UUID {
 
 // GenID delegates to the functional helper.
 func (ct *ContentTag) GenID() {
-	am.GenID(ct)
+	hm.GenID(ct)
 }
 
 // SetID sets the unique identifier of the entity.
@@ -66,7 +66,7 @@ func (ct *ContentTag) GetShortID() string {
 
 // GenShortID delegates to the functional helper.
 func (ct *ContentTag) GenShortID() {
-	am.GenShortID(ct)
+	hm.GenShortID(ct)
 }
 
 // SetShortID sets the short ID of the entity.
@@ -77,15 +77,14 @@ func (ct *ContentTag) SetShortID(shortID string, force ...bool) {
 	}
 }
 
-
 // GenCreateValues delegates to the functional helper.
 func (ct *ContentTag) GenCreateValues(userID ...uuid.UUID) {
-	am.SetCreateValues(ct, userID...)
+	hm.SetCreateValues(ct, userID...)
 }
 
 // GenUpdateValues delegates to the functional helper.
 func (ct *ContentTag) GenUpdateValues(userID ...uuid.UUID) {
-	am.SetUpdateValues(ct, userID...)
+	hm.SetUpdateValues(ct, userID...)
 }
 
 // CreatedBy returns the UUID of the user who created the entity.
@@ -135,7 +134,7 @@ func (ct *ContentTag) IsZero() bool {
 
 // Slug returns a human-readable, URL-friendly string identifier for the entity.
 func (ct *ContentTag) Slug() string {
-	return am.Normalize(ct.Type()) + "-" + ct.GetShortID()
+	return hm.Normalize(ct.Type()) + "-" + ct.GetShortID()
 }
 
 func (ct *ContentTag) OptValue() string {
@@ -145,5 +144,3 @@ func (ct *ContentTag) OptValue() string {
 func (ct *ContentTag) OptLabel() string {
 	return ct.GetShortID()
 }
-
-

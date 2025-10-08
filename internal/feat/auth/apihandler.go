@@ -3,7 +3,7 @@ package auth
 import (
 	"net/http"
 
-	"github.com/adrianpk/clio/internal/am"
+	hm "github.com/hermesgen/hm"
 )
 
 const (
@@ -12,12 +12,12 @@ const (
 )
 
 type APIHandler struct {
-	*am.APIHandler
+	*hm.APIHandler
 	svc Service
 }
 
-func NewAPIHandler(name string, service Service, options ...am.Option) *APIHandler {
-	h := am.NewAPIHandler(name, options...)
+func NewAPIHandler(name string, service Service, options ...hm.Option) *APIHandler {
+	h := hm.NewAPIHandler(name, options...)
 	return &APIHandler{
 		APIHandler: h,
 		svc:        service,

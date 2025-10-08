@@ -5,8 +5,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/adrianpk/clio/internal/am"
-	feat "github.com/adrianpk/clio/internal/feat/ssg"
+	hm "github.com/hermesgen/hm"
+	feat "github.com/hermesgen/clio/internal/feat/ssg"
 )
 
 const (
@@ -43,7 +43,7 @@ func NewContent(heading, body string) Content {
 
 // Type returns the type of the entity.
 func (c *Content) Type() string {
-	return am.DefaultType(contentType)
+	return hm.DefaultType(contentType)
 }
 
 // GetID returns the unique identifier of the entity.
@@ -53,7 +53,7 @@ func (c *Content) GetID() uuid.UUID {
 
 // GenID delegates to the functional helper.
 func (c *Content) GenID() {
-	am.GenID(c)
+	hm.GenID(c)
 }
 
 // SetID sets the unique identifier of the entity.
@@ -71,7 +71,7 @@ func (c *Content) GetShortID() string {
 
 // GenShortID delegates to the functional helper.
 func (c *Content) GenShortID() {
-	am.GenShortID(c)
+	hm.GenShortID(c)
 }
 
 // SetShortID sets the short ID of the entity.
@@ -84,7 +84,7 @@ func (c *Content) SetShortID(shortID string, force ...bool) {
 
 // TypeID returns a universal identifier for a specific model instance.
 func (c *Content) TypeID() string {
-	return am.Normalize(c.Type()) + "-" + c.GetShortID()
+	return hm.Normalize(c.Type()) + "-" + c.GetShortID()
 }
 
 // IsZero returns true if the Content is uninitialized.

@@ -3,8 +3,8 @@ package ssg
 import (
 	"github.com/google/uuid"
 
-	"github.com/adrianpk/clio/internal/am"
-	feat "github.com/adrianpk/clio/internal/feat/ssg"
+	hm "github.com/hermesgen/hm"
+	feat "github.com/hermesgen/clio/internal/feat/ssg"
 )
 
 const (
@@ -28,7 +28,7 @@ func NewTag(name string) Tag {
 
 // Type returns the type of the entity.
 func (t *Tag) Type() string {
-	return am.DefaultType(tagType)
+	return hm.DefaultType(tagType)
 }
 
 // GetID returns the unique identifier of the entity.
@@ -38,7 +38,7 @@ func (t *Tag) GetID() uuid.UUID {
 
 // GenID delegates to the functional helper.
 func (t *Tag) GenID() {
-	am.GenID(t)
+	hm.GenID(t)
 }
 
 // SetID sets the unique identifier of the entity.
@@ -56,7 +56,7 @@ func (t *Tag) GetShortID() string {
 
 // GenShortID delegates to the functional helper.
 func (t *Tag) GenShortID() {
-	am.GenShortID(t)
+	hm.GenShortID(t)
 }
 
 // SetShortID sets the short ID of the entity.
@@ -69,7 +69,7 @@ func (t *Tag) SetShortID(shortID string, force ...bool) {
 
 // TypeID returns a universal identifier for a specific model instance.
 func (t *Tag) TypeID() string {
-	return am.Normalize(t.Type()) + "-" + t.GetShortID()
+	return hm.Normalize(t.Type()) + "-" + t.GetShortID()
 }
 
 // IsZero returns true if the Tag is uninitialized.
@@ -82,7 +82,7 @@ func (t *Tag) Slug() string {
 	if t.SlugField != "" {
 		return t.SlugField
 	}
-	return am.Normalize(t.Name) + "-" + t.GetShortID()
+	return hm.Normalize(t.Name) + "-" + t.GetShortID()
 }
 
 func (t *Tag) OptValue() string {

@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/adrianpk/clio/internal/am"
-	feat "github.com/adrianpk/clio/internal/feat/ssg"
+	hm "github.com/hermesgen/hm"
+	feat "github.com/hermesgen/clio/internal/feat/ssg"
 )
 
 func (h *WebHandler) ListParams(w http.ResponseWriter, r *http.Request) {
@@ -22,7 +22,7 @@ func (h *WebHandler) ListParams(w http.ResponseWriter, r *http.Request) {
 	}
 	params := response.Params
 
-	page := am.NewPage(r, ToWebParams(params))
+	page := hm.NewPage(r, ToWebParams(params))
 	page.Form.SetAction(ssgPath)
 
 	menu := page.NewMenu(ssgPath)
@@ -30,14 +30,14 @@ func (h *WebHandler) ListParams(w http.ResponseWriter, r *http.Request) {
 
 	tmpl, err := h.Tmpl().Get(ssgFeat, "list-params")
 	if err != nil {
-		h.Err(w, err, am.ErrTemplateNotFound, http.StatusInternalServerError)
+		h.Err(w, err, hm.ErrTemplateNotFound, http.StatusInternalServerError)
 		return
 	}
 
 	var buf bytes.Buffer
 	err = tmpl.Execute(&buf, page)
 	if err != nil {
-		h.Err(w, err, am.ErrCannotRenderTemplate, http.StatusInternalServerError)
+		h.Err(w, err, hm.ErrCannotRenderTemplate, http.StatusInternalServerError)
 		return
 	}
 
@@ -80,15 +80,15 @@ func (h *WebHandler) CreateParam(w http.ResponseWriter, r *http.Request) {
 	}
 	createdParam := ToWebParam(response.Param)
 
-	if am.IsHTMXRequest(r) {
-		redirectURL := am.EditPath(&createdParam, createdParam.GetID())
+	if hm.IsHTMXRequest(r) {
+		redirectURL := hm.EditPath(&createdParam, createdParam.GetID())
 		w.Header().Set("HX-Redirect", redirectURL)
 		w.WriteHeader(http.StatusOK)
 		return
 	}
 
 	h.FlashInfo(w, r, "Param created")
-	h.Redir(w, r, am.EditPath(&createdParam, createdParam.GetID()), http.StatusSeeOther)
+	h.Redir(w, r, hm.EditPath(&createdParam, createdParam.GetID()), http.StatusSeeOther)
 }
 
 func (h *WebHandler) EditParam(w http.ResponseWriter, r *http.Request) {
@@ -142,14 +142,14 @@ func (h *WebHandler) UpdateParam(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if am.IsHTMXRequest(r) {
+	if hm.IsHTMXRequest(r) {
 		w.Header().Set("Content-Type", "text/html")
-		_, _ = w.Write([]byte("<div id=\"save-status\" data-timestamp=\"" + am.Now().Format(am.TimeFormat) + "\"></div>"))
+		_, _ = w.Write([]byte("<div id=\"save-status\" data-timestamp=\"" + hm.Now().Format(hm.TimeFormat) + "\"></div>"))
 		return
 	}
 
 	h.FlashInfo(w, r, "Param updated successfully")
-	h.Redir(w, r, am.EditPath(&Param{}, param.GetID()), http.StatusSeeOther)
+	h.Redir(w, r, hm.EditPath(&Param{}, param.GetID()), http.StatusSeeOther)
 }
 
 func (h *WebHandler) DeleteParam(w http.ResponseWriter, r *http.Request) {
@@ -173,7 +173,7 @@ func (h *WebHandler) DeleteParam(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.FlashInfo(w, r, "Param deleted successfully")
-	h.Redir(w, r, am.ListPath(&Param{}), http.StatusSeeOther)
+	h.Redir(w, r, hm.ListPath(&Param{}), http.StatusSeeOther)
 }
 
 func (h *WebHandler) ShowParam(w http.ResponseWriter, r *http.Request) {
@@ -197,7 +197,7 @@ func (h *WebHandler) ShowParam(w http.ResponseWriter, r *http.Request) {
 
 	param := ToWebParam(response.Param)
 
-	page := am.NewPage(r, param)
+	page := hm.NewPage(r, param)
 	page.Name = "Show Param"
 
 	menu := page.NewMenu(ssgPath)
@@ -205,13 +205,13 @@ func (h *WebHandler) ShowParam(w http.ResponseWriter, r *http.Request) {
 
 	tmpl, err := h.Tmpl().Get(ssgFeat, "show-param")
 	if err != nil {
-		h.Err(w, err, am.ErrTemplateNotFound, http.StatusInternalServerError)
+		h.Err(w, err, hm.ErrTemplateNotFound, http.StatusInternalServerError)
 		return
 	}
 
 	var buf bytes.Buffer
 	if err := tmpl.Execute(&buf, page); err != nil {
-		h.Err(w, err, am.ErrCannotRenderTemplate, http.StatusInternalServerError)
+		h.Err(w, err, hm.ErrCannotRenderTemplate, http.StatusInternalServerError)
 		return
 	}
 
@@ -225,12 +225,12 @@ func (h *WebHandler) renderParamForm(w http.ResponseWriter, r *http.Request, for
 	if param.IsZero() {
 		paramPage.Name = "New Param"
 		paramPage.IsNew = true
-		paramPage.Form.SetAction(am.CreatePath(&Param{}))
+		paramPage.Form.SetAction(hm.CreatePath(&Param{}))
 		paramPage.Form.SetSubmitButtonText("Create")
 	} else {
 		paramPage.Name = "Edit Param"
 		paramPage.IsNew = false
-		paramPage.Form.SetAction(am.UpdatePath(&Param{}))
+		paramPage.Form.SetAction(hm.UpdatePath(&Param{}))
 		paramPage.Form.SetSubmitButtonText("Update")
 	}
 
@@ -239,7 +239,7 @@ func (h *WebHandler) renderParamForm(w http.ResponseWriter, r *http.Request, for
 
 	tmpl, err := h.Tmpl().Get(ssgFeat, "new-param")
 	if err != nil {
-		h.Err(w, err, am.ErrTemplateNotFound, http.StatusInternalServerError)
+		h.Err(w, err, hm.ErrTemplateNotFound, http.StatusInternalServerError)
 		return
 	}
 
@@ -248,7 +248,7 @@ func (h *WebHandler) renderParamForm(w http.ResponseWriter, r *http.Request, for
 	var buf bytes.Buffer
 	err = tmpl.Execute(&buf, paramPage)
 	if err != nil {
-		h.Err(w, err, am.ErrCannotRenderTemplate, http.StatusInternalServerError)
+		h.Err(w, err, hm.ErrCannotRenderTemplate, http.StatusInternalServerError)
 		return
 	}
 

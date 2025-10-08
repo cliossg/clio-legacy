@@ -1,7 +1,7 @@
 package ssg
 
 import (
-	"github.com/adrianpk/clio/internal/am"
+	hm "github.com/hermesgen/hm"
 )
 
 const (
@@ -15,13 +15,13 @@ const (
 )
 
 type WebHandler struct {
-	*am.WebHandler
-	apiClient *am.APIClient
+	*hm.WebHandler
+	apiClient *hm.APIClient
 }
 
-func NewWebHandler(tm *am.TemplateManager, flash *am.FlashManager, opts ...am.Option) *WebHandler {
-	handler := am.NewWebHandler(tm, flash, opts...)
-	apiClient := am.NewAPIClient("web-api-client", func() string { return "" }, defaultAPIBaseURL, opts...)
+func NewWebHandler(tm *hm.TemplateManager, flash *hm.FlashManager, opts ...hm.Option) *WebHandler {
+	handler := hm.NewWebHandler(tm, flash, opts...)
+	apiClient := hm.NewAPIClient("web-api-client", func() string { return "" }, defaultAPIBaseURL, opts...)
 	return &WebHandler{
 		WebHandler: handler,
 		apiClient:  apiClient,

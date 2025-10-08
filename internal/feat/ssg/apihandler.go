@@ -6,7 +6,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/adrianpk/clio/internal/am"
+	hm "github.com/hermesgen/hm"
 )
 
 const (
@@ -20,13 +20,13 @@ const (
 )
 
 type APIHandler struct {
-	*am.APIHandler
+	*hm.APIHandler
 	svc Service
 }
 
-func NewAPIHandler(name string, service Service, options ...am.Option) *APIHandler {
+func NewAPIHandler(name string, service Service, options ...hm.Option) *APIHandler {
 	return &APIHandler{
-		APIHandler: am.NewAPIHandler(name, options...),
+		APIHandler: hm.NewAPIHandler(name, options...),
 		svc:        service,
 	}
 }
@@ -88,14 +88,14 @@ func (h *APIHandler) Publish(w http.ResponseWriter, r *http.Request) {
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		h.Err(w, http.StatusBadRequest, am.ErrInvalidBody, err)
+		h.Err(w, http.StatusBadRequest, hm.ErrInvalidBody, err)
 		return
 	}
 
 	var data PublishRequest
 	err = json.Unmarshal(body, &data)
 	if err != nil {
-		h.Err(w, http.StatusBadRequest, am.ErrInvalidBody, err)
+		h.Err(w, http.StatusBadRequest, hm.ErrInvalidBody, err)
 		return
 	}
 

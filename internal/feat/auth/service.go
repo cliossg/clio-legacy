@@ -3,8 +3,8 @@ package auth
 import (
 	"context"
 
-	"github.com/adrianpk/clio/internal/am"
 	"github.com/google/uuid"
+	hm "github.com/hermesgen/hm"
 )
 
 type Service interface {
@@ -14,29 +14,29 @@ type Service interface {
 	CreateUser(ctx context.Context, user *User) error
 	UpdateUser(ctx context.Context, user *User) error
 	DeleteUser(ctx context.Context, id uuid.UUID) error
-	// NOTE: Check this, am.UserService and am.SessionStore implementations
-	GetUserByID(ctx context.Context, userID uuid.UUID) (*am.UserCtxData, error)
+	// NOTE: Check this, hm.UserService and hm.SessionStore implementations
+	GetUserByID(ctx context.Context, userID uuid.UUID) (*hm.UserCtxData, error)
 }
 
 type BaseService struct {
-	*am.Service
+	*hm.Service
 	repo Repo
 }
 
-func NewService(repo Repo, params am.XParams) *BaseService {
+func NewService(repo Repo, params hm.XParams) *BaseService {
 	return &BaseService{
-		Service: am.NewService("auth-svc", params),
+		Service: hm.NewService("auth-svc", params),
 		repo:    repo,
 	}
 }
 
-func (svc *BaseService) GetUserByID(ctx context.Context, userID uuid.UUID) (*am.UserCtxData, error) {
+func (svc *BaseService) GetUserByID(ctx context.Context, userID uuid.UUID) (*hm.UserCtxData, error) {
 	user, err := svc.repo.GetUser(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
 
-	userCtxData := &am.UserCtxData{
+	userCtxData := &hm.UserCtxData{
 		ID: user.ID,
 	}
 	return userCtxData, nil

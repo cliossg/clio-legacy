@@ -13,16 +13,16 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/adrianpk/clio/internal/am"
-	"github.com/adrianpk/clio/internal/am/github"
-	"github.com/adrianpk/clio/internal/feat/ssg"
+	hm "github.com/hermesgen/hm"
+	"github.com/hermesgen/hm/github"
+	"github.com/hermesgen/clio/internal/feat/ssg"
 )
 
 var (
 	testRepoOwner   string
 	testRepoName    string
 	testGithubToken string
-	gitClient       am.GitClient
+	gitClient       hm.GitClient
 )
 
 func TestMain(m *testing.M) {
@@ -36,8 +36,10 @@ func TestMain(m *testing.M) {
 	}
 
 	// Initialize real GitHub client
-	logger := am.NewLogger("info")
-	gitClient = github.NewClient(am.WithLog(logger))
+	logger := hm.NewLogger("info")
+	cfg := hm.NewConfig() // Basic config for tests
+	xparams := hm.XParams{Cfg: cfg, Log: logger}
+	gitClient = github.NewClient(xparams)
 
 	// Prepare the remote repository
 	repoURL := fmt.Sprintf("https://github.com/%s/%s.git", testRepoOwner, testRepoName)
@@ -236,18 +238,18 @@ func TestPublisherIntegration(t *testing.T) {
 			err = os.WriteFile(filepath.Join(sourceDir, tt.publishPath), []byte(tt.publishContent), 0644)
 			require.NoError(t, err)
 
-			logger := am.NewLogger("info")
-			publisher := ssg.NewPublisher(gitClient, am.WithLog(logger))
+			logger := hm.NewLogger("info")
+			publisher := ssg.NewPublisher(gitClient, hm.WithLog(logger))
 
 			pubCfg := ssg.PublisherConfig{
 				RepoURL:     authRepoURL, // NOTE: We wse the authenticated
 				Branch:      testBranch,
 				PagesSubdir: "",
-				Auth: am.GitAuth{
-					Method: am.AuthToken,
+				Auth: hm.GitAuth{
+					Method: hm.AuthToken,
 					Token:  testGithubToken,
 				},
-				CommitAuthor: am.GitCommit{
+				CommitAuthor: hm.GitCommit{
 					UserName:  "Clio Test Bot",
 					UserEmail: "ci@clio.dev",
 					Message:   tt.commitMessage,

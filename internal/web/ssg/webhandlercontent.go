@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/adrianpk/clio/internal/am"
-	"github.com/adrianpk/clio/internal/feat/auth"
-	feat "github.com/adrianpk/clio/internal/feat/ssg"
+	hm "github.com/hermesgen/hm"
+	"github.com/hermesgen/clio/internal/feat/auth"
+	feat "github.com/hermesgen/clio/internal/feat/ssg"
 )
 
 func (h *WebHandler) NewContent(w http.ResponseWriter, r *http.Request) {
@@ -45,15 +45,15 @@ func (h *WebHandler) CreateContent(w http.ResponseWriter, r *http.Request) {
 	}
 	createdContent := ToWebContent(response.Content)
 
-	if am.IsHTMXRequest(r) {
-		redirectURL := am.EditPath(&createdContent, createdContent.GetID())
+	if hm.IsHTMXRequest(r) {
+		redirectURL := hm.EditPath(&createdContent, createdContent.GetID())
 		w.Header().Set("HX-Redirect", redirectURL)
 		w.WriteHeader(http.StatusOK)
 		return
 	}
 
 	h.FlashInfo(w, r, "Content created")
-	h.Redir(w, r, am.EditPath(&createdContent, createdContent.GetID()), http.StatusSeeOther)
+	h.Redir(w, r, hm.EditPath(&createdContent, createdContent.GetID()), http.StatusSeeOther)
 }
 
 func (h *WebHandler) EditContent(w http.ResponseWriter, r *http.Request) {
@@ -107,14 +107,14 @@ func (h *WebHandler) UpdateContent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if am.IsHTMXRequest(r) {
+	if hm.IsHTMXRequest(r) {
 		w.Header().Set("Content-Type", "text/html")
-		_, _ = w.Write([]byte("<div id=\"save-status\" data-timestamp=\"" + am.Now().Format(am.TimeFormat) + "\"></div>"))
+		_, _ = w.Write([]byte("<div id=\"save-status\" data-timestamp=\"" + hm.Now().Format(hm.TimeFormat) + "\"></div>"))
 		return
 	}
 
 	h.FlashInfo(w, r, "Content updated successfully")
-	h.Redir(w, r, am.EditPath(&Content{}, content.GetID()), http.StatusSeeOther)
+	h.Redir(w, r, hm.EditPath(&Content{}, content.GetID()), http.StatusSeeOther)
 }
 
 func (h *WebHandler) ListContent(w http.ResponseWriter, r *http.Request) {
@@ -133,7 +133,7 @@ func (h *WebHandler) ListContent(w http.ResponseWriter, r *http.Request) {
 	contents := response.Contents
 
 	h.Log().Infof("Contents received: %+v", contents)
-	page := am.NewPage(r, contents)
+	page := hm.NewPage(r, contents)
 	h.Log().Info("Page created")
 	page.Form.SetAction(ssgPath)
 	h.Log().Info("Form action set")
@@ -145,7 +145,7 @@ func (h *WebHandler) ListContent(w http.ResponseWriter, r *http.Request) {
 
 	tmpl, err := h.Tmpl().Get(ssgFeat, "list-content")
 	if err != nil {
-		h.Err(w, err, am.ErrTemplateNotFound, http.StatusInternalServerError)
+		h.Err(w, err, hm.ErrTemplateNotFound, http.StatusInternalServerError)
 		return
 	}
 	h.Log().Info("Template retrieved")
@@ -153,7 +153,7 @@ func (h *WebHandler) ListContent(w http.ResponseWriter, r *http.Request) {
 	var buf bytes.Buffer
 	err = tmpl.Execute(&buf, page)
 	if err != nil {
-		h.Err(w, err, am.ErrCannotRenderTemplate, http.StatusInternalServerError)
+		h.Err(w, err, hm.ErrCannotRenderTemplate, http.StatusInternalServerError)
 		return
 	}
 	h.Log().Info("Template executed")
@@ -182,7 +182,7 @@ func (h *WebHandler) ShowContent(w http.ResponseWriter, r *http.Request) {
 	}
 	content := response.Content
 
-	page := am.NewPage(r, content)
+	page := hm.NewPage(r, content)
 	page.Name = "Show Content"
 
 	menu := page.NewMenu(ssgPath)
@@ -190,13 +190,13 @@ func (h *WebHandler) ShowContent(w http.ResponseWriter, r *http.Request) {
 
 	tmpl, err := h.Tmpl().Get(ssgFeat, "show-content")
 	if err != nil {
-		h.Err(w, err, am.ErrTemplateNotFound, http.StatusInternalServerError)
+		h.Err(w, err, hm.ErrTemplateNotFound, http.StatusInternalServerError)
 		return
 	}
 
 	var buf bytes.Buffer
 	if err := tmpl.Execute(&buf, page); err != nil {
-		h.Err(w, err, am.ErrCannotRenderTemplate, http.StatusInternalServerError)
+		h.Err(w, err, hm.ErrCannotRenderTemplate, http.StatusInternalServerError)
 		return
 	}
 
@@ -224,7 +224,7 @@ func (h *WebHandler) DeleteContent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.FlashInfo(w, r, "Content deleted successfully")
-	h.Redir(w, r, am.ListPath(&Content{}), http.StatusSeeOther)
+	h.Redir(w, r, hm.ListPath(&Content{}), http.StatusSeeOther)
 }
 
 func (h *WebHandler) renderContentForm(w http.ResponseWriter, r *http.Request, form ContentForm, content Content, errorMessage string, statusCode int) {
@@ -269,29 +269,29 @@ func (h *WebHandler) renderContentForm(w http.ResponseWriter, r *http.Request, f
 	tags := tagsResponse.Tags
 	h.Log().Debugf("Tags received: %+v", tags)
 
-	kinds := []am.SelectOpt{
+	kinds := []hm.SelectOpt{
 		{Value: "article", Label: "Article"},
 		{Value: "page", Label: "Page"},
 		{Value: "blog", Label: "Blog"},
 		{Value: "series", Label: "Series"},
 	}
 
-	page := am.NewPage(r, content)
+	page := hm.NewPage(r, content)
 	page.SetForm(&form)
-	page.AddSelect("sections", am.ToSelectOpt(am.ToPtrSlice(sections)))
-	page.AddSelect("users", am.ToSelectOpt(am.ToPtrSlice(users)))
-	page.AddSelect("tags", am.ToSelectOpt(am.ToPtrSlice(tags)))
+	page.AddSelect("sections", hm.ToSelectOpt(hm.ToPtrSlice(sections)))
+	page.AddSelect("users", hm.ToSelectOpt(hm.ToPtrSlice(users)))
+	page.AddSelect("tags", hm.ToSelectOpt(hm.ToPtrSlice(tags)))
 	page.AddSelect("kinds", kinds)
 
 	if content.IsZero() {
 		page.Name = "New Content"
 		page.IsNew = true
-		page.Form.SetAction(am.CreatePath(&Content{}))
+		page.Form.SetAction(hm.CreatePath(&Content{}))
 		page.Form.SetSubmitButtonText("Create")
 	} else {
 		page.Name = "Edit Content"
 		page.IsNew = false
-		page.Form.SetAction(am.UpdatePath(&Content{}))
+		page.Form.SetAction(hm.UpdatePath(&Content{}))
 		page.Form.SetSubmitButtonText("Update")
 	}
 
@@ -300,7 +300,7 @@ func (h *WebHandler) renderContentForm(w http.ResponseWriter, r *http.Request, f
 
 	tmpl, err := h.Tmpl().Get(ssgFeat, "new-content")
 	if err != nil {
-		h.Err(w, err, am.ErrTemplateNotFound, http.StatusInternalServerError)
+		h.Err(w, err, hm.ErrTemplateNotFound, http.StatusInternalServerError)
 		return
 	}
 
@@ -309,7 +309,7 @@ func (h *WebHandler) renderContentForm(w http.ResponseWriter, r *http.Request, f
 	var buf bytes.Buffer
 	err = tmpl.Execute(&buf, page)
 	if err != nil {
-		h.Err(w, err, am.ErrCannotRenderTemplate, http.StatusInternalServerError)
+		h.Err(w, err, hm.ErrCannotRenderTemplate, http.StatusInternalServerError)
 		return
 	}
 

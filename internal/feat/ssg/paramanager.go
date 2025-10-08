@@ -3,18 +3,17 @@ package ssg
 import (
 	"context"
 
-	"github.com/adrianpk/clio/internal/am"
+	hm "github.com/hermesgen/hm"
 )
 
 type ParamManager struct {
-	am.Core
+	hm.Core
 	repo Repo
 }
 
-
 // NewParamManagerWithParams creates a ParamManager with XParams.
-func NewParamManager(repo Repo, params am.XParams) *ParamManager {
-	core := am.NewCoreWithParams("param-manager", params)
+func NewParamManager(repo Repo, params hm.XParams) *ParamManager {
+	core := hm.NewCoreWithParams("param-manager", params)
 	return &ParamManager{
 		Core: core,
 		repo: repo,

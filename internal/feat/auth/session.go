@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/adrianpk/clio/internal/am"
 	"github.com/google/uuid"
 	"github.com/gorilla/securecookie"
+	hm "github.com/hermesgen/hm"
 )
 
 const ( // TODO: Move to config
@@ -19,13 +19,13 @@ const ( // TODO: Move to config
 
 // SessionManager handles user sessions.
 type SessionManager struct {
-	*am.BaseCore
+	*hm.BaseCore
 	encoder *securecookie.SecureCookie
 }
 
 // NewSessionManager creates a new SessionManager.
-func NewSessionManager(opts ...am.Option) *SessionManager {
-	core := am.NewCore("session-manager", opts...) // Changed to am.NewCore
+func NewSessionManager(opts ...hm.Option) *SessionManager {
+	core := hm.NewCore("session-manager", opts...) // Changed to hm.NewCore
 	return &SessionManager{
 		BaseCore: core,
 	}
@@ -39,8 +39,8 @@ func (sm *SessionManager) Setup(ctx context.Context) error {
 	}
 
 	cfg := sm.Cfg()
-	hashKey := cfg.ByteSliceVal(am.Key.SecHashKey)
-	blockKey := cfg.ByteSliceVal(am.Key.SecBlockKey)
+	hashKey := cfg.ByteSliceVal(hm.Key.SecHashKey)
+	blockKey := cfg.ByteSliceVal(hm.Key.SecBlockKey)
 
 	if len(hashKey) == 0 || len(blockKey) == 0 {
 		return errors.New("missing hashKey or blockKey in configuration for session manager")

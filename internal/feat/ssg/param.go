@@ -3,8 +3,8 @@ package ssg
 import (
 	"time"
 
-	"github.com/adrianpk/clio/internal/am"
 	"github.com/google/uuid"
+	hm "github.com/hermesgen/hm"
 )
 
 const (
@@ -58,7 +58,7 @@ func (p Param) GetID() uuid.UUID {
 
 // GenID delegates to the functional helper.
 func (p *Param) GenID() {
-	am.GenID(p)
+	hm.GenID(p)
 }
 
 // SetID sets the unique identifier of the entity.
@@ -76,7 +76,7 @@ func (p *Param) GetShortID() string {
 
 // GenShortID delegates to the functional helper.
 func (p *Param) GenShortID() {
-	am.GenShortID(p)
+	hm.GenShortID(p)
 }
 
 // SetShortID sets the short ID of the entity.
@@ -87,15 +87,14 @@ func (p *Param) SetShortID(shortID string, force ...bool) {
 	}
 }
 
-
 // GenCreateValues delegates to the functional helper.
 func (p *Param) GenCreateValues(userID ...uuid.UUID) {
-	am.SetCreateValues(p, userID...)
+	hm.SetCreateValues(p, userID...)
 }
 
 // GenUpdateValues delegates to the functional helper.
 func (p *Param) GenUpdateValues(userID ...uuid.UUID) {
-	am.SetUpdateValues(p, userID...)
+	hm.SetUpdateValues(p, userID...)
 }
 
 // GetCreatedBy returns the UUID of the user who created the entity.
@@ -145,5 +144,5 @@ func (p *Param) IsZero() bool {
 
 // Slug returns a slug for the param.
 func (p *Param) Slug() string {
-	return am.Normalize(p.Name) + "-" + p.GetShortID()
+	return hm.Normalize(p.Name) + "-" + p.GetShortID()
 }

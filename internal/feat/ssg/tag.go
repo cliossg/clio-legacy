@@ -5,15 +5,14 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/adrianpk/clio/internal/am"
+	hm "github.com/hermesgen/hm"
 )
-
 
 // Tag model.
 type Tag struct {
 	// Common
 	ID      uuid.UUID `json:"id" db:"id"`
-	ShortID string `json:"-" db:"short_id"`
+	ShortID string    `json:"-" db:"short_id"`
 
 	// Tag specific fields
 	Name      string `json:"name" db:"name"`
@@ -49,7 +48,7 @@ func (t *Tag) GetID() uuid.UUID {
 
 // GenID delegates to the functional helper.
 func (t *Tag) GenID() {
-	am.GenID(t)
+	hm.GenID(t)
 }
 
 // SetID sets the unique identifier of the entity.
@@ -67,7 +66,7 @@ func (t *Tag) GetShortID() string {
 
 // GenShortID delegates to the functional helper.
 func (t *Tag) GenShortID() {
-	am.GenShortID(t)
+	hm.GenShortID(t)
 }
 
 // SetShortID sets the short ID of the entity.
@@ -78,15 +77,14 @@ func (t *Tag) SetShortID(shortID string, force ...bool) {
 	}
 }
 
-
 // GenCreateValues delegates to the functional helper.
 func (t *Tag) GenCreateValues(userID ...uuid.UUID) {
-	am.SetCreateValues(t, userID...)
+	hm.SetCreateValues(t, userID...)
 }
 
 // GenUpdateValues delegates to the functional helper.
 func (t *Tag) GenUpdateValues(userID ...uuid.UUID) {
-	am.SetUpdateValues(t, userID...)
+	hm.SetUpdateValues(t, userID...)
 }
 
 // CreatedBy returns the UUID of the user who created the entity.
@@ -139,7 +137,7 @@ func (t *Tag) Slug() string {
 	if t.SlugField != "" {
 		return t.SlugField
 	}
-	return am.Normalize(t.Name) + "-" + t.GetShortID()
+	return hm.Normalize(t.Name) + "-" + t.GetShortID()
 }
 
 func (t *Tag) OptValue() string {
@@ -149,4 +147,3 @@ func (t *Tag) OptValue() string {
 func (t *Tag) OptLabel() string {
 	return t.Name
 }
-

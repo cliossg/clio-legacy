@@ -8,9 +8,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/adrianpk/clio/internal/am"
-	"github.com/adrianpk/clio/internal/feat/auth"
 	"github.com/google/uuid"
+	hm "github.com/hermesgen/hm"
+	"github.com/hermesgen/clio/internal/feat/auth"
 )
 
 const (
@@ -18,7 +18,7 @@ const (
 )
 
 type Seeder struct {
-	*am.JSONSeeder
+	*hm.JSONSeeder
 	repo Repo
 }
 
@@ -34,7 +34,7 @@ type SeedFile struct {
 
 func NewSeeder(assetsFS embed.FS, engine string, repo Repo) *Seeder {
 	return &Seeder{
-		JSONSeeder: am.NewJSONSeeder(ssgFeat, assetsFS, engine),
+		JSONSeeder: hm.NewJSONSeeder(ssgFeat, assetsFS, engine),
 		repo:       repo,
 	}
 }

@@ -8,14 +8,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/adrianpk/clio/internal/am"
-	feat "github.com/adrianpk/clio/internal/feat/ssg"
 	"github.com/google/uuid"
+	hm "github.com/hermesgen/hm"
+	feat "github.com/hermesgen/clio/internal/feat/ssg"
 )
 
 // ContentForm represents the form data for a content.
 type ContentForm struct {
-	*am.BaseForm
+	*hm.BaseForm
 
 	// Content fields
 	ID          string `json:"id"`
@@ -44,7 +44,7 @@ type ContentForm struct {
 // NewContentForm creates a new ContentForm from a request.
 func NewContentForm(r *http.Request) ContentForm {
 	return ContentForm{
-		BaseForm: am.NewBaseForm(r),
+		BaseForm: hm.NewBaseForm(r),
 	}
 }
 
@@ -207,7 +207,7 @@ func (f *ContentForm) Validate() {
 
 // LayoutForm represents the form for creating or updating a layout.
 type LayoutForm struct {
-	*am.BaseForm
+	*hm.BaseForm
 	ID          string `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
@@ -217,7 +217,7 @@ type LayoutForm struct {
 // NewLayoutForm creates a new LayoutForm.
 func NewLayoutForm(r *http.Request) LayoutForm {
 	return LayoutForm{
-		BaseForm: am.NewBaseForm(r),
+		BaseForm: hm.NewBaseForm(r),
 	}
 }
 
@@ -273,7 +273,7 @@ func (f *LayoutForm) Validate() {
 
 // SectionForm represents the form for creating or updating a section.
 type SectionForm struct {
-	*am.BaseForm
+	*hm.BaseForm
 	ID          string `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
@@ -286,7 +286,7 @@ type SectionForm struct {
 // NewSectionForm creates a new SectionForm.
 func NewSectionForm(r *http.Request) SectionForm {
 	return SectionForm{
-		BaseForm: am.NewBaseForm(r),
+		BaseForm: hm.NewBaseForm(r),
 	}
 }
 
@@ -331,7 +331,7 @@ func ToSectionForm(r *http.Request, section feat.Section) SectionForm {
 	form.Description = section.Description
 	form.Path = section.Path
 	form.LayoutID = section.LayoutID.String()
-	form.Header = "" // TODO: Get header via relationship
+	form.Header = ""     // TODO: Get header via relationship
 	form.BlogHeader = "" // TODO: Get blog header via relationship
 	return form
 }
@@ -355,7 +355,7 @@ func (f *SectionForm) Validate() {
 
 // TagForm represents the form data for a tag.
 type TagForm struct {
-	*am.BaseForm
+	*hm.BaseForm
 	ID   string `json:"id"`
 	Name string `json:"name"`
 }
@@ -363,7 +363,7 @@ type TagForm struct {
 // NewTagForm creates a new TagForm from a request.
 func NewTagForm(r *http.Request) TagForm {
 	return TagForm{
-		BaseForm: am.NewBaseForm(r),
+		BaseForm: hm.NewBaseForm(r),
 	}
 }
 
@@ -411,7 +411,7 @@ func (f *TagForm) Validate() {
 
 // ParamForm represents the form data for a param.
 type ParamForm struct {
-	*am.BaseForm
+	*hm.BaseForm
 	ID          string `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
@@ -422,7 +422,7 @@ type ParamForm struct {
 // NewParamForm creates a new ParamForm from a request.
 func NewParamForm(r *http.Request) ParamForm {
 	return ParamForm{
-		BaseForm: am.NewBaseForm(r),
+		BaseForm: hm.NewBaseForm(r),
 	}
 }
 

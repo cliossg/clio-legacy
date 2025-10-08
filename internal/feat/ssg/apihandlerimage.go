@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/adrianpk/clio/internal/am"
+	hm "github.com/hermesgen/hm"
 
 	"github.com/google/uuid"
 )
@@ -17,7 +17,7 @@ func (h *APIHandler) CreateImage(w http.ResponseWriter, r *http.Request) {
 	var err error
 	err = json.NewDecoder(r.Body).Decode(&image)
 	if err != nil {
-		h.Err(w, http.StatusBadRequest, am.ErrInvalidBody, err)
+		h.Err(w, http.StatusBadRequest, hm.ErrInvalidBody, err)
 		return
 	}
 
@@ -41,12 +41,12 @@ func (h *APIHandler) CreateImage(w http.ResponseWriter, r *http.Request) {
 
 	err = h.svc.CreateImage(r.Context(), &newImage)
 	if err != nil {
-		msg := fmt.Sprintf(am.ErrCannotCreateResource, resImageName)
+		msg := fmt.Sprintf(hm.ErrCannotCreateResource, resImageName)
 		h.Err(w, http.StatusInternalServerError, msg, err)
 		return
 	}
 
-	msg := fmt.Sprintf(am.MsgCreateItem, am.Cap(resImageName))
+	msg := fmt.Sprintf(hm.MsgCreateItem, hm.Cap(resImageName))
 	h.Created(w, msg, newImage)
 }
 
@@ -57,7 +57,7 @@ func (h *APIHandler) GetImage(w http.ResponseWriter, r *http.Request) {
 	var id uuid.UUID
 	id, err = h.ID(w, r)
 	if err != nil {
-		msg := fmt.Sprintf(am.ErrInvalidID, am.Cap(resImageName))
+		msg := fmt.Sprintf(hm.ErrInvalidID, hm.Cap(resImageName))
 		h.Err(w, http.StatusBadRequest, msg, err)
 		return
 	}
@@ -65,12 +65,12 @@ func (h *APIHandler) GetImage(w http.ResponseWriter, r *http.Request) {
 	var image Image
 	image, err = h.svc.GetImage(r.Context(), id)
 	if err != nil {
-		msg := fmt.Sprintf(am.ErrCannotGetResource, resImageName)
+		msg := fmt.Sprintf(hm.ErrCannotGetResource, resImageName)
 		h.Err(w, http.StatusInternalServerError, msg, err)
 		return
 	}
 
-	msg := fmt.Sprintf(am.MsgGetItem, am.Cap(resImageName))
+	msg := fmt.Sprintf(hm.MsgGetItem, hm.Cap(resImageName))
 	h.OK(w, msg, image)
 }
 
@@ -81,7 +81,7 @@ func (h *APIHandler) GetImageByShortID(w http.ResponseWriter, r *http.Request) {
 	var shortID string
 	shortID, err = h.Param(w, r, "short_id")
 	if err != nil {
-		msg := fmt.Sprintf("%s: %s", am.ErrInvalidParam, "short_id")
+		msg := fmt.Sprintf("%s: %s", hm.ErrInvalidParam, "short_id")
 		h.Err(w, http.StatusBadRequest, msg, err)
 		return
 	}
@@ -89,12 +89,12 @@ func (h *APIHandler) GetImageByShortID(w http.ResponseWriter, r *http.Request) {
 	var image Image
 	image, err = h.svc.GetImageByShortID(r.Context(), shortID)
 	if err != nil {
-		msg := fmt.Sprintf(am.ErrCannotGetResource, resImageName)
+		msg := fmt.Sprintf(hm.ErrCannotGetResource, resImageName)
 		h.Err(w, http.StatusInternalServerError, msg, err)
 		return
 	}
 
-	msg := fmt.Sprintf(am.MsgGetItem, am.Cap(resImageName))
+	msg := fmt.Sprintf(hm.MsgGetItem, hm.Cap(resImageName))
 	h.OK(w, msg, image)
 }
 
@@ -105,12 +105,12 @@ func (h *APIHandler) ListImages(w http.ResponseWriter, r *http.Request) {
 	var err error
 	images, err = h.svc.ListImages(r.Context())
 	if err != nil {
-		msg := fmt.Sprintf(am.ErrCannotGetResources, resImageName)
+		msg := fmt.Sprintf(hm.ErrCannotGetResources, resImageName)
 		h.Err(w, http.StatusInternalServerError, msg, err)
 		return
 	}
 
-	msg := fmt.Sprintf(am.MsgGetAllItems, am.Cap(resImageName))
+	msg := fmt.Sprintf(hm.MsgGetAllItems, hm.Cap(resImageName))
 	h.OK(w, msg, images)
 }
 
@@ -121,7 +121,7 @@ func (h *APIHandler) UpdateImage(w http.ResponseWriter, r *http.Request) {
 	var id uuid.UUID
 	id, err = h.ID(w, r)
 	if err != nil {
-		msg := fmt.Sprintf(am.ErrInvalidID, am.Cap(resImageName))
+		msg := fmt.Sprintf(hm.ErrInvalidID, hm.Cap(resImageName))
 		h.Err(w, http.StatusBadRequest, msg, err)
 		return
 	}
@@ -129,7 +129,7 @@ func (h *APIHandler) UpdateImage(w http.ResponseWriter, r *http.Request) {
 	var image Image
 	err = json.NewDecoder(r.Body).Decode(&image)
 	if err != nil {
-		h.Err(w, http.StatusBadRequest, am.ErrInvalidBody, err)
+		h.Err(w, http.StatusBadRequest, hm.ErrInvalidBody, err)
 		return
 	}
 
@@ -155,12 +155,12 @@ func (h *APIHandler) UpdateImage(w http.ResponseWriter, r *http.Request) {
 
 	err = h.svc.UpdateImage(r.Context(), &updatedImage)
 	if err != nil {
-		msg := fmt.Sprintf(am.ErrCannotUpdateResource, resImageName)
+		msg := fmt.Sprintf(hm.ErrCannotUpdateResource, resImageName)
 		h.Err(w, http.StatusInternalServerError, msg, err)
 		return
 	}
 
-	msg := fmt.Sprintf(am.MsgUpdateItem, am.Cap(resImageName))
+	msg := fmt.Sprintf(hm.MsgUpdateItem, hm.Cap(resImageName))
 	h.OK(w, msg, updatedImage)
 }
 
@@ -171,19 +171,19 @@ func (h *APIHandler) DeleteImage(w http.ResponseWriter, r *http.Request) {
 	var id uuid.UUID
 	id, err = h.ID(w, r)
 	if err != nil {
-		msg := fmt.Sprintf(am.ErrInvalidID, am.Cap(resImageName))
+		msg := fmt.Sprintf(hm.ErrInvalidID, hm.Cap(resImageName))
 		h.Err(w, http.StatusBadRequest, msg, err)
 		return
 	}
 
 	err = h.svc.DeleteImage(r.Context(), id)
 	if err != nil {
-		msg := fmt.Sprintf(am.ErrCannotDeleteResource, resImageName)
+		msg := fmt.Sprintf(hm.ErrCannotDeleteResource, resImageName)
 		h.Err(w, http.StatusInternalServerError, msg, err)
 		return
 	}
 
-	msg := fmt.Sprintf(am.MsgDeleteItem, am.Cap(resImageName))
+	msg := fmt.Sprintf(hm.MsgDeleteItem, hm.Cap(resImageName))
 	h.OK(w, msg, json.RawMessage("null"))
 }
 
@@ -194,7 +194,7 @@ func (h *APIHandler) CreateImageVariant(w http.ResponseWriter, r *http.Request) 
 	var err error
 	err = json.NewDecoder(r.Body).Decode(&variant)
 	if err != nil {
-		h.Err(w, http.StatusBadRequest, am.ErrInvalidBody, err)
+		h.Err(w, http.StatusBadRequest, hm.ErrInvalidBody, err)
 		return
 	}
 
@@ -212,12 +212,12 @@ func (h *APIHandler) CreateImageVariant(w http.ResponseWriter, r *http.Request) 
 
 	err = h.svc.CreateImageVariant(r.Context(), &newVariant)
 	if err != nil {
-		msg := fmt.Sprintf(am.ErrCannotCreateResource, resImageVariantName)
+		msg := fmt.Sprintf(hm.ErrCannotCreateResource, resImageVariantName)
 		h.Err(w, http.StatusInternalServerError, msg, err)
 		return
 	}
 
-	msg := fmt.Sprintf(am.MsgCreateItem, am.Cap(resImageVariantName))
+	msg := fmt.Sprintf(hm.MsgCreateItem, hm.Cap(resImageVariantName))
 	h.Created(w, msg, newVariant)
 }
 
@@ -228,7 +228,7 @@ func (h *APIHandler) GetImageVariant(w http.ResponseWriter, r *http.Request) {
 	var id uuid.UUID
 	id, err = h.ID(w, r)
 	if err != nil {
-		msg := fmt.Sprintf(am.ErrInvalidID, am.Cap(resImageVariantName))
+		msg := fmt.Sprintf(hm.ErrInvalidID, hm.Cap(resImageVariantName))
 		h.Err(w, http.StatusBadRequest, msg, err)
 		return
 	}
@@ -236,12 +236,12 @@ func (h *APIHandler) GetImageVariant(w http.ResponseWriter, r *http.Request) {
 	var variant ImageVariant
 	variant, err = h.svc.GetImageVariant(r.Context(), id)
 	if err != nil {
-		msg := fmt.Sprintf(am.ErrCannotGetResource, resImageVariantName)
+		msg := fmt.Sprintf(hm.ErrCannotGetResource, resImageVariantName)
 		h.Err(w, http.StatusInternalServerError, msg, err)
 		return
 	}
 
-	msg := fmt.Sprintf(am.MsgGetItem, am.Cap(resImageVariantName))
+	msg := fmt.Sprintf(hm.MsgGetItem, hm.Cap(resImageVariantName))
 	h.OK(w, msg, variant)
 }
 
@@ -252,14 +252,14 @@ func (h *APIHandler) ListImageVariantsByImageID(w http.ResponseWriter, r *http.R
 	var imageIDStr string
 	imageIDStr, err = h.Param(w, r, "image_id")
 	if err != nil {
-		msg := fmt.Sprintf(am.ErrInvalidID, am.Cap(resImageName))
+		msg := fmt.Sprintf(hm.ErrInvalidID, hm.Cap(resImageName))
 		h.Err(w, http.StatusBadRequest, msg, err)
 		return
 	}
 	var imageID uuid.UUID
 	imageID, err = uuid.Parse(imageIDStr)
 	if err != nil {
-		msg := fmt.Sprintf(am.ErrInvalidID, am.Cap(resImageName))
+		msg := fmt.Sprintf(hm.ErrInvalidID, hm.Cap(resImageName))
 		h.Err(w, http.StatusBadRequest, msg, err)
 		return
 	}
@@ -267,12 +267,12 @@ func (h *APIHandler) ListImageVariantsByImageID(w http.ResponseWriter, r *http.R
 	var variants []ImageVariant
 	variants, err = h.svc.ListImageVariantsByImageID(r.Context(), imageID)
 	if err != nil {
-		msg := fmt.Sprintf(am.ErrCannotGetResources, resImageVariantName)
+		msg := fmt.Sprintf(hm.ErrCannotGetResources, resImageVariantName)
 		h.Err(w, http.StatusInternalServerError, msg, err)
 		return
 	}
 
-	msg := fmt.Sprintf(am.MsgGetAllItems, am.Cap(resImageVariantName))
+	msg := fmt.Sprintf(hm.MsgGetAllItems, hm.Cap(resImageVariantName))
 	h.OK(w, msg, variants)
 }
 
@@ -283,7 +283,7 @@ func (h *APIHandler) UpdateImageVariant(w http.ResponseWriter, r *http.Request) 
 	var id uuid.UUID
 	id, err = h.ID(w, r)
 	if err != nil {
-		msg := fmt.Sprintf(am.ErrInvalidID, am.Cap(resImageVariantName))
+		msg := fmt.Sprintf(hm.ErrInvalidID, hm.Cap(resImageVariantName))
 		h.Err(w, http.StatusBadRequest, msg, err)
 		return
 	}
@@ -291,7 +291,7 @@ func (h *APIHandler) UpdateImageVariant(w http.ResponseWriter, r *http.Request) 
 	var variant ImageVariant
 	err = json.NewDecoder(r.Body).Decode(&variant)
 	if err != nil {
-		h.Err(w, http.StatusBadRequest, am.ErrInvalidBody, err)
+		h.Err(w, http.StatusBadRequest, hm.ErrInvalidBody, err)
 		return
 	}
 
@@ -311,12 +311,12 @@ func (h *APIHandler) UpdateImageVariant(w http.ResponseWriter, r *http.Request) 
 
 	err = h.svc.UpdateImageVariant(r.Context(), &updatedVariant)
 	if err != nil {
-		msg := fmt.Sprintf(am.ErrCannotUpdateResource, resImageVariantName)
+		msg := fmt.Sprintf(hm.ErrCannotUpdateResource, resImageVariantName)
 		h.Err(w, http.StatusInternalServerError, msg, err)
 		return
 	}
 
-	msg := fmt.Sprintf(am.MsgUpdateItem, am.Cap(resImageVariantName))
+	msg := fmt.Sprintf(hm.MsgUpdateItem, hm.Cap(resImageVariantName))
 	h.OK(w, msg, updatedVariant)
 }
 
@@ -327,18 +327,18 @@ func (h *APIHandler) DeleteImageVariant(w http.ResponseWriter, r *http.Request) 
 	var id uuid.UUID
 	id, err = h.ID(w, r)
 	if err != nil {
-		msg := fmt.Sprintf(am.ErrInvalidID, am.Cap(resImageVariantName))
+		msg := fmt.Sprintf(hm.ErrInvalidID, hm.Cap(resImageVariantName))
 		h.Err(w, http.StatusBadRequest, msg, err)
 		return
 	}
 
 	err = h.svc.DeleteImageVariant(r.Context(), id)
 	if err != nil {
-		msg := fmt.Sprintf(am.ErrCannotDeleteResource, resImageVariantName)
+		msg := fmt.Sprintf(hm.ErrCannotDeleteResource, resImageVariantName)
 		h.Err(w, http.StatusInternalServerError, msg, err)
 		return
 	}
 
-	msg := fmt.Sprintf(am.MsgDeleteItem, am.Cap(resImageVariantName))
+	msg := fmt.Sprintf(hm.MsgDeleteItem, hm.Cap(resImageVariantName))
 	h.OK(w, msg, json.RawMessage("null"))
 }

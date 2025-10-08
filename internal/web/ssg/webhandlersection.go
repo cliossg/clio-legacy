@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/adrianpk/clio/internal/am"
-	feat "github.com/adrianpk/clio/internal/feat/ssg"
 	"github.com/google/uuid"
+	hm "github.com/hermesgen/hm"
+	feat "github.com/hermesgen/clio/internal/feat/ssg"
 )
 
 func (h *WebHandler) NewSection(w http.ResponseWriter, r *http.Request) {
@@ -46,7 +46,7 @@ func (h *WebHandler) CreateSection(w http.ResponseWriter, r *http.Request) {
 	createdSection := ToWebSection(response.Section)
 
 	h.FlashInfo(w, r, "Section created")
-	h.Redir(w, r, am.EditPath(&Section{}, createdSection.GetID()), http.StatusSeeOther)
+	h.Redir(w, r, hm.EditPath(&Section{}, createdSection.GetID()), http.StatusSeeOther)
 }
 
 func (h *WebHandler) EditSection(w http.ResponseWriter, r *http.Request) {
@@ -100,7 +100,7 @@ func (h *WebHandler) UpdateSection(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.FlashInfo(w, r, "Section updated successfully")
-	h.Redir(w, r, am.ListPath(&Section{}), http.StatusSeeOther)
+	h.Redir(w, r, hm.ListPath(&Section{}), http.StatusSeeOther)
 }
 
 func (h *WebHandler) ListSections(w http.ResponseWriter, r *http.Request) {
@@ -116,20 +116,20 @@ func (h *WebHandler) ListSections(w http.ResponseWriter, r *http.Request) {
 	}
 	sections := ToWebSections(response.Sections)
 
-	page := am.NewPage(r, sections)
+	page := hm.NewPage(r, sections)
 	page.Form.SetAction(ssgPath)
 	menu := page.NewMenu(ssgPath)
 	menu.AddNewItem(&Section{})
 
 	tmpl, err := h.Tmpl().Get(ssgFeat, "list-sections")
 	if err != nil {
-		h.Err(w, err, am.ErrTemplateNotFound, http.StatusInternalServerError)
+		h.Err(w, err, hm.ErrTemplateNotFound, http.StatusInternalServerError)
 		return
 	}
 
 	var buf bytes.Buffer
 	if err := tmpl.Execute(&buf, page); err != nil {
-		h.Err(w, err, am.ErrCannotRenderTemplate, http.StatusInternalServerError)
+		h.Err(w, err, hm.ErrCannotRenderTemplate, http.StatusInternalServerError)
 		return
 	}
 
@@ -156,7 +156,7 @@ func (h *WebHandler) ShowSection(w http.ResponseWriter, r *http.Request) {
 	}
 	section := ToWebSection(response.Section)
 
-	page := am.NewPage(r, section)
+	page := hm.NewPage(r, section)
 	page.Name = "Show Section"
 
 	menu := page.NewMenu(ssgPath)
@@ -164,13 +164,13 @@ func (h *WebHandler) ShowSection(w http.ResponseWriter, r *http.Request) {
 
 	tmpl, err := h.Tmpl().Get(ssgFeat, "show-section")
 	if err != nil {
-		h.Err(w, err, am.ErrTemplateNotFound, http.StatusInternalServerError)
+		h.Err(w, err, hm.ErrTemplateNotFound, http.StatusInternalServerError)
 		return
 	}
 
 	var buf bytes.Buffer
 	if err := tmpl.Execute(&buf, page); err != nil {
-		h.Err(w, err, am.ErrCannotRenderTemplate, http.StatusInternalServerError)
+		h.Err(w, err, hm.ErrCannotRenderTemplate, http.StatusInternalServerError)
 		return
 	}
 
@@ -198,7 +198,7 @@ func (h *WebHandler) DeleteSection(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.FlashInfo(w, r, "Section deleted successfully")
-	h.Redir(w, r, am.ListPath(&Section{}), http.StatusSeeOther)
+	h.Redir(w, r, hm.ListPath(&Section{}), http.StatusSeeOther)
 }
 
 func (h *WebHandler) renderSectionForm(w http.ResponseWriter, r *http.Request, form SectionForm, section Section, errorMessage string, statusCode int) {
@@ -212,19 +212,19 @@ func (h *WebHandler) renderSectionForm(w http.ResponseWriter, r *http.Request, f
 	}
 	layouts := response.Layouts
 
-	page := am.NewPage(r, section)
+	page := hm.NewPage(r, section)
 	page.SetForm(&form)
-	page.AddSelect("layouts", am.ToSelectOpt(am.ToPtrSlice(layouts)))
+	page.AddSelect("layouts", hm.ToSelectOpt(hm.ToPtrSlice(layouts)))
 
 	if section.IsZero() {
 		page.Name = "New Section"
 		page.IsNew = true
-		page.Form.SetAction(am.CreatePath(&Section{}))
+		page.Form.SetAction(hm.CreatePath(&Section{}))
 		page.Form.SetSubmitButtonText("Create")
 	} else {
 		page.Name = "Edit Section"
 		page.IsNew = false
-		page.Form.SetAction(am.UpdatePath(&Section{}))
+		page.Form.SetAction(hm.UpdatePath(&Section{}))
 		page.Form.SetSubmitButtonText("Update")
 	}
 
@@ -233,7 +233,7 @@ func (h *WebHandler) renderSectionForm(w http.ResponseWriter, r *http.Request, f
 
 	tmpl, err := h.Tmpl().Get(ssgFeat, "new-section")
 	if err != nil {
-		h.Err(w, err, am.ErrTemplateNotFound, http.StatusInternalServerError)
+		h.Err(w, err, hm.ErrTemplateNotFound, http.StatusInternalServerError)
 		return
 	}
 
@@ -242,7 +242,7 @@ func (h *WebHandler) renderSectionForm(w http.ResponseWriter, r *http.Request, f
 	var buf bytes.Buffer
 	err = tmpl.Execute(&buf, page)
 	if err != nil {
-		h.Err(w, err, am.ErrCannotRenderTemplate, http.StatusInternalServerError)
+		h.Err(w, err, hm.ErrCannotRenderTemplate, http.StatusInternalServerError)
 		return
 	}
 

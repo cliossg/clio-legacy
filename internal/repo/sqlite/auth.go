@@ -5,8 +5,8 @@ import (
 	"database/sql"
 	"errors"
 
-	"github.com/adrianpk/clio/internal/feat/auth"
 	"github.com/google/uuid"
+	"github.com/hermesgen/clio/internal/feat/auth"
 )
 
 var (

@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/adrianpk/clio/internal/am"
+	hm "github.com/hermesgen/hm"
 )
 
 // PublisherConfig holds all configuration needed for a publishing operation.
@@ -16,8 +16,8 @@ type PublisherConfig struct {
 	RepoURL      string // Full URL to the GitHub repository
 	Branch       string // Target branch for publishing (e.g., "gh-pages")
 	PagesSubdir  string // Subdirectory within the repo (e.g., "" for root, "docs")
-	Auth         am.GitAuth
-	CommitAuthor am.GitCommit
+	Auth         hm.GitAuth
+	CommitAuthor hm.GitCommit
 }
 
 // Publisher defines the interface for orchestrating the publishing process.
@@ -42,22 +42,21 @@ type PlanReport struct {
 }
 
 type publisher struct {
-	am.Core
-	gitClient am.GitClient
+	hm.Core
+	gitClient hm.GitClient
 }
 
-
 // NewPublisherWithParams creates a Publisher with XParams.
-func NewPublisher(gitClient am.GitClient, params am.XParams) *publisher {
+func NewPublisher(gitClient hm.GitClient, params hm.XParams) *publisher {
 	return &publisher{
-		Core:      am.NewCoreWithParams("ssg-pub", params),
+		Core:      hm.NewCoreWithParams("ssg-pub", params),
 		gitClient: gitClient,
 	}
 }
 
 // Validate implementation
 func (p *publisher) Validate(cfg PublisherConfig) error {
-	// NOTE: See if we can use am.Validator approach here
+	// NOTE: See if we can use hm.Validator approach here
 	if cfg.RepoURL == "" {
 		return fmt.Errorf("repo URL cannot be empty")
 	}

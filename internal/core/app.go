@@ -6,15 +6,15 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/adrianpk/clio/internal/am"
+	hm "github.com/hermesgen/hm"
 )
 
 type App struct {
-	*am.App
+	*hm.App
 }
 
-func NewApp(name, version string, fs embed.FS, params am.XParams) *App {
-	core := am.NewAppWithParams(name, version, fs, params)
+func NewApp(name, version string, fs embed.FS, params hm.XParams) *App {
+	core := hm.NewAppWithParams(name, version, fs, params)
 	app := &App{
 		App: core,
 	}
@@ -41,5 +41,5 @@ func (app *App) Setup(ctx context.Context) error {
 
 func (app *App) setupPluralization() {
 	// NOTE: This should be externally configurable in the future.
-	am.AddUncountableRule("content")
+	hm.AddUncountableRule("content")
 }

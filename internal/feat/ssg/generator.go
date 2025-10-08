@@ -7,15 +7,15 @@ import (
 
 	"gopkg.in/yaml.v2"
 
-	"github.com/adrianpk/clio/internal/am"
+	hm "github.com/hermesgen/hm"
 )
 
 type Generator struct {
-	am.Core
+	hm.Core
 }
 
-func NewGenerator(params am.XParams) *Generator {
-	core := am.NewCoreWithParams("ssg-generator", params)
+func NewGenerator(params hm.XParams) *Generator {
+	core := hm.NewCoreWithParams("ssg-generator", params)
 	g := &Generator{
 		Core: core,
 	}
@@ -25,7 +25,7 @@ func NewGenerator(params am.XParams) *Generator {
 func (g *Generator) Generate(contents []Content) error {
 	g.Log().Info("Starting markdown generation")
 
-	basePath := g.Cfg().StrValOrDef(am.Key.SSGMarkdownPath, "_workspace/documents/markdown")
+	basePath := g.Cfg().StrValOrDef(hm.Key.SSGMarkdownPath, "_workspace/documents/markdown")
 
 	for _, content := range contents {
 		fileName := content.Slug() + ".md"

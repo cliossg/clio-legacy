@@ -5,8 +5,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/adrianpk/clio/internal/am"
-	feat "github.com/adrianpk/clio/internal/feat/ssg"
+	hm "github.com/hermesgen/hm"
+	feat "github.com/hermesgen/clio/internal/feat/ssg"
 )
 
 const (
@@ -43,7 +43,7 @@ func NewImageVariant(imageID uuid.UUID, name, path, url, mimeType string, size i
 
 // Type returns the type of the entity.
 func (iv *ImageVariant) Type() string {
-	return am.DefaultType(imageVariantType)
+	return hm.DefaultType(imageVariantType)
 }
 
 // GetID returns the unique identifier of the entity.
@@ -53,7 +53,7 @@ func (iv *ImageVariant) GetID() uuid.UUID {
 
 // GenID delegates to the functional helper.
 func (iv *ImageVariant) GenID() {
-	am.GenID(iv)
+	hm.GenID(iv)
 }
 
 // SetID sets the unique identifier of the entity.
@@ -71,7 +71,7 @@ func (iv *ImageVariant) GetShortID() string {
 
 // GenShortID delegates to the functional helper.
 func (iv *ImageVariant) GenShortID() {
-	am.GenShortID(iv)
+	hm.GenShortID(iv)
 }
 
 // SetShortID sets the short ID of the entity.
@@ -84,7 +84,7 @@ func (iv *ImageVariant) SetShortID(shortID string, force ...bool) {
 
 // TypeID returns a universal identifier for a specific model instance.
 func (iv *ImageVariant) TypeID() string {
-	return am.Normalize(iv.Type()) + "-" + iv.GetShortID()
+	return hm.Normalize(iv.Type()) + "-" + iv.GetShortID()
 }
 
 // IsZero returns true if the ImageVariant is uninitialized.
@@ -94,7 +94,7 @@ func (iv *ImageVariant) IsZero() bool {
 
 // Slug returns a human-readable, URL-friendly string identifier for the entity.
 func (iv *ImageVariant) Slug() string {
-	return am.Normalize(iv.Name) + "-" + iv.GetShortID()
+	return hm.Normalize(iv.Name) + "-" + iv.GetShortID()
 }
 
 func (iv *ImageVariant) OptValue() string {
@@ -137,7 +137,7 @@ func ToWebImageVariants(featImageVariants []feat.ImageVariant) []ImageVariant {
 
 // ImageVariantForm represents the form data for an ImageVariant.
 type ImageVariantForm struct {
-	*am.BaseForm        // Embed BaseForm
+	*hm.BaseForm        // Embed BaseForm
 	ID           string `json:"id"`
 	ImageID      string `json:"imageID"`
 	Name         string `json:"name"` // Maps to feat.ImageVariant.Kind
@@ -146,7 +146,7 @@ type ImageVariantForm struct {
 // NewImageVariantForm creates a new ImageVariantForm.
 func NewImageVariantForm(r *http.Request) ImageVariantForm {
 	return ImageVariantForm{
-		BaseForm: am.NewBaseForm(r),
+		BaseForm: hm.NewBaseForm(r),
 	}
 }
 
@@ -173,7 +173,7 @@ func ToImageVariantForm(r *http.Request, imageVariant ImageVariant) ImageVariant
 // Validate validates the ImageVariantForm.
 func (f *ImageVariantForm) Validate() {
 	// Reset validation errors
-	f.BaseForm.SetValidation(&am.Validation{})
+	f.BaseForm.SetValidation(&hm.Validation{})
 
 	validation := f.BaseForm.Validation() // Get the pointer to validation
 

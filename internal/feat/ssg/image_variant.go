@@ -3,8 +3,8 @@ package ssg
 import (
 	"time"
 
-	"github.com/adrianpk/clio/internal/am"
 	"github.com/google/uuid"
+	hm "github.com/hermesgen/hm"
 )
 
 const (
@@ -58,7 +58,7 @@ func (iv ImageVariant) GetID() uuid.UUID {
 
 // GenID delegates to the functional helper.
 func (iv *ImageVariant) GenID() {
-	am.GenID(iv)
+	hm.GenID(iv)
 }
 
 // SetID sets the unique identifier of the entity.
@@ -76,7 +76,7 @@ func (iv *ImageVariant) GetShortID() string {
 
 // GenShortID delegates to the functional helper.
 func (iv *ImageVariant) GenShortID() {
-	am.GenShortID(iv)
+	hm.GenShortID(iv)
 }
 
 // SetShortID sets the short ID of the entity.
@@ -87,15 +87,14 @@ func (iv *ImageVariant) SetShortID(shortID string, force ...bool) {
 	}
 }
 
-
 // GenCreateValues delegates to the functional helper.
 func (iv *ImageVariant) GenCreateValues(userID ...uuid.UUID) {
-	am.SetCreateValues(iv, userID...)
+	hm.SetCreateValues(iv, userID...)
 }
 
 // GenUpdateValues delegates to the functional helper.
 func (iv *ImageVariant) GenUpdateValues(userID ...uuid.UUID) {
-	am.SetUpdateValues(iv, userID...)
+	hm.SetUpdateValues(iv, userID...)
 }
 
 // GetCreatedBy returns the UUID of the user who created the entity.
@@ -145,5 +144,5 @@ func (iv *ImageVariant) IsZero() bool {
 
 // Slug returns a slug for the image variant.
 func (iv *ImageVariant) Slug() string {
-	return am.Normalize(iv.Kind) + "-" + iv.GetShortID()
+	return hm.Normalize(iv.Kind) + "-" + iv.GetShortID()
 }

@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/adrianpk/clio/internal/am"
+	hm "github.com/hermesgen/hm"
 )
 
 // CLEANUP_ORPHANED_IMAGES controls whether to automatically clean up orphaned images
@@ -38,16 +38,16 @@ type ImageProcessResult struct {
 
 // ImageManager handles all image-related operations
 type ImageManager struct {
-	am.Core
+	hm.Core
 	baseImagePath string // Base path for all images (e.g., "./assets/images")
 }
 
 // NewImageManager creates a new ImageManager instance
 
 // NewImageManagerWithParams creates an ImageManager with XParams.
-func NewImageManager(params am.XParams) *ImageManager {
-	core := am.NewCoreWithParams("image-manager", params)
-	imagesPath := core.Cfg().StrValOrDef(am.Key.SSGImagesPath, "_workspace/documents/assets/images")
+func NewImageManager(params hm.XParams) *ImageManager {
+	core := hm.NewCoreWithParams("image-manager", params)
+	imagesPath := core.Cfg().StrValOrDef(hm.Key.SSGImagesPath, "_workspace/documents/assets/images")
 	return &ImageManager{
 		Core:          core,
 		baseImagePath: imagesPath,

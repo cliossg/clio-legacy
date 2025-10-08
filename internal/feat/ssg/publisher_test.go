@@ -9,9 +9,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/adrianpk/clio/internal/am"
-	"github.com/adrianpk/clio/internal/fake"
-	"github.com/adrianpk/clio/internal/feat/ssg"
+	hm "github.com/hermesgen/hm"
+	"github.com/hermesgen/clio/internal/fake"
+	"github.com/hermesgen/clio/internal/feat/ssg"
 )
 
 func TestPublisherPublishFakeClient(t *testing.T) {
@@ -34,8 +34,8 @@ func TestPublisherPublishFakeClient(t *testing.T) {
 				RepoURL:     "https://github.com/test/repo.git",
 				Branch:      "gh-pages",
 				PagesSubdir: "",
-				Auth:        am.GitAuth{Method: am.AuthToken, Token: "test-token"},
-				CommitAuthor: am.GitCommit{
+				Auth:        hm.GitAuth{Method: hm.AuthToken, Token: "test-token"},
+				CommitAuthor: hm.GitCommit{
 					UserName:  "Test User",
 					UserEmail: "test@example.com",
 					Message:   "Test commit",
@@ -46,7 +46,7 @@ func TestPublisherPublishFakeClient(t *testing.T) {
 				"css/style.css": "body { color: red; }",
 			},
 			gitClient: &fake.GithubClient{
-				CloneFn: func(ctx context.Context, repoURL, localPath string, auth am.GitAuth, env []string) error {
+				CloneFn: func(ctx context.Context, repoURL, localPath string, auth hm.GitAuth, env []string) error {
 					if err := os.MkdirAll(localPath, 0755); err != nil {
 						return err
 					}
@@ -54,10 +54,10 @@ func TestPublisherPublishFakeClient(t *testing.T) {
 				},
 				CheckoutFn: func(ctx context.Context, localRepoPath, branch string, create bool, env []string) error { return nil },
 				AddFn:      func(ctx context.Context, localRepoPath, pathspec string, env []string) error { return nil },
-				CommitFn: func(ctx context.Context, localRepoPath string, commit am.GitCommit, env []string) (string, error) {
+				CommitFn: func(ctx context.Context, localRepoPath string, commit hm.GitCommit, env []string) (string, error) {
 					return "fake-hash", nil
 				},
-				PushFn: func(ctx context.Context, localRepoPath string, auth am.GitAuth, remote, branch string, env []string) error {
+				PushFn: func(ctx context.Context, localRepoPath string, auth hm.GitAuth, remote, branch string, env []string) error {
 					return nil
 				},
 			},
@@ -74,8 +74,8 @@ func TestPublisherPublishFakeClient(t *testing.T) {
 				RepoURL:     "https://github.com/test/repo.git",
 				Branch:      "gh-pages",
 				PagesSubdir: "",
-				Auth:        am.GitAuth{Method: am.AuthToken, Token: "test-token"},
-				CommitAuthor: am.GitCommit{
+				Auth:        hm.GitAuth{Method: hm.AuthToken, Token: "test-token"},
+				CommitAuthor: hm.GitCommit{
 					UserName:  "Test User",
 					UserEmail: "test@example.com",
 					Message:   "Test commit",
@@ -85,7 +85,7 @@ func TestPublisherPublishFakeClient(t *testing.T) {
 				"index.html": "<html><body>Hello</body></html>",
 			},
 			gitClient: &fake.GithubClient{
-				CloneFn: func(ctx context.Context, repoURL, localPath string, auth am.GitAuth, env []string) error {
+				CloneFn: func(ctx context.Context, repoURL, localPath string, auth hm.GitAuth, env []string) error {
 					return errors.New("clone error")
 				},
 			},
@@ -117,7 +117,7 @@ func TestPublisherPublishFakeClient(t *testing.T) {
 				}
 			}
 
-			publisher := ssg.NewPublisher(tt.gitClient, am.WithLog(am.NewLogger("debug")))
+			publisher := ssg.NewPublisher(tt.gitClient, hm.WithLog(hm.NewLogger("debug")))
 
 			_, err = publisher.Publish(context.Background(), tt.config, sourceDir)
 

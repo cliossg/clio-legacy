@@ -3,8 +3,8 @@ package ssg
 import (
 	"github.com/google/uuid"
 
-	"github.com/adrianpk/clio/internal/am"
-	feat "github.com/adrianpk/clio/internal/feat/ssg"
+	hm "github.com/hermesgen/hm"
+	feat "github.com/hermesgen/clio/internal/feat/ssg"
 )
 
 const (
@@ -38,7 +38,7 @@ func NewSection(name, description, path string, layoutID uuid.UUID) Section {
 
 // Type returns the type of the entity.
 func (s *Section) Type() string {
-	return am.DefaultType(sectionType)
+	return hm.DefaultType(sectionType)
 }
 
 // GetID returns the unique identifier of the entity.
@@ -48,7 +48,7 @@ func (s *Section) GetID() uuid.UUID {
 
 // GenID delegates to the functional helper.
 func (s *Section) GenID() {
-	am.GenID(s)
+	hm.GenID(s)
 }
 
 // SetID sets the unique identifier of the entity.
@@ -66,7 +66,7 @@ func (s *Section) GetShortID() string {
 
 // GenShortID delegates to the functional helper.
 func (s *Section) GenShortID() {
-	am.GenShortID(s)
+	hm.GenShortID(s)
 }
 
 // SetShortID sets the short ID of the entity.
@@ -79,7 +79,7 @@ func (s *Section) SetShortID(shortID string, force ...bool) {
 
 // TypeID returns a universal identifier for a specific model instance.
 func (s *Section) TypeID() string {
-	return am.Normalize(s.Type()) + "-" + s.GetShortID()
+	return hm.Normalize(s.Type()) + "-" + s.GetShortID()
 }
 
 // IsZero returns true if the Section is uninitialized.
@@ -89,7 +89,7 @@ func (s *Section) IsZero() bool {
 
 // Slug returns a human-readable, URL-friendly string identifier for the entity.
 func (s *Section) Slug() string {
-	return am.Normalize(s.Name) + "-" + s.GetShortID()
+	return hm.Normalize(s.Name) + "-" + s.GetShortID()
 }
 
 func (s *Section) OptValue() string {

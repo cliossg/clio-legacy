@@ -5,9 +5,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/adrianpk/clio/internal/am"
+	hm "github.com/hermesgen/hm"
 )
-
 
 type Meta struct {
 	ID              uuid.UUID `json:"id" db:"id"`
@@ -40,13 +39,12 @@ func (m *Meta) Type() string {
 	return "meta"
 }
 
-
 func (m *Meta) GetID() uuid.UUID {
 	return m.ID
 }
 
 func (m *Meta) GenID() {
-	am.GenID(m)
+	hm.GenID(m)
 }
 
 func (m *Meta) SetID(id uuid.UUID, force ...bool) {
@@ -61,7 +59,7 @@ func (m *Meta) GetShortID() string {
 }
 
 func (m *Meta) GenShortID() {
-	am.GenShortID(m)
+	hm.GenShortID(m)
 }
 
 func (m *Meta) SetShortID(shortID string, force ...bool) {
@@ -71,13 +69,12 @@ func (m *Meta) SetShortID(shortID string, force ...bool) {
 	}
 }
 
-
 func (m *Meta) GenCreateValues(userID ...uuid.UUID) {
-	am.SetCreateValues(m, userID...)
+	hm.SetCreateValues(m, userID...)
 }
 
 func (m *Meta) GenUpdateValues(userID ...uuid.UUID) {
-	am.SetUpdateValues(m, userID...)
+	hm.SetUpdateValues(m, userID...)
 }
 
 func (m *Meta) GetCreatedBy() uuid.UUID {
@@ -119,4 +116,3 @@ func (m *Meta) IsZero() bool {
 func (m *Meta) Slug() string {
 	return m.GetShortID()
 }
-

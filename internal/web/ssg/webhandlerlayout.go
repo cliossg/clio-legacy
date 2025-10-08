@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/adrianpk/clio/internal/am"
-	feat "github.com/adrianpk/clio/internal/feat/ssg"
+	hm "github.com/hermesgen/hm"
+	feat "github.com/hermesgen/clio/internal/feat/ssg"
 )
 
 func (h *WebHandler) NewLayout(w http.ResponseWriter, r *http.Request) {
@@ -45,7 +45,7 @@ func (h *WebHandler) CreateLayout(w http.ResponseWriter, r *http.Request) {
 	createdLayout := ToWebLayout(response.Layout)
 
 	h.FlashInfo(w, r, "Layout created")
-	h.Redir(w, r, am.EditPath(&Layout{}, createdLayout.GetID()), http.StatusSeeOther)
+	h.Redir(w, r, hm.EditPath(&Layout{}, createdLayout.GetID()), http.StatusSeeOther)
 }
 
 func (h *WebHandler) EditLayout(w http.ResponseWriter, r *http.Request) {
@@ -99,7 +99,7 @@ func (h *WebHandler) UpdateLayout(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.FlashInfo(w, r, "Layout updated successfully")
-	h.Redir(w, r, am.ListPath(&Layout{}), http.StatusSeeOther)
+	h.Redir(w, r, hm.ListPath(&Layout{}), http.StatusSeeOther)
 }
 
 func (h *WebHandler) ListLayouts(w http.ResponseWriter, r *http.Request) {
@@ -115,20 +115,20 @@ func (h *WebHandler) ListLayouts(w http.ResponseWriter, r *http.Request) {
 	}
 	layouts := ToWebLayouts(response.Layouts)
 
-	page := am.NewPage(r, layouts)
+	page := hm.NewPage(r, layouts)
 	page.Form.SetAction(ssgPath)
 	menu := page.NewMenu(ssgPath)
 	menu.AddNewItem(&Layout{})
 
 	tmpl, err := h.Tmpl().Get(ssgFeat, "list-layouts")
 	if err != nil {
-		h.Err(w, err, am.ErrTemplateNotFound, http.StatusInternalServerError)
+		h.Err(w, err, hm.ErrTemplateNotFound, http.StatusInternalServerError)
 		return
 	}
 
 	var buf bytes.Buffer
 	if err := tmpl.Execute(&buf, page); err != nil {
-		h.Err(w, err, am.ErrCannotRenderTemplate, http.StatusInternalServerError)
+		h.Err(w, err, hm.ErrCannotRenderTemplate, http.StatusInternalServerError)
 		return
 	}
 
@@ -157,7 +157,7 @@ func (h *WebHandler) ShowLayout(w http.ResponseWriter, r *http.Request) {
 
 	layout := ToWebLayout(response.Layout)
 
-	page := am.NewPage(r, layout)
+	page := hm.NewPage(r, layout)
 	page.Name = "Show Layout"
 
 	menu := page.NewMenu(ssgPath)
@@ -165,13 +165,13 @@ func (h *WebHandler) ShowLayout(w http.ResponseWriter, r *http.Request) {
 
 	tmpl, err := h.Tmpl().Get(ssgFeat, "show-layout")
 	if err != nil {
-		h.Err(w, err, am.ErrTemplateNotFound, http.StatusInternalServerError)
+		h.Err(w, err, hm.ErrTemplateNotFound, http.StatusInternalServerError)
 		return
 	}
 
 	var buf bytes.Buffer
 	if err := tmpl.Execute(&buf, page); err != nil {
-		h.Err(w, err, am.ErrCannotRenderTemplate, http.StatusInternalServerError)
+		h.Err(w, err, hm.ErrCannotRenderTemplate, http.StatusInternalServerError)
 		return
 	}
 
@@ -199,22 +199,22 @@ func (h *WebHandler) DeleteLayout(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.FlashInfo(w, r, "Layout deleted successfully")
-	h.Redir(w, r, am.ListPath(&Layout{}), http.StatusSeeOther)
+	h.Redir(w, r, hm.ListPath(&Layout{}), http.StatusSeeOther)
 }
 
 func (h *WebHandler) renderLayoutForm(w http.ResponseWriter, r *http.Request, form LayoutForm, layout Layout, errorMessage string, statusCode int) {
-	page := am.NewPage(r, layout)
+	page := hm.NewPage(r, layout)
 	page.SetForm(&form)
 
 	if layout.IsZero() {
 		page.Name = "New Layout"
 		page.IsNew = true
-		page.Form.SetAction(am.CreatePath(&Layout{}))
+		page.Form.SetAction(hm.CreatePath(&Layout{}))
 		page.Form.SetSubmitButtonText("Create")
 	} else {
 		page.Name = "Edit Layout"
 		page.IsNew = false
-		page.Form.SetAction(am.UpdatePath(&Layout{}))
+		page.Form.SetAction(hm.UpdatePath(&Layout{}))
 		page.Form.SetSubmitButtonText("Update")
 	}
 
@@ -223,7 +223,7 @@ func (h *WebHandler) renderLayoutForm(w http.ResponseWriter, r *http.Request, fo
 
 	tmpl, err := h.Tmpl().Get(ssgFeat, "new-layout")
 	if err != nil {
-		h.Err(w, err, am.ErrTemplateNotFound, http.StatusInternalServerError)
+		h.Err(w, err, hm.ErrTemplateNotFound, http.StatusInternalServerError)
 		return
 	}
 
@@ -232,7 +232,7 @@ func (h *WebHandler) renderLayoutForm(w http.ResponseWriter, r *http.Request, fo
 	var buf bytes.Buffer
 	err = tmpl.Execute(&buf, page)
 	if err != nil {
-		h.Err(w, err, am.ErrCannotRenderTemplate, http.StatusInternalServerError)
+		h.Err(w, err, hm.ErrCannotRenderTemplate, http.StatusInternalServerError)
 		return
 	}
 

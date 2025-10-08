@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/adrianpk/clio/internal/am"
-	"github.com/adrianpk/clio/internal/core"
+	hm "github.com/hermesgen/hm"
+	"github.com/hermesgen/clio/internal/core"
 )
 
 func TestWorkspaceSetup(t *testing.T) {
@@ -40,36 +40,36 @@ func TestWorkspaceSetup(t *testing.T) {
 			name: "dev mode",
 			env:  "dev",
 			expectedPaths: map[string]string{
-				am.Key.DBSQLiteDSN:      "file:" + filepath.Join(tempDir, "_workspace", "db", "clio.db") + "?cache=shared&mode=rwc",
-				am.Key.SSGWorkspacePath: filepath.Join(tempDir, "_workspace"),
-				am.Key.SSGDocsPath:      filepath.Join(tempDir, "_workspace", "documents"),
-				am.Key.SSGMarkdownPath:  filepath.Join(tempDir, "_workspace", "documents", "markdown"),
-				am.Key.SSGHTMLPath:      filepath.Join(tempDir, "_workspace", "documents", "html"),
-				am.Key.SSGAssetsPath:    filepath.Join(tempDir, "_workspace", "documents", "assets"),
-				am.Key.SSGImagesPath:    filepath.Join(tempDir, "_workspace", "documents", "assets", "images"),
+				hm.Key.DBSQLiteDSN:      "file:" + filepath.Join(tempDir, "_workspace", "db", "clio.db") + "?cache=shared&mode=rwc",
+				hm.Key.SSGWorkspacePath: filepath.Join(tempDir, "_workspace"),
+				hm.Key.SSGDocsPath:      filepath.Join(tempDir, "_workspace", "documents"),
+				hm.Key.SSGMarkdownPath:  filepath.Join(tempDir, "_workspace", "documents", "markdown"),
+				hm.Key.SSGHTMLPath:      filepath.Join(tempDir, "_workspace", "documents", "html"),
+				hm.Key.SSGAssetsPath:    filepath.Join(tempDir, "_workspace", "documents", "assets"),
+				hm.Key.SSGImagesPath:    filepath.Join(tempDir, "_workspace", "documents", "assets", "images"),
 			},
 		},
 		{
 			name: "prod mode",
 			env:  "prod",
 			expectedPaths: map[string]string{
-				am.Key.SSGWorkspacePath: filepath.Join(homeDir, ".clio"),
-				am.Key.SSGDocsPath:      filepath.Join(homeDir, "Documents", "Clio"),
-				am.Key.SSGMarkdownPath:  filepath.Join(homeDir, "Documents", "Clio", "markdown"),
-				am.Key.SSGHTMLPath:      filepath.Join(homeDir, "Documents", "Clio", "html"),
-				am.Key.SSGAssetsPath:    filepath.Join(homeDir, "Documents", "Clio", "assets"),
-				am.Key.SSGImagesPath:    filepath.Join(homeDir, "Documents", "Clio", "assets", "images"),
+				hm.Key.SSGWorkspacePath: filepath.Join(homeDir, ".clio"),
+				hm.Key.SSGDocsPath:      filepath.Join(homeDir, "Documents", "Clio"),
+				hm.Key.SSGMarkdownPath:  filepath.Join(homeDir, "Documents", "Clio", "markdown"),
+				hm.Key.SSGHTMLPath:      filepath.Join(homeDir, "Documents", "Clio", "html"),
+				hm.Key.SSGAssetsPath:    filepath.Join(homeDir, "Documents", "Clio", "assets"),
+				hm.Key.SSGImagesPath:    filepath.Join(homeDir, "Documents", "Clio", "assets", "images"),
 			},
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			cfg := am.NewConfig()
-			cfg.Set(am.Key.AppEnv, tc.env)
+			cfg := hm.NewConfig()
+			cfg.Set(hm.Key.AppEnv, tc.env)
 
-			logger := am.NewLogger("")
-			ws := core.NewWorkspace(am.WithCfg(cfg), am.WithLog(logger))
+			logger := hm.NewLogger("")
+			ws := core.NewWorkspace(hm.WithCfg(cfg), hm.WithLog(logger))
 
 			if err := ws.Setup(context.Background()); err != nil {
 				t.Fatalf("ws.Setup() failed: %v", err)
@@ -84,7 +84,7 @@ func TestWorkspaceSetup(t *testing.T) {
 
 			if tc.name == "dev mode" {
 				for key, path := range tc.expectedPaths {
-					if key == am.Key.DBSQLiteDSN {
+					if key == hm.Key.DBSQLiteDSN {
 						continue
 					}
 					if _, err := os.Stat(path); os.IsNotExist(err) {

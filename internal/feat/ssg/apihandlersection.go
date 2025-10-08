@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/adrianpk/clio/internal/am"
+	hm "github.com/hermesgen/hm"
 
 	"github.com/google/uuid"
 )
@@ -17,12 +17,12 @@ func (h *APIHandler) GetAllSections(w http.ResponseWriter, r *http.Request) {
 	var err error
 	sections, err = h.svc.GetSections(r.Context())
 	if err != nil {
-		msg := fmt.Sprintf(am.ErrCannotGetResources, resSectionName)
+		msg := fmt.Sprintf(hm.ErrCannotGetResources, resSectionName)
 		h.Err(w, http.StatusInternalServerError, msg, err)
 		return
 	}
 
-	msg := fmt.Sprintf(am.MsgGetAllItems, am.Cap(resSectionName))
+	msg := fmt.Sprintf(hm.MsgGetAllItems, hm.Cap(resSectionName))
 	h.OK(w, msg, sections)
 }
 
@@ -33,7 +33,7 @@ func (h *APIHandler) GetSection(w http.ResponseWriter, r *http.Request) {
 	var id uuid.UUID
 	id, err = h.ID(w, r)
 	if err != nil {
-		msg := fmt.Sprintf(am.ErrInvalidID, am.Cap(resSectionName))
+		msg := fmt.Sprintf(hm.ErrInvalidID, hm.Cap(resSectionName))
 		h.Err(w, http.StatusBadRequest, msg, err)
 		return
 	}
@@ -41,12 +41,12 @@ func (h *APIHandler) GetSection(w http.ResponseWriter, r *http.Request) {
 	var section Section
 	section, err = h.svc.GetSection(r.Context(), id)
 	if err != nil {
-		msg := fmt.Sprintf(am.ErrCannotGetResource, resSectionName)
+		msg := fmt.Sprintf(hm.ErrCannotGetResource, resSectionName)
 		h.Err(w, http.StatusInternalServerError, msg, err)
 		return
 	}
 
-	msg := fmt.Sprintf(am.MsgGetItem, am.Cap(resSectionName))
+	msg := fmt.Sprintf(hm.MsgGetItem, hm.Cap(resSectionName))
 	h.OK(w, msg, section)
 }
 
@@ -57,7 +57,7 @@ func (h *APIHandler) CreateSection(w http.ResponseWriter, r *http.Request) {
 	var err error
 	err = json.NewDecoder(r.Body).Decode(&section)
 	if err != nil {
-		h.Err(w, http.StatusBadRequest, am.ErrInvalidBody, err)
+		h.Err(w, http.StatusBadRequest, hm.ErrInvalidBody, err)
 		return
 	}
 
@@ -66,12 +66,12 @@ func (h *APIHandler) CreateSection(w http.ResponseWriter, r *http.Request) {
 
 	err = h.svc.CreateSection(r.Context(), newSection)
 	if err != nil {
-		msg := fmt.Sprintf(am.ErrCannotCreateResource, resSectionName)
+		msg := fmt.Sprintf(hm.ErrCannotCreateResource, resSectionName)
 		h.Err(w, http.StatusInternalServerError, msg, err)
 		return
 	}
 
-	msg := fmt.Sprintf(am.MsgCreateItem, am.Cap(resSectionName))
+	msg := fmt.Sprintf(hm.MsgCreateItem, hm.Cap(resSectionName))
 	h.Created(w, msg, newSection)
 }
 
@@ -82,7 +82,7 @@ func (h *APIHandler) UpdateSection(w http.ResponseWriter, r *http.Request) {
 	var id uuid.UUID
 	id, err = h.ID(w, r)
 	if err != nil {
-		msg := fmt.Sprintf(am.ErrInvalidID, am.Cap(resSectionName))
+		msg := fmt.Sprintf(hm.ErrInvalidID, hm.Cap(resSectionName))
 		h.Err(w, http.StatusBadRequest, msg, err)
 		return
 	}
@@ -90,7 +90,7 @@ func (h *APIHandler) UpdateSection(w http.ResponseWriter, r *http.Request) {
 	var section Section
 	err = json.NewDecoder(r.Body).Decode(&section)
 	if err != nil {
-		h.Err(w, http.StatusBadRequest, am.ErrInvalidBody, err)
+		h.Err(w, http.StatusBadRequest, hm.ErrInvalidBody, err)
 		return
 	}
 
@@ -100,12 +100,12 @@ func (h *APIHandler) UpdateSection(w http.ResponseWriter, r *http.Request) {
 
 	err = h.svc.UpdateSection(r.Context(), updatedSection)
 	if err != nil {
-		msg := fmt.Sprintf(am.ErrCannotUpdateResource, resSectionName)
+		msg := fmt.Sprintf(hm.ErrCannotUpdateResource, resSectionName)
 		h.Err(w, http.StatusInternalServerError, msg, err)
 		return
 	}
 
-	msg := fmt.Sprintf(am.MsgUpdateItem, am.Cap(resSectionName))
+	msg := fmt.Sprintf(hm.MsgUpdateItem, hm.Cap(resSectionName))
 	h.OK(w, msg, updatedSection)
 }
 
@@ -116,19 +116,19 @@ func (h *APIHandler) DeleteSection(w http.ResponseWriter, r *http.Request) {
 	var id uuid.UUID
 	id, err = h.ID(w, r)
 	if err != nil {
-		msg := fmt.Sprintf(am.ErrInvalidID, am.Cap(resSectionName))
+		msg := fmt.Sprintf(hm.ErrInvalidID, hm.Cap(resSectionName))
 		h.Err(w, http.StatusBadRequest, msg, err)
 		return
 	}
 
 	err = h.svc.DeleteSection(r.Context(), id)
 	if err != nil {
-		msg := fmt.Sprintf(am.ErrCannotDeleteResource, resSectionName)
+		msg := fmt.Sprintf(hm.ErrCannotDeleteResource, resSectionName)
 		h.Err(w, http.StatusInternalServerError, msg, err)
 		return
 	}
 
-	msg := fmt.Sprintf(am.MsgDeleteItem, am.Cap(resSectionName))
+	msg := fmt.Sprintf(hm.MsgDeleteItem, hm.Cap(resSectionName))
 	h.OK(w, msg, json.RawMessage("null"))
 }
 

@@ -3,8 +3,8 @@ package ssg
 import (
 	"time"
 
-	"github.com/adrianpk/clio/internal/am"
 	"github.com/google/uuid"
+	hm "github.com/hermesgen/hm"
 )
 
 const (
@@ -36,7 +36,7 @@ type Image struct {
 	DescribedByID   uuid.UUID `json:"described_by_id" db:"described_by_id"`
 
 	// Purpose from relationship (not stored in DB, populated from relationship table)
-	Purpose         string    `json:"purpose" db:"-"`
+	Purpose string `json:"purpose" db:"-"`
 
 	// Audit
 	CreatedBy uuid.UUID `json:"-" db:"created_by"`
@@ -70,7 +70,7 @@ func (i Image) GetID() uuid.UUID {
 
 // GenID delegates to the functional helper.
 func (i *Image) GenID() {
-	am.GenID(i)
+	hm.GenID(i)
 }
 
 // SetID sets the unique identifier of the entity.
@@ -88,7 +88,7 @@ func (i *Image) GetShortID() string {
 
 // GenShortID delegates to the functional helper.
 func (i *Image) GenShortID() {
-	am.GenShortID(i)
+	hm.GenShortID(i)
 }
 
 // SetShortID sets the short ID of the entity.
@@ -99,15 +99,14 @@ func (i *Image) SetShortID(shortID string, force ...bool) {
 	}
 }
 
-
 // GenCreateValues delegates to the functional helper.
 func (i *Image) GenCreateValues(userID ...uuid.UUID) {
-	am.SetCreateValues(i, userID...)
+	hm.SetCreateValues(i, userID...)
 }
 
 // GenUpdateValues delegates to the functional helper.
 func (i *Image) GenUpdateValues(userID ...uuid.UUID) {
-	am.SetUpdateValues(i, userID...)
+	hm.SetUpdateValues(i, userID...)
 }
 
 // GetCreatedBy returns the UUID of the user who created the entity.
@@ -158,7 +157,7 @@ func (i *Image) IsZero() bool {
 // Slug returns a slug for the image.
 func (i *Image) Slug() string {
 	if i.Title != "" {
-		return am.Normalize(i.Title) + "-" + i.GetShortID()
+		return hm.Normalize(i.Title) + "-" + i.GetShortID()
 	}
-	return am.Normalize(i.ContentHash) + "-" + i.GetShortID()
+	return hm.Normalize(i.ContentHash) + "-" + i.GetShortID()
 }

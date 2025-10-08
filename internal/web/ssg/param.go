@@ -1,9 +1,9 @@
 package ssg
 
 import (
-	"github.com/adrianpk/clio/internal/am"
-	feat "github.com/adrianpk/clio/internal/feat/ssg"
 	"github.com/google/uuid"
+	hm "github.com/hermesgen/hm"
+	feat "github.com/hermesgen/clio/internal/feat/ssg"
 )
 
 const (
@@ -31,7 +31,7 @@ func NewParam(name, value string) Param {
 
 // Type returns the type of the entity.
 func (p *Param) Type() string {
-	return am.DefaultType(paramType)
+	return hm.DefaultType(paramType)
 }
 
 // GetID returns the unique identifier of the entity.
@@ -41,7 +41,7 @@ func (p *Param) GetID() uuid.UUID {
 
 // GenID delegates to the functional helper.
 func (p *Param) GenID() {
-	am.GenID(p)
+	hm.GenID(p)
 }
 
 // SetID sets the unique identifier of the entity.
@@ -59,7 +59,7 @@ func (p *Param) GetShortID() string {
 
 // GenShortID delegates to the functional helper.
 func (p *Param) GenShortID() {
-	am.GenShortID(p)
+	hm.GenShortID(p)
 }
 
 // SetShortID sets the short ID of the entity.
@@ -72,7 +72,7 @@ func (p *Param) SetShortID(shortID string, force ...bool) {
 
 // TypeID returns a universal identifier for a specific model instance.
 func (p *Param) TypeID() string {
-	return am.Normalize(p.Type()) + "-" + p.GetShortID()
+	return hm.Normalize(p.Type()) + "-" + p.GetShortID()
 }
 
 // IsZero returns true if the Param is uninitialized.
@@ -82,7 +82,7 @@ func (p *Param) IsZero() bool {
 
 // Slug returns a slug for the param.
 func (p *Param) Slug() string {
-	return am.Normalize(p.Name) + "-" + p.GetShortID()
+	return hm.Normalize(p.Name) + "-" + p.GetShortID()
 }
 
 // IsSystem returns true if the param is a system parameter.

@@ -3,13 +3,13 @@ package ssg
 import (
 	"context"
 
-	"github.com/adrianpk/clio/internal/am"
-	"github.com/adrianpk/clio/internal/feat/auth"
 	"github.com/google/uuid"
+	hm "github.com/hermesgen/hm"
+	"github.com/hermesgen/clio/internal/feat/auth"
 )
 
 type Repo interface {
-	am.Repo
+	hm.Repo
 
 	CreateContent(ctx context.Context, content *Content) error
 	GetContent(ctx context.Context, id uuid.UUID) (Content, error)

@@ -5,17 +5,17 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/adrianpk/clio/internal/am"
+	hm "github.com/hermesgen/hm"
 )
 
-var key = am.Key
+var key = hm.Key
 
 type Workspace struct {
-	am.Core
+	hm.Core
 }
 
-func NewWorkspace(opts ...am.Option) *Workspace {
-	core := am.NewCore("ssg-workspace", opts...)
+func NewWorkspace(opts ...hm.Option) *Workspace {
+	core := hm.NewCore("ssg-workspace", opts...)
 	w := &Workspace{
 		Core: core,
 	}

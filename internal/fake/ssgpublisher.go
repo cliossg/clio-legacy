@@ -3,7 +3,7 @@ package fake
 import (
 	"context"
 
-	"github.com/adrianpk/clio/internal/feat/ssg"
+	"github.com/hermesgen/clio/internal/feat/ssg"
 )
 
 // SSGPublisher is a fake implementation of ssg.Publisher for testing.

@@ -5,21 +5,21 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/adrianpk/clio/internal/am"
+	hm "github.com/hermesgen/hm"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
 )
 
-var key = am.Key
+var key = hm.Key
 
 type ClioRepo struct {
-	*am.BaseRepo
+	*hm.BaseRepo
 	db *sqlx.DB
 }
 
-func NewClioRepo(qm *am.QueryManager, opts ...am.Option) *ClioRepo {
+func NewClioRepo(qm *hm.QueryManager, opts ...hm.Option) *ClioRepo {
 	return &ClioRepo{
-		BaseRepo: am.NewRepo("sqlite-auth-repo", qm, opts...),
+		BaseRepo: hm.NewRepo("sqlite-auth-repo", qm, opts...),
 	}
 }
 
@@ -58,7 +58,7 @@ func (repo *ClioRepo) DB() *sqlx.DB {
 
 // getExec returns the correct Execer (Tx or DB) from context.
 func (repo *ClioRepo) getExec(ctx context.Context) sqlx.ExtContext {
-	tx, ok := am.TxFromContext(ctx)
+	tx, ok := hm.TxFromContext(ctx)
 	if ok {
 		if sqlxTx, ok := tx.(*sqlx.Tx); ok {
 			return sqlxTx
@@ -67,11 +67,11 @@ func (repo *ClioRepo) getExec(ctx context.Context) sqlx.ExtContext {
 	return repo.db
 }
 
-func (r *ClioRepo) BeginTx(ctx context.Context) (context.Context, am.Tx, error) {
+func (r *ClioRepo) BeginTx(ctx context.Context) (context.Context, hm.Tx, error) {
 	tx, err := r.db.BeginTxx(ctx, nil)
 	if err != nil {
 		return ctx, nil, err
 	}
-	ctxWithTx := am.WithTx(ctx, tx)
+	ctxWithTx := hm.WithTx(ctx, tx)
 	return ctxWithTx, tx, nil
 }

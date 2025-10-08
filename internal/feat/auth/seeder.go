@@ -6,12 +6,12 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/adrianpk/clio/internal/am"
 	"github.com/google/uuid"
+	hm "github.com/hermesgen/hm"
 )
 
 type Seeder struct {
-	*am.JSONSeeder
+	*hm.JSONSeeder
 	repo Repo
 }
 
@@ -19,9 +19,9 @@ type SeedData struct {
 	Users []User `json:"users"`
 }
 
-func NewSeeder(assetsFS embed.FS, engine string, repo Repo, opts ...am.Option) *Seeder {
+func NewSeeder(assetsFS embed.FS, engine string, repo Repo, opts ...hm.Option) *Seeder {
 	return &Seeder{
-		JSONSeeder: am.NewJSONSeeder("auth", assetsFS, engine, opts...),
+		JSONSeeder: hm.NewJSONSeeder("auth", assetsFS, engine, opts...),
 		repo:       repo,
 	}
 }

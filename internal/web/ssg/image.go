@@ -6,8 +6,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/adrianpk/clio/internal/am"
-	feat "github.com/adrianpk/clio/internal/feat/ssg"
+	hm "github.com/hermesgen/hm"
+	feat "github.com/hermesgen/clio/internal/feat/ssg"
 )
 
 const (
@@ -46,7 +46,7 @@ func NewImage(name, description, path, url, altText, mimeType string, size int64
 
 // Type returns the type of the entity.
 func (i *Image) Type() string {
-	return am.DefaultType(imageType)
+	return hm.DefaultType(imageType)
 }
 
 // GetID returns the unique identifier of the entity.
@@ -56,7 +56,7 @@ func (i *Image) GetID() uuid.UUID {
 
 // GenID delegates to the functional helper.
 func (i *Image) GenID() {
-	am.GenID(i)
+	hm.GenID(i)
 }
 
 // SetID sets the unique identifier of the entity.
@@ -74,7 +74,7 @@ func (i *Image) GetShortID() string {
 
 // GenShortID delegates to the functional helper.
 func (i *Image) GenShortID() {
-	am.GenShortID(i)
+	hm.GenShortID(i)
 }
 
 // SetShortID sets the short ID of the entity.
@@ -87,7 +87,7 @@ func (i *Image) SetShortID(shortID string, force ...bool) {
 
 // TypeID returns a universal identifier for a specific model instance.
 func (i *Image) TypeID() string {
-	return am.Normalize(i.Type()) + "-" + i.GetShortID()
+	return hm.Normalize(i.Type()) + "-" + i.GetShortID()
 }
 
 // IsZero returns true if the Image is uninitialized.
@@ -97,7 +97,7 @@ func (i *Image) IsZero() bool {
 
 // Slug returns a human-readable, URL-friendly string identifier for the entity.
 func (i *Image) Slug() string {
-	return am.Normalize(i.Name) + "-" + i.GetShortID()
+	return hm.Normalize(i.Name) + "-" + i.GetShortID()
 }
 
 func (i *Image) OptValue() string {
@@ -140,7 +140,7 @@ func ToWebImages(featImages []feat.Image) []Image {
 
 // ImageForm represents the form data for an Image.
 type ImageForm struct {
-	*am.BaseForm                       // Embed BaseForm
+	*hm.BaseForm                       // Embed BaseForm
 	ID           string                `json:"id"`
 	Name         string                `json:"name"`
 	Description  string                `json:"description"`
@@ -151,7 +151,7 @@ type ImageForm struct {
 // NewImageForm creates a new ImageForm.
 func NewImageForm(r *http.Request) ImageForm {
 	return ImageForm{
-		BaseForm: am.NewBaseForm(r),
+		BaseForm: hm.NewBaseForm(r),
 	}
 }
 
@@ -180,7 +180,7 @@ func ToImageForm(r *http.Request, image Image) ImageForm {
 // Validate validates the ImageForm.
 func (f *ImageForm) Validate() {
 	// Reset validation errors
-	f.BaseForm.SetValidation(&am.Validation{})
+	f.BaseForm.SetValidation(&hm.Validation{})
 
 	validation := f.BaseForm.Validation() // Get the pointer to validation
 

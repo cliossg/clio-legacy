@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/adrianpk/clio/internal/am"
+	hm "github.com/hermesgen/hm"
 
 	"github.com/google/uuid"
 )
@@ -17,7 +17,7 @@ func (h *APIHandler) CreateParam(w http.ResponseWriter, r *http.Request) {
 	var err error
 	err = json.NewDecoder(r.Body).Decode(&param)
 	if err != nil {
-		h.Err(w, http.StatusBadRequest, am.ErrInvalidBody, err)
+		h.Err(w, http.StatusBadRequest, hm.ErrInvalidBody, err)
 		return
 	}
 
@@ -28,12 +28,12 @@ func (h *APIHandler) CreateParam(w http.ResponseWriter, r *http.Request) {
 
 	err = h.svc.CreateParam(r.Context(), &newParam)
 	if err != nil {
-		msg := fmt.Sprintf(am.ErrCannotCreateResource, resParamName)
+		msg := fmt.Sprintf(hm.ErrCannotCreateResource, resParamName)
 		h.Err(w, http.StatusInternalServerError, msg, err)
 		return
 	}
 
-	msg := fmt.Sprintf(am.MsgCreateItem, am.Cap(resParamName))
+	msg := fmt.Sprintf(hm.MsgCreateItem, hm.Cap(resParamName))
 	h.Created(w, msg, newParam)
 }
 
@@ -44,7 +44,7 @@ func (h *APIHandler) GetParam(w http.ResponseWriter, r *http.Request) {
 	var id uuid.UUID
 	id, err = h.ID(w, r)
 	if err != nil {
-		msg := fmt.Sprintf(am.ErrInvalidID, am.Cap(resParamName))
+		msg := fmt.Sprintf(hm.ErrInvalidID, hm.Cap(resParamName))
 		h.Err(w, http.StatusBadRequest, msg, err)
 		return
 	}
@@ -52,12 +52,12 @@ func (h *APIHandler) GetParam(w http.ResponseWriter, r *http.Request) {
 	var param Param
 	param, err = h.svc.GetParam(r.Context(), id)
 	if err != nil {
-		msg := fmt.Sprintf(am.ErrCannotGetResource, resParamName)
+		msg := fmt.Sprintf(hm.ErrCannotGetResource, resParamName)
 		h.Err(w, http.StatusInternalServerError, msg, err)
 		return
 	}
 
-	msg := fmt.Sprintf(am.MsgGetItem, am.Cap(resParamName))
+	msg := fmt.Sprintf(hm.MsgGetItem, hm.Cap(resParamName))
 	h.OK(w, msg, param)
 }
 
@@ -68,7 +68,7 @@ func (h *APIHandler) GetParamByName(w http.ResponseWriter, r *http.Request) {
 	var name string
 	name, err = h.Param(w, r, "name")
 	if err != nil {
-		msg := fmt.Sprintf("%s: %s", am.ErrInvalidParam, "name")
+		msg := fmt.Sprintf("%s: %s", hm.ErrInvalidParam, "name")
 		h.Err(w, http.StatusBadRequest, msg, err)
 		return
 	}
@@ -76,12 +76,12 @@ func (h *APIHandler) GetParamByName(w http.ResponseWriter, r *http.Request) {
 	var param Param
 	param, err = h.svc.GetParamByName(r.Context(), name)
 	if err != nil {
-		msg := fmt.Sprintf(am.ErrCannotGetResource, resParamName)
+		msg := fmt.Sprintf(hm.ErrCannotGetResource, resParamName)
 		h.Err(w, http.StatusInternalServerError, msg, err)
 		return
 	}
 
-	msg := fmt.Sprintf(am.MsgGetItem, am.Cap(resParamName))
+	msg := fmt.Sprintf(hm.MsgGetItem, hm.Cap(resParamName))
 	h.OK(w, msg, param)
 }
 
@@ -92,7 +92,7 @@ func (h *APIHandler) GetParamByRefKey(w http.ResponseWriter, r *http.Request) {
 	var refKey string
 	refKey, err = h.Param(w, r, "ref_key")
 	if err != nil {
-		msg := fmt.Sprintf("%s: %s", am.ErrInvalidParam, "ref_key")
+		msg := fmt.Sprintf("%s: %s", hm.ErrInvalidParam, "ref_key")
 		h.Err(w, http.StatusBadRequest, msg, err)
 		return
 	}
@@ -100,12 +100,12 @@ func (h *APIHandler) GetParamByRefKey(w http.ResponseWriter, r *http.Request) {
 	var param Param
 	param, err = h.svc.GetParamByRefKey(r.Context(), refKey)
 	if err != nil {
-		msg := fmt.Sprintf(am.ErrCannotGetResource, resParamName)
+		msg := fmt.Sprintf(hm.ErrCannotGetResource, resParamName)
 		h.Err(w, http.StatusInternalServerError, msg, err)
 		return
 	}
 
-	msg := fmt.Sprintf(am.MsgGetItem, am.Cap(resParamName))
+	msg := fmt.Sprintf(hm.MsgGetItem, hm.Cap(resParamName))
 	h.OK(w, msg, param)
 }
 
@@ -116,12 +116,12 @@ func (h *APIHandler) ListParams(w http.ResponseWriter, r *http.Request) {
 	var err error
 	params, err = h.svc.ListParams(r.Context())
 	if err != nil {
-		msg := fmt.Sprintf(am.ErrCannotGetResources, resParamName)
+		msg := fmt.Sprintf(hm.ErrCannotGetResources, resParamName)
 		h.Err(w, http.StatusInternalServerError, msg, err)
 		return
 	}
 
-	msg := fmt.Sprintf(am.MsgGetAllItems, am.Cap(resParamName))
+	msg := fmt.Sprintf(hm.MsgGetAllItems, hm.Cap(resParamName))
 	h.OK(w, msg, params)
 }
 
@@ -132,7 +132,7 @@ func (h *APIHandler) UpdateParam(w http.ResponseWriter, r *http.Request) {
 	var id uuid.UUID
 	id, err = h.ID(w, r)
 	if err != nil {
-		msg := fmt.Sprintf(am.ErrInvalidID, am.Cap(resParamName))
+		msg := fmt.Sprintf(hm.ErrInvalidID, hm.Cap(resParamName))
 		h.Err(w, http.StatusBadRequest, msg, err)
 		return
 	}
@@ -141,7 +141,7 @@ func (h *APIHandler) UpdateParam(w http.ResponseWriter, r *http.Request) {
 	var existingParam Param
 	existingParam, err = h.svc.GetParam(r.Context(), id)
 	if err != nil {
-		msg := fmt.Sprintf(am.ErrCannotGetResource, resParamName)
+		msg := fmt.Sprintf(hm.ErrCannotGetResource, resParamName)
 		h.Err(w, http.StatusInternalServerError, msg, err)
 		return
 	}
@@ -149,7 +149,7 @@ func (h *APIHandler) UpdateParam(w http.ResponseWriter, r *http.Request) {
 	var param Param
 	err = json.NewDecoder(r.Body).Decode(&param)
 	if err != nil {
-		h.Err(w, http.StatusBadRequest, am.ErrInvalidBody, err)
+		h.Err(w, http.StatusBadRequest, hm.ErrInvalidBody, err)
 		return
 	}
 
@@ -182,12 +182,12 @@ func (h *APIHandler) UpdateParam(w http.ResponseWriter, r *http.Request) {
 
 	err = h.svc.UpdateParam(r.Context(), &updatedParam)
 	if err != nil {
-		msg := fmt.Sprintf(am.ErrCannotUpdateResource, resParamName)
+		msg := fmt.Sprintf(hm.ErrCannotUpdateResource, resParamName)
 		h.Err(w, http.StatusInternalServerError, msg, err)
 		return
 	}
 
-	msg := fmt.Sprintf(am.MsgUpdateItem, am.Cap(resParamName))
+	msg := fmt.Sprintf(hm.MsgUpdateItem, hm.Cap(resParamName))
 	h.OK(w, msg, updatedParam)
 }
 
@@ -198,7 +198,7 @@ func (h *APIHandler) DeleteParam(w http.ResponseWriter, r *http.Request) {
 	var id uuid.UUID
 	id, err = h.ID(w, r)
 	if err != nil {
-		msg := fmt.Sprintf(am.ErrInvalidID, am.Cap(resParamName))
+		msg := fmt.Sprintf(hm.ErrInvalidID, hm.Cap(resParamName))
 		h.Err(w, http.StatusBadRequest, msg, err)
 		return
 	}
@@ -207,7 +207,7 @@ func (h *APIHandler) DeleteParam(w http.ResponseWriter, r *http.Request) {
 	var existingParam Param
 	existingParam, err = h.svc.GetParam(r.Context(), id)
 	if err != nil {
-		msg := fmt.Sprintf(am.ErrCannotGetResource, resParamName)
+		msg := fmt.Sprintf(hm.ErrCannotGetResource, resParamName)
 		h.Err(w, http.StatusInternalServerError, msg, err)
 		return
 	}
@@ -219,11 +219,11 @@ func (h *APIHandler) DeleteParam(w http.ResponseWriter, r *http.Request) {
 
 	err = h.svc.DeleteParam(r.Context(), id)
 	if err != nil {
-		msg := fmt.Sprintf(am.ErrCannotDeleteResource, resParamName)
+		msg := fmt.Sprintf(hm.ErrCannotDeleteResource, resParamName)
 		h.Err(w, http.StatusInternalServerError, msg, err)
 		return
 	}
 
-	msg := fmt.Sprintf(am.MsgDeleteItem, am.Cap(resParamName))
+	msg := fmt.Sprintf(hm.MsgDeleteItem, hm.Cap(resParamName))
 	h.OK(w, msg, json.RawMessage("null"))
 }

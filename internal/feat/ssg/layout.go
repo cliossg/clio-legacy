@@ -5,21 +5,20 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/adrianpk/clio/internal/am"
+	hm "github.com/hermesgen/hm"
 )
-
 
 // Layout model.
 type Layout struct {
 	// Common
-	ID      uuid.UUID `json:"id" db:"id"`
-	ShortID string    `json:"-" db:"short_id"`
-	RefValue string `json:"ref"`
+	ID       uuid.UUID `json:"id" db:"id"`
+	ShortID  string    `json:"-" db:"short_id"`
+	RefValue string    `json:"ref"`
 
 	// Layout specific fields
-	Name        string `json:"name" db:"name"`
-	Description string `json:"description" db:"description"`
-	Code        string `json:"code" db:"code"`
+	Name          string     `json:"name" db:"name"`
+	Description   string     `json:"description" db:"description"`
+	Code          string     `json:"code" db:"code"`
 	HeaderImageID *uuid.UUID `json:"header_image_id,omitempty" db:"header_image_id"`
 
 	// Audit
@@ -54,7 +53,7 @@ func (l *Layout) GetID() uuid.UUID {
 
 // GenID delegates to the functional helper.
 func (l *Layout) GenID() {
-	am.GenID(l)
+	hm.GenID(l)
 }
 
 // SetID sets the unique identifier of the entity.
@@ -72,7 +71,7 @@ func (l *Layout) GetShortID() string {
 
 // GenShortID delegates to the functional helper.
 func (l *Layout) GenShortID() {
-	am.GenShortID(l)
+	hm.GenShortID(l)
 }
 
 // SetShortID sets the short ID of the entity.
@@ -83,15 +82,14 @@ func (l *Layout) SetShortID(shortID string, force ...bool) {
 	}
 }
 
-
 // GenCreateValues delegates to the functional helper.
 func (l *Layout) GenCreateValues(userID ...uuid.UUID) {
-	am.SetCreateValues(l, userID...)
+	hm.SetCreateValues(l, userID...)
 }
 
 // GenUpdateValues delegates to the functional helper.
 func (l *Layout) GenUpdateValues(userID ...uuid.UUID) {
-	am.SetUpdateValues(l, userID...)
+	hm.SetUpdateValues(l, userID...)
 }
 
 // CreatedBy returns the UUID of the user who created the entity.
@@ -151,7 +149,7 @@ func (l *Layout) IsZero() bool {
 
 // Slug returns a human-readable, URL-friendly string identifier for the entity.
 func (l *Layout) Slug() string {
-	return am.Normalize(l.Name) + "-" + l.GetShortID()
+	return hm.Normalize(l.Name) + "-" + l.GetShortID()
 }
 
 func (l *Layout) OptValue() string {
@@ -171,7 +169,6 @@ func (l *Layout) Ref() string {
 func (l *Layout) SetRef(ref string) {
 	l.RefValue = ref
 }
-
 
 // StringID returns the unique identifier of the entity as a string.
 func (l *Layout) StringID() string {

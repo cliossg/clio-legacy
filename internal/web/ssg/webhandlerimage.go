@@ -14,8 +14,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/adrianpk/clio/internal/am"
-	feat "github.com/adrianpk/clio/internal/feat/ssg"
+	hm "github.com/hermesgen/hm"
+	feat "github.com/hermesgen/clio/internal/feat/ssg"
 )
 
 func (h *WebHandler) NewImage(w http.ResponseWriter, r *http.Request) {
@@ -55,7 +55,7 @@ func (h *WebHandler) CreateImage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Determine upload directory
-	uploadDir, _ := h.Cfg().StrVal(am.Key.SSGImagesPath)
+	uploadDir, _ := h.Cfg().StrVal(hm.Key.SSGImagesPath)
 	if err = os.MkdirAll(uploadDir, os.ModePerm); err != nil {
 		h.Err(w, err, "Cannot create upload directory", http.StatusInternalServerError)
 		return
@@ -132,7 +132,7 @@ func (h *WebHandler) CreateImage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.FlashInfo(w, r, "Image created successfully")
-	h.Redir(w, r, am.EditPath(&Image{}, createdImage.GetID()), http.StatusSeeOther)
+	h.Redir(w, r, hm.EditPath(&Image{}, createdImage.GetID()), http.StatusSeeOther)
 }
 
 func (h *WebHandler) EditImage(w http.ResponseWriter, r *http.Request) {
@@ -202,7 +202,7 @@ func (h *WebHandler) UpdateImage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.FlashInfo(w, r, "Image updated successfully")
-	h.Redir(w, r, am.ListPath(&Image{}), http.StatusSeeOther)
+	h.Redir(w, r, hm.ListPath(&Image{}), http.StatusSeeOther)
 }
 
 func (h *WebHandler) ListImages(w http.ResponseWriter, r *http.Request) {
@@ -218,20 +218,20 @@ func (h *WebHandler) ListImages(w http.ResponseWriter, r *http.Request) {
 	}
 	images := ToWebImages(response.Images)
 
-	page := am.NewPage(r, images)
+	page := hm.NewPage(r, images)
 	page.Form.SetAction(ssgPath)
 	menu := page.NewMenu(ssgPath)
 	menu.AddNewItem(&Image{})
 
 	tmpl, err := h.Tmpl().Get(ssgFeat, "list-images")
 	if err != nil {
-		h.Err(w, err, am.ErrTemplateNotFound, http.StatusInternalServerError)
+		h.Err(w, err, hm.ErrTemplateNotFound, http.StatusInternalServerError)
 		return
 	}
 
 	var buf bytes.Buffer
 	if err = tmpl.Execute(&buf, page); err != nil {
-		h.Err(w, err, am.ErrCannotRenderTemplate, http.StatusInternalServerError)
+		h.Err(w, err, hm.ErrCannotRenderTemplate, http.StatusInternalServerError)
 		return
 	}
 
@@ -260,7 +260,7 @@ func (h *WebHandler) ShowImage(w http.ResponseWriter, r *http.Request) {
 
 	image := ToWebImage(response.Image)
 
-	page := am.NewPage(r, image)
+	page := hm.NewPage(r, image)
 	page.Name = "Show Image"
 
 	menu := page.NewMenu(ssgPath)
@@ -268,13 +268,13 @@ func (h *WebHandler) ShowImage(w http.ResponseWriter, r *http.Request) {
 
 	tmpl, err := h.Tmpl().Get(ssgFeat, "show-image")
 	if err != nil {
-		h.Err(w, err, am.ErrTemplateNotFound, http.StatusInternalServerError)
+		h.Err(w, err, hm.ErrTemplateNotFound, http.StatusInternalServerError)
 		return
 	}
 
 	var buf bytes.Buffer
 	if err = tmpl.Execute(&buf, page); err != nil {
-		h.Err(w, err, am.ErrCannotRenderTemplate, http.StatusInternalServerError)
+		h.Err(w, err, hm.ErrCannotRenderTemplate, http.StatusInternalServerError)
 		return
 	}
 
@@ -302,22 +302,22 @@ func (h *WebHandler) DeleteImage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.FlashInfo(w, r, "Image deleted successfully")
-	h.Redir(w, r, am.ListPath(&Image{}), http.StatusSeeOther)
+	h.Redir(w, r, hm.ListPath(&Image{}), http.StatusSeeOther)
 }
 
 func (h *WebHandler) renderImageForm(w http.ResponseWriter, r *http.Request, form ImageForm, image Image, errorMessage string, statusCode int) {
-	page := am.NewPage(r, image)
+	page := hm.NewPage(r, image)
 	page.SetForm(&form)
 
 	if image.IsZero() {
 		page.Name = "New Image"
 		page.IsNew = true
-		page.Form.SetAction(am.CreatePath(&Image{}))
+		page.Form.SetAction(hm.CreatePath(&Image{}))
 		page.Form.SetSubmitButtonText("Create")
 	} else {
 		page.Name = "Edit Image"
 		page.IsNew = false
-		page.Form.SetAction(am.UpdatePath(&Image{}))
+		page.Form.SetAction(hm.UpdatePath(&Image{}))
 		page.Form.SetSubmitButtonText("Update")
 	}
 
@@ -326,7 +326,7 @@ func (h *WebHandler) renderImageForm(w http.ResponseWriter, r *http.Request, for
 
 	tmpl, err := h.Tmpl().Get(ssgFeat, "new-image")
 	if err != nil {
-		h.Err(w, err, am.ErrTemplateNotFound, http.StatusInternalServerError)
+		h.Err(w, err, hm.ErrTemplateNotFound, http.StatusInternalServerError)
 		return
 	}
 
@@ -334,7 +334,7 @@ func (h *WebHandler) renderImageForm(w http.ResponseWriter, r *http.Request, for
 
 	var buf bytes.Buffer
 	if err = tmpl.Execute(&buf, page); err != nil {
-		h.Err(w, err, am.ErrCannotRenderTemplate, http.StatusInternalServerError)
+		h.Err(w, err, hm.ErrCannotRenderTemplate, http.StatusInternalServerError)
 		return
 	}
 
@@ -427,7 +427,7 @@ func (h *WebHandler) CreateImageVariant(w http.ResponseWriter, r *http.Request) 
 	createdVariant := ToWebImageVariant(response.ImageVariant)
 
 	h.FlashInfo(w, r, "Image variant created successfully")
-	h.Redir(w, r, am.EditPath(&ImageVariant{}, createdVariant.GetID()), http.StatusSeeOther)
+	h.Redir(w, r, hm.EditPath(&ImageVariant{}, createdVariant.GetID()), http.StatusSeeOther)
 }
 
 // EditImageVariant displays the form for editing an existing image variant.
@@ -524,7 +524,7 @@ func (h *WebHandler) UpdateImageVariant(w http.ResponseWriter, r *http.Request) 
 	}
 
 	h.FlashInfo(w, r, "Image variant updated successfully")
-	h.Redir(w, r, am.ListPath(&ImageVariant{}), http.StatusSeeOther)
+	h.Redir(w, r, hm.ListPath(&ImageVariant{}), http.StatusSeeOther)
 }
 
 // ListImageVariants lists all image variants for a given image.
@@ -548,20 +548,20 @@ func (h *WebHandler) ListImageVariants(w http.ResponseWriter, r *http.Request) {
 	}
 	variants := ToWebImageVariants(response.ImageVariants)
 
-	page := am.NewPage(r, variants)
+	page := hm.NewPage(r, variants)
 	page.Form.SetAction(ssgPath)
 	menu := page.NewMenu(ssgPath)
 	menu.AddNewItem(&ImageVariant{})
 
 	tmpl, err := h.Tmpl().Get(ssgFeat, "list-image-variants")
 	if err != nil {
-		h.Err(w, err, am.ErrTemplateNotFound, http.StatusInternalServerError)
+		h.Err(w, err, hm.ErrTemplateNotFound, http.StatusInternalServerError)
 		return
 	}
 
 	var buf bytes.Buffer
 	if err = tmpl.Execute(&buf, page); err != nil {
-		h.Err(w, err, am.ErrCannotRenderTemplate, http.StatusInternalServerError)
+		h.Err(w, err, hm.ErrCannotRenderTemplate, http.StatusInternalServerError)
 		return
 	}
 
@@ -592,7 +592,7 @@ func (h *WebHandler) ShowImageVariant(w http.ResponseWriter, r *http.Request) {
 
 	variant := ToWebImageVariant(response.ImageVariant)
 
-	page := am.NewPage(r, variant)
+	page := hm.NewPage(r, variant)
 	page.Name = "Show Image Variant"
 
 	menu := page.NewMenu(ssgPath)
@@ -600,13 +600,13 @@ func (h *WebHandler) ShowImageVariant(w http.ResponseWriter, r *http.Request) {
 
 	tmpl, err := h.Tmpl().Get(ssgFeat, "show-image-variant")
 	if err != nil {
-		h.Err(w, err, am.ErrTemplateNotFound, http.StatusInternalServerError)
+		h.Err(w, err, hm.ErrTemplateNotFound, http.StatusInternalServerError)
 		return
 	}
 
 	var buf bytes.Buffer
 	if err = tmpl.Execute(&buf, page); err != nil {
-		h.Err(w, err, am.ErrCannotRenderTemplate, http.StatusInternalServerError)
+		h.Err(w, err, hm.ErrCannotRenderTemplate, http.StatusInternalServerError)
 		return
 	}
 
@@ -636,22 +636,22 @@ func (h *WebHandler) DeleteImageVariant(w http.ResponseWriter, r *http.Request) 
 	}
 
 	h.FlashInfo(w, r, "Image variant deleted successfully")
-	h.Redir(w, r, am.ListPath(&ImageVariant{}), http.StatusSeeOther)
+	h.Redir(w, r, hm.ListPath(&ImageVariant{}), http.StatusSeeOther)
 }
 
 func (h *WebHandler) renderImageVariantForm(w http.ResponseWriter, r *http.Request, form ImageVariantForm, variant ImageVariant, errorMessage string, statusCode int) {
-	page := am.NewPage(r, variant)
+	page := hm.NewPage(r, variant)
 	page.SetForm(&form)
 
 	if variant.IsZero() {
 		page.Name = "New Image Variant"
 		page.IsNew = true
-		page.Form.SetAction(am.CreatePath(&ImageVariant{}))
+		page.Form.SetAction(hm.CreatePath(&ImageVariant{}))
 		page.Form.SetSubmitButtonText("Create")
 	} else {
 		page.Name = "Edit Image Variant"
 		page.IsNew = false
-		page.Form.SetAction(am.UpdatePath(&ImageVariant{}))
+		page.Form.SetAction(hm.UpdatePath(&ImageVariant{}))
 		page.Form.SetSubmitButtonText("Update")
 	}
 
@@ -660,7 +660,7 @@ func (h *WebHandler) renderImageVariantForm(w http.ResponseWriter, r *http.Reque
 
 	tmpl, err := h.Tmpl().Get(ssgFeat, "new-image-variant")
 	if err != nil {
-		h.Err(w, err, am.ErrTemplateNotFound, http.StatusInternalServerError)
+		h.Err(w, err, hm.ErrTemplateNotFound, http.StatusInternalServerError)
 		return
 	}
 
@@ -668,7 +668,7 @@ func (h *WebHandler) renderImageVariantForm(w http.ResponseWriter, r *http.Reque
 
 	var buf bytes.Buffer
 	if err = tmpl.Execute(&buf, page); err != nil {
-		h.Err(w, err, am.ErrCannotRenderTemplate, http.StatusInternalServerError)
+		h.Err(w, err, hm.ErrCannotRenderTemplate, http.StatusInternalServerError)
 		return
 	}
 

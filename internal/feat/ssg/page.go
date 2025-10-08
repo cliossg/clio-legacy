@@ -3,7 +3,7 @@ package ssg
 import (
 	"html/template"
 
-	"github.com/adrianpk/clio/internal/am"
+	hm "github.com/hermesgen/hm"
 )
 
 // PageData holds all the data needed to render a complete HTML page.
@@ -16,7 +16,7 @@ type PageData struct {
 	Content         PageContent
 	Blocks          *GeneratedBlocks
 	Pagination      *PaginationData
-	Config          *am.Config // Esto lo quitaremos después de refactorizar el service y el template
+	Config          *hm.Config // Esto lo quitaremos después de refactorizar el service y el template
 	Search          SearchData // Nueva estructura para la configuración de búsqueda
 }
 

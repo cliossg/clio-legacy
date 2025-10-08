@@ -3,13 +3,13 @@ package auth
 import (
 	"context"
 
-	"github.com/adrianpk/clio/internal/am"
+	hm "github.com/hermesgen/hm"
 
 	"github.com/google/uuid"
 )
 
 type Repo interface {
-	am.Repo
+	hm.Repo
 
 	// SECTION: User-related methods
 

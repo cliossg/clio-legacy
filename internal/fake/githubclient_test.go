@@ -5,8 +5,8 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/adrianpk/clio/internal/am"
-	"github.com/adrianpk/clio/internal/fake"
+	hm "github.com/hermesgen/hm"
+	"github.com/hermesgen/clio/internal/fake"
 )
 
 func TestGithubClientClone(t *testing.T) {
@@ -16,7 +16,7 @@ func TestGithubClientClone(t *testing.T) {
 		ctx         context.Context
 		repoURL     string
 		localPath   string
-		auth        am.GitAuth
+		auth        hm.GitAuth
 		env         []string
 		expectedErr error
 		expectCalls int
@@ -27,7 +27,7 @@ func TestGithubClientClone(t *testing.T) {
 			ctx:         context.Background(),
 			repoURL:     "https://github.com/owner/repo.git",
 			localPath:   "/tmp/repo",
-			auth:        am.GitAuth{Method: am.AuthToken, Token: "test-token"},
+			auth:        hm.GitAuth{Method: hm.AuthToken, Token: "test-token"},
 			env:         []string{"GIT_TERMINAL_PROMPT=0"},
 			expectedErr: nil,
 			expectCalls: 1,
@@ -35,14 +35,14 @@ func TestGithubClientClone(t *testing.T) {
 		{
 			name: "clone returns error",
 			setupFake: func(f *fake.GithubClient) {
-				f.CloneFn = func(ctx context.Context, repoURL, localPath string, auth am.GitAuth, env []string) error {
+				f.CloneFn = func(ctx context.Context, repoURL, localPath string, auth hm.GitAuth, env []string) error {
 					return errors.New("clone failed")
 				}
 			},
 			ctx:         context.Background(),
 			repoURL:     "https://github.com/owner/repo.git",
 			localPath:   "/tmp/repo",
-			auth:        am.GitAuth{Method: am.AuthSSH},
+			auth:        hm.GitAuth{Method: hm.AuthSSH},
 			env:         nil,
 			expectedErr: errors.New("clone failed"),
 			expectCalls: 1,

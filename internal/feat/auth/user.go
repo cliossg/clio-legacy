@@ -3,8 +3,8 @@ package auth
 import (
 	"time"
 
-	"github.com/adrianpk/clio/internal/am"
 	"github.com/google/uuid"
+	hm "github.com/hermesgen/hm"
 )
 
 const (
@@ -57,7 +57,7 @@ func (u User) GetID() uuid.UUID {
 
 // GenID delegates to the functional helper.
 func (u *User) GenID() {
-	am.GenID(u)
+	hm.GenID(u)
 }
 
 // SetID sets the unique identifier of the entity.
@@ -75,7 +75,7 @@ func (u *User) GetShortID() string {
 
 // GenShortID delegates to the functional helper.
 func (u *User) GenShortID() {
-	am.GenShortID(u)
+	hm.GenShortID(u)
 }
 
 // SetShortID sets the short ID of the entity.
@@ -86,15 +86,14 @@ func (u *User) SetShortID(shortID string, force ...bool) {
 	}
 }
 
-
 // GenCreateValues delegates to the functional helper.
 func (u *User) GenCreateValues(userID ...uuid.UUID) {
-	am.SetCreateValues(u, userID...)
+	hm.SetCreateValues(u, userID...)
 }
 
 // GenUpdateValues delegates to the functional helper.
 func (u *User) GenUpdateValues(userID ...uuid.UUID) {
-	am.SetUpdateValues(u, userID...)
+	hm.SetUpdateValues(u, userID...)
 }
 
 // CreatedBy returns the UUID of the user who created the entity.
@@ -144,7 +143,7 @@ func (u *User) IsZero() bool {
 
 // Slug returns a slug for the user.
 func (u *User) Slug() string {
-	return am.Normalize(u.Username) + "-" + u.GetShortID()
+	return hm.Normalize(u.Username) + "-" + u.GetShortID()
 }
 
 // OptLabel returns the label for select options.

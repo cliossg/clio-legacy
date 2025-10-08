@@ -5,13 +5,12 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/adrianpk/clio/internal/am"
+	hm "github.com/hermesgen/hm"
 )
-
 
 type Content struct {
 	ID      uuid.UUID `json:"id" db:"id"`
-	ShortID string `json:"-" db:"short_id"`
+	ShortID string    `json:"-" db:"short_id"`
 
 	UserID      uuid.UUID  `json:"user_id" db:"user_id"`
 	SectionID   uuid.UUID  `json:"section_id" db:"section_id"`
@@ -61,7 +60,7 @@ func (c *Content) GetID() uuid.UUID {
 
 // GenID delegates to the functional helper.
 func (c *Content) GenID() {
-	am.GenID(c)
+	hm.GenID(c)
 }
 
 // SetID sets the unique identifier of the entity.
@@ -79,7 +78,7 @@ func (c *Content) GetShortID() string {
 
 // GenShortID delegates to the functional helper.
 func (c *Content) GenShortID() {
-	am.GenShortID(c)
+	hm.GenShortID(c)
 }
 
 // SetShortID sets the short ID of the entity.
@@ -90,15 +89,14 @@ func (c *Content) SetShortID(shortID string, force ...bool) {
 	}
 }
 
-
 // GenCreateValues delegates to the functional helper.
 func (c *Content) GenCreateValues(userID ...uuid.UUID) {
-	am.SetCreateValues(c, userID...)
+	hm.SetCreateValues(c, userID...)
 }
 
 // GenUpdateValues delegates to the functional helper.
 func (c *Content) GenUpdateValues(userID ...uuid.UUID) {
-	am.SetUpdateValues(c, userID...)
+	hm.SetUpdateValues(c, userID...)
 }
 
 // CreatedBy returns the UUID of the user who created the entity.
@@ -148,7 +146,7 @@ func (c *Content) IsZero() bool {
 
 // Slug returns the slug for the content.
 func (c *Content) Slug() string {
-	return am.Normalize(c.Heading) + "-" + c.GetShortID()
+	return hm.Normalize(c.Heading) + "-" + c.GetShortID()
 }
 
 func (c *Content) OptValue() string {
@@ -158,4 +156,3 @@ func (c *Content) OptValue() string {
 func (c *Content) OptLabel() string {
 	return c.Heading
 }
-
