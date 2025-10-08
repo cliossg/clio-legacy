@@ -25,7 +25,7 @@ func NewGenerator(params hm.XParams) *Generator {
 func (g *Generator) Generate(contents []Content) error {
 	g.Log().Info("Starting markdown generation")
 
-	basePath := g.Cfg().StrValOrDef(hm.Key.SSGMarkdownPath, "_workspace/documents/markdown")
+	basePath := g.Cfg().StrValOrDef(SSGKey.MarkdownPath, "_workspace/documents/markdown")
 
 	for _, content := range contents {
 		fileName := content.Slug() + ".md"

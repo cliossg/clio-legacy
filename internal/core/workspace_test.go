@@ -8,6 +8,7 @@ import (
 
 	hm "github.com/hermesgen/hm"
 	"github.com/hermesgen/clio/internal/core"
+	"github.com/hermesgen/clio/internal/feat/ssg"
 )
 
 func TestWorkspaceSetup(t *testing.T) {
@@ -40,25 +41,25 @@ func TestWorkspaceSetup(t *testing.T) {
 			name: "dev mode",
 			env:  "dev",
 			expectedPaths: map[string]string{
-				hm.Key.DBSQLiteDSN:      "file:" + filepath.Join(tempDir, "_workspace", "db", "clio.db") + "?cache=shared&mode=rwc",
-				hm.Key.SSGWorkspacePath: filepath.Join(tempDir, "_workspace"),
-				hm.Key.SSGDocsPath:      filepath.Join(tempDir, "_workspace", "documents"),
-				hm.Key.SSGMarkdownPath:  filepath.Join(tempDir, "_workspace", "documents", "markdown"),
-				hm.Key.SSGHTMLPath:      filepath.Join(tempDir, "_workspace", "documents", "html"),
-				hm.Key.SSGAssetsPath:    filepath.Join(tempDir, "_workspace", "documents", "assets"),
-				hm.Key.SSGImagesPath:    filepath.Join(tempDir, "_workspace", "documents", "assets", "images"),
+				hm.Key.DBSQLiteDSN:         "file:" + filepath.Join(tempDir, "_workspace", "db", "clio.db") + "?cache=shared&mode=rwc",
+				ssg.SSGKey.WorkspacePath: filepath.Join(tempDir, "_workspace"),
+				ssg.SSGKey.DocsPath:      filepath.Join(tempDir, "_workspace", "documents"),
+				ssg.SSGKey.MarkdownPath:  filepath.Join(tempDir, "_workspace", "documents", "markdown"),
+				ssg.SSGKey.HTMLPath:      filepath.Join(tempDir, "_workspace", "documents", "html"),
+				ssg.SSGKey.AssetsPath:    filepath.Join(tempDir, "_workspace", "documents", "assets"),
+				ssg.SSGKey.ImagesPath:    filepath.Join(tempDir, "_workspace", "documents", "assets", "images"),
 			},
 		},
 		{
 			name: "prod mode",
 			env:  "prod",
 			expectedPaths: map[string]string{
-				hm.Key.SSGWorkspacePath: filepath.Join(homeDir, ".clio"),
-				hm.Key.SSGDocsPath:      filepath.Join(homeDir, "Documents", "Clio"),
-				hm.Key.SSGMarkdownPath:  filepath.Join(homeDir, "Documents", "Clio", "markdown"),
-				hm.Key.SSGHTMLPath:      filepath.Join(homeDir, "Documents", "Clio", "html"),
-				hm.Key.SSGAssetsPath:    filepath.Join(homeDir, "Documents", "Clio", "assets"),
-				hm.Key.SSGImagesPath:    filepath.Join(homeDir, "Documents", "Clio", "assets", "images"),
+				ssg.SSGKey.WorkspacePath: filepath.Join(homeDir, ".clio"),
+				ssg.SSGKey.DocsPath:      filepath.Join(homeDir, "Documents", "Clio"),
+				ssg.SSGKey.MarkdownPath:  filepath.Join(homeDir, "Documents", "Clio", "markdown"),
+				ssg.SSGKey.HTMLPath:      filepath.Join(homeDir, "Documents", "Clio", "html"),
+				ssg.SSGKey.AssetsPath:    filepath.Join(homeDir, "Documents", "Clio", "assets"),
+				ssg.SSGKey.ImagesPath:    filepath.Join(homeDir, "Documents", "Clio", "assets", "images"),
 			},
 		},
 	}

@@ -120,17 +120,17 @@ func (svc *BaseService) Publish(ctx context.Context, commitMessage string) (stri
 
 	// For now, we build the config from the application's configuration.
 	cfg := PublisherConfig{
-		RepoURL: svc.pm.Get(ctx, hm.Key.SSGPublishRepoURL, ""),
-		Branch:  svc.pm.Get(ctx, hm.Key.SSGPublishBranch, ""),
+		RepoURL: svc.pm.Get(ctx, SSGKey.PublishRepoURL, ""),
+		Branch:  svc.pm.Get(ctx, SSGKey.PublishBranch, ""),
 		Auth: hm.GitAuth{
 			// NOTE: This is oversimplified. We need to work out a bit more here.
 			Method: hm.AuthToken,
-			Token:  svc.pm.Get(ctx, hm.Key.SSGPublishAuthToken, ""),
+			Token:  svc.pm.Get(ctx, SSGKey.PublishAuthToken, ""),
 		},
 		CommitAuthor: hm.GitCommit{
-			UserName:  svc.pm.Get(ctx, hm.Key.SSGPublishCommitUserName, ""),
-			UserEmail: svc.pm.Get(ctx, hm.Key.SSGPublishCommitUserEmail, ""),
-			Message:   svc.pm.Get(ctx, hm.Key.SSGPublishCommitMessage, ""),
+			UserName:  svc.pm.Get(ctx, SSGKey.PublishCommitUserName, ""),
+			UserEmail: svc.pm.Get(ctx, SSGKey.PublishCommitUserEmail, ""),
+			Message:   svc.pm.Get(ctx, SSGKey.PublishCommitMessage, ""),
 		},
 	}
 
@@ -140,7 +140,7 @@ func (svc *BaseService) Publish(ctx context.Context, commitMessage string) (stri
 	}
 
 	// Get the output directory for HTML files, which is the source for publishing
-	sourceDir := svc.Cfg().StrValOrDef(hm.Key.SSGHTMLPath, "_workspace/documents/html")
+	sourceDir := svc.Cfg().StrValOrDef(SSGKey.HTMLPath, "_workspace/documents/html")
 
 	commitURL, err := svc.pub.Publish(ctx, cfg, sourceDir)
 	if err != nil {
@@ -157,22 +157,22 @@ func (svc *BaseService) Plan(ctx context.Context) (PlanReport, error) {
 
 	// For now, we build the config from the application's configuration.
 	cfg := PublisherConfig{
-		RepoURL: svc.pm.Get(ctx, hm.Key.SSGPublishRepoURL, ""),
-		Branch:  svc.pm.Get(ctx, hm.Key.SSGPublishBranch, ""),
+		RepoURL: svc.pm.Get(ctx, SSGKey.PublishRepoURL, ""),
+		Branch:  svc.pm.Get(ctx, SSGKey.PublishBranch, ""),
 		Auth: hm.GitAuth{
 			// NOTE: This is oversimplified. We need to work out a bit more here.
 			Method: hm.AuthToken,
-			Token:  svc.pm.Get(ctx, hm.Key.SSGPublishAuthToken, ""),
+			Token:  svc.pm.Get(ctx, SSGKey.PublishAuthToken, ""),
 		},
 		CommitAuthor: hm.GitCommit{
-			UserName:  svc.pm.Get(ctx, hm.Key.SSGPublishCommitUserName, ""),
-			UserEmail: svc.pm.Get(ctx, hm.Key.SSGPublishCommitUserEmail, ""),
-			Message:   svc.pm.Get(ctx, hm.Key.SSGPublishCommitMessage, ""),
+			UserName:  svc.pm.Get(ctx, SSGKey.PublishCommitUserName, ""),
+			UserEmail: svc.pm.Get(ctx, SSGKey.PublishCommitUserEmail, ""),
+			Message:   svc.pm.Get(ctx, SSGKey.PublishCommitMessage, ""),
 		},
 	}
 
 	// Get the output directory for HTML files, which is the source for planning
-	sourceDir := svc.Cfg().StrValOrDef(hm.Key.SSGHTMLPath, "_workspace/documents/html")
+	sourceDir := svc.Cfg().StrValOrDef(SSGKey.HTMLPath, "_workspace/documents/html")
 
 	report, err := svc.pub.Plan(ctx, cfg, sourceDir)
 	if err != nil {
@@ -229,7 +229,7 @@ func (svc *BaseService) GenerateHTMLFromContent(ctx context.Context) error {
 		}
 	}
 
-	layoutPath := svc.Cfg().StrValOrDef(hm.Key.SSGLayoutPath, "assets/ssg/layout/layout.html")
+	layoutPath := svc.Cfg().StrValOrDef(SSGKey.LayoutPath, "assets/ssg/layout/layout.html")
 	tmpl, err := template.ParseFS(svc.assetsFS,
 		layoutPath,
 		"assets/ssg/partial/list.tmpl",
@@ -245,20 +245,20 @@ func (svc *BaseService) GenerateHTMLFromContent(ctx context.Context) error {
 	}
 
 	processor := NewMarkdownProcessor()
-	htmlPath := svc.Cfg().StrValOrDef(hm.Key.SSGHTMLPath, "_workspace/documents/html")
+	htmlPath := svc.Cfg().StrValOrDef(SSGKey.HTMLPath, "_workspace/documents/html")
 
 	if err := CopyStaticAssets(svc.assetsFS, htmlPath); err != nil {
 		return fmt.Errorf("cannot copy static assets: %w", err)
 	}
 
-	headerStyle := svc.Cfg().StrValOrDef(hm.Key.SSGHeaderStyle, "boxed", true)
+	headerStyle := svc.Cfg().StrValOrDef(SSGKey.HeaderStyle, "boxed", true)
 	imageExtensions := []string{".png", ".jpg", ".jpeg", ".webp"}
 
 	// Prepare SearchData
 	searchData := SearchData{
 		Provider: "google", // O el proveedor que corresponda
-		Enabled:  svc.Cfg().BoolVal(hm.Key.SSGSearchGoogleEnabled, false),
-		ID:       svc.Cfg().StrValOrDef(hm.Key.SSGSearchGoogleID, ""),
+		Enabled:  svc.Cfg().BoolVal(SSGKey.SearchGoogleEnabled, false),
+		ID:       svc.Cfg().StrValOrDef(SSGKey.SearchGoogleID, ""),
 	}
 	svc.Log().Info("SearchData values", "enabled", searchData.Enabled, "id", searchData.ID) // Línea de log modificada
 
@@ -315,7 +315,7 @@ func (svc *BaseService) GenerateHTMLFromContent(ctx context.Context) error {
 			Kind:        content.Kind,
 		}
 
-		blocks := BuildBlocks(content, contents, int(svc.Cfg().IntVal(hm.Key.SSGBlocksMaxItems, 5)))
+		blocks := BuildBlocks(content, contents, int(svc.Cfg().IntVal(SSGKey.BlocksMaxItems, 5)))
 
 		data := PageData{
 			HeaderStyle: headerStyle,
@@ -357,7 +357,7 @@ func (svc *BaseService) GenerateHTMLFromContent(ctx context.Context) error {
 		}
 	}
 
-	postsPerPage := int(svc.Cfg().IntVal(hm.Key.SSGIndexMaxItems, 9))
+	postsPerPage := int(svc.Cfg().IntVal(SSGKey.IndexMaxItems, 9))
 
 	for _, index := range indexes {
 		// Check if a manual index page exists for this path

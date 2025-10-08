@@ -44,7 +44,7 @@ func main() {
 	app.MountFileServer("/", fileServer)
 
 	// Serve uploaded images from the filesystem
-	imagesPath := cfg.StrValOrDef(hm.Key.SSGImagesPath, "_workspace/documents/assets/images")
+	imagesPath := cfg.StrValOrDef(ssg.SSGKey.ImagesPath, "_workspace/documents/assets/images")
 	imageFileServer := http.FileServer(http.Dir(imagesPath))
 	app.Router.Handle("/static/images/*", http.StripPrefix("/static/images/", imageFileServer))
 

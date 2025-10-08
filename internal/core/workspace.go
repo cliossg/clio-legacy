@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	hm "github.com/hermesgen/hm"
+	"github.com/hermesgen/clio/internal/feat/ssg"
 )
 
 var key = hm.Key
@@ -52,12 +53,12 @@ func (w *Workspace) setupDirs() error {
 		devDSN := "file:" + filepath.Join(dbDir, "clio.db") + "?cache=shared&mode=rwc"
 		w.Cfg().Set(key.DBSQLiteDSN, devDSN)
 
-		w.Cfg().Set(key.SSGWorkspacePath, base)
-		w.Cfg().Set(key.SSGDocsPath, filepath.Join(base, "documents"))
-		w.Cfg().Set(key.SSGMarkdownPath, filepath.Join(base, "documents", "markdown"))
-		w.Cfg().Set(key.SSGHTMLPath, filepath.Join(base, "documents", "html"))
-		w.Cfg().Set(key.SSGAssetsPath, filepath.Join(base, "documents", "assets"))
-		w.Cfg().Set(key.SSGImagesPath, filepath.Join(base, "documents", "assets", "images"))
+		w.Cfg().Set(ssg.SSGKey.WorkspacePath, base)
+		w.Cfg().Set(ssg.SSGKey.DocsPath, filepath.Join(base, "documents"))
+		w.Cfg().Set(ssg.SSGKey.MarkdownPath, filepath.Join(base, "documents", "markdown"))
+		w.Cfg().Set(ssg.SSGKey.HTMLPath, filepath.Join(base, "documents", "html"))
+		w.Cfg().Set(ssg.SSGKey.AssetsPath, filepath.Join(base, "documents", "assets"))
+		w.Cfg().Set(ssg.SSGKey.ImagesPath, filepath.Join(base, "documents", "assets", "images"))
 
 		w.Log().Info("Overriding config for DEV mode", "key", key.DBSQLiteDSN, "value", devDSN)
 
@@ -84,12 +85,12 @@ func (w *Workspace) setupDirs() error {
 			imagesPath,
 		}
 
-		w.Cfg().Set(key.SSGWorkspacePath, basePath)
-		w.Cfg().Set(key.SSGDocsPath, docsPath)
-		w.Cfg().Set(key.SSGMarkdownPath, markdownPath)
-		w.Cfg().Set(key.SSGHTMLPath, htmlPath)
-		w.Cfg().Set(key.SSGAssetsPath, assetsPath)
-		w.Cfg().Set(key.SSGImagesPath, imagesPath)
+		w.Cfg().Set(ssg.SSGKey.WorkspacePath, basePath)
+		w.Cfg().Set(ssg.SSGKey.DocsPath, docsPath)
+		w.Cfg().Set(ssg.SSGKey.MarkdownPath, markdownPath)
+		w.Cfg().Set(ssg.SSGKey.HTMLPath, htmlPath)
+		w.Cfg().Set(ssg.SSGKey.AssetsPath, assetsPath)
+		w.Cfg().Set(ssg.SSGKey.ImagesPath, imagesPath)
 	}
 
 	w.Log().Info("Ensuring base directory structure exists...")

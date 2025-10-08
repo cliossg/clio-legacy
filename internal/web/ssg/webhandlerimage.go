@@ -55,7 +55,7 @@ func (h *WebHandler) CreateImage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Determine upload directory
-	uploadDir, _ := h.Cfg().StrVal(hm.Key.SSGImagesPath)
+	uploadDir, _ := h.Cfg().StrVal(feat.SSGKey.ImagesPath)
 	if err = os.MkdirAll(uploadDir, os.ModePerm); err != nil {
 		h.Err(w, err, "Cannot create upload directory", http.StatusInternalServerError)
 		return
