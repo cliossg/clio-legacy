@@ -92,4 +92,16 @@ Manage multiple independent sites from a single Clio installation.
 
 ---
 
+## More Site Index Views
+
+Different views and states of the site index page.
+
+![Site Index 2](../img/site-index-2.png)
+
+![Site Index 3](../img/site-index-3.png)
+
+![Site Index 4](../img/site-index4.png)
+
+---
+
 <p align="right"><i><a href="old/20251010-gallery.md">View previous gallery version...</a></i></p>
