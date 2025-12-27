@@ -32,13 +32,13 @@ The workflow is straightforward: write in Markdown, preview, and publish when re
 make test
 
 # Run tests with coverage
-make coverage
+make test-coverage
 
 # Run tests with HTML coverage report
-make coverage-html
+make test-coverage-html
 
 # Check if coverage meets 85% threshold
-make coverage-check
+make test-coverage-check
 ```
 
 ### Quality Checks
