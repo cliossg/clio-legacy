@@ -23,36 +23,6 @@ The workflow is straightforward: write in Markdown, preview, and publish when re
 
 ---
 
-## Development
-
-### Running Tests
-
-```bash
-# Run all tests
-make test
-
-# Run tests with coverage
-make test-coverage
-
-# Run tests with HTML coverage report
-make test-coverage-html
-
-# Check if coverage meets 85% threshold
-make test-coverage-check
-```
-
-### Quality Checks
-
-```bash
-# Run all quality checks (format, vet, test, coverage, lint)
-make check
-
-# Run CI pipeline (strict)
-make ci
-```
-
----
-
 For a detailed feature list, see [features](docs/features.md).
 For a complete overview of plans, see the [roadmap](docs/roadmap.md).
 
