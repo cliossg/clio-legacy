@@ -89,6 +89,16 @@ func TestProcessorToHTML(t *testing.T) {
 			markdown: "",
 			want:     "",
 		},
+		{
+			name:     "converts unordered lists",
+			markdown: "- Item 1\n- Item 2",
+			want:     "<ul>\n<li>Item 1</li>\n<li>Item 2</li>\n</ul>\n",
+		},
+		{
+			name:     "converts ordered lists",
+			markdown: "1. First\n2. Second",
+			want:     "<ol>\n<li>First</li>\n<li>Second</li>\n</ol>\n",
+		},
 	}
 
 	for _, tt := range tests {
