@@ -25,6 +25,10 @@ type mockServiceRepo struct {
 	images          map[uuid.UUID]Image
 	imagesByShortID map[string]Image
 	imageVariants   map[uuid.UUID]ImageVariant
+	contentImages   map[uuid.UUID][]ContentImage
+	sectionImages   map[uuid.UUID][]SectionImage
+	contentTags     map[uuid.UUID][]Tag
+	tagContent      map[uuid.UUID][]Content
 
 	createContentErr error
 	getContentErr    error
@@ -60,6 +64,16 @@ type mockServiceRepo struct {
 	getImageVariantErr    error
 	updateImageVariantErr error
 	deleteImageVariantErr error
+
+	addTagToContentErr               error
+	removeTagFromContentErr          error
+	getTagsForContentErr             error
+	getContentForTagErr              error
+	getContentImagesByContentIDErr   error
+	getSectionImagesBySectionIDErr   error
+
+	createTagCalled      bool
+	addTagToContentCalled bool
 }
 
 func newMockServiceRepo() *mockServiceRepo {
@@ -78,6 +92,10 @@ func newMockServiceRepo() *mockServiceRepo {
 		images:          make(map[uuid.UUID]Image),
 		imagesByShortID: make(map[string]Image),
 		imageVariants:   make(map[uuid.UUID]ImageVariant),
+		contentImages:   make(map[uuid.UUID][]ContentImage),
+		sectionImages:   make(map[uuid.UUID][]SectionImage),
+		contentTags:     make(map[uuid.UUID][]Tag),
+		tagContent:      make(map[uuid.UUID][]Content),
 	}
 }
 
@@ -250,6 +268,7 @@ func (m *mockServiceRepo) DeleteLayout(ctx context.Context, id uuid.UUID) error 
 }
 
 func (m *mockServiceRepo) CreateTag(ctx context.Context, tag Tag) error {
+	m.createTagCalled = true
 	if m.createTagErr != nil {
 		return m.createTagErr
 	}
@@ -507,7 +526,14 @@ func (m *mockServiceRepo) DeleteContentImage(ctx context.Context, id uuid.UUID) 
 }
 
 func (m *mockServiceRepo) GetContentImagesByContentID(ctx context.Context, contentID uuid.UUID) ([]ContentImage, error) {
-	return nil, nil
+	if m.getContentImagesByContentIDErr != nil {
+		return nil, m.getContentImagesByContentIDErr
+	}
+	images, exists := m.contentImages[contentID]
+	if !exists {
+		return []ContentImage{}, nil
+	}
+	return images, nil
 }
 
 func (m *mockServiceRepo) CreateSectionImage(ctx context.Context, sectionImage *SectionImage) error {
@@ -519,23 +545,51 @@ func (m *mockServiceRepo) DeleteSectionImage(ctx context.Context, id uuid.UUID) 
 }
 
 func (m *mockServiceRepo) GetSectionImagesBySectionID(ctx context.Context, sectionID uuid.UUID) ([]SectionImage, error) {
-	return nil, nil
+	if m.getSectionImagesBySectionIDErr != nil {
+		return nil, m.getSectionImagesBySectionIDErr
+	}
+	images, exists := m.sectionImages[sectionID]
+	if !exists {
+		return []SectionImage{}, nil
+	}
+	return images, nil
 }
 
 func (m *mockServiceRepo) AddTagToContent(ctx context.Context, contentID, tagID uuid.UUID) error {
+	m.addTagToContentCalled = true
+	if m.addTagToContentErr != nil {
+		return m.addTagToContentErr
+	}
 	return nil
 }
 
 func (m *mockServiceRepo) RemoveTagFromContent(ctx context.Context, contentID, tagID uuid.UUID) error {
+	if m.removeTagFromContentErr != nil {
+		return m.removeTagFromContentErr
+	}
 	return nil
 }
 
 func (m *mockServiceRepo) GetTagsForContent(ctx context.Context, contentID uuid.UUID) ([]Tag, error) {
-	return nil, nil
+	if m.getTagsForContentErr != nil {
+		return nil, m.getTagsForContentErr
+	}
+	tags, exists := m.contentTags[contentID]
+	if !exists {
+		return []Tag{}, nil
+	}
+	return tags, nil
 }
 
 func (m *mockServiceRepo) GetContentForTag(ctx context.Context, tagID uuid.UUID) ([]Content, error) {
-	return nil, nil
+	if m.getContentForTagErr != nil {
+		return nil, m.getContentForTagErr
+	}
+	content, exists := m.tagContent[tagID]
+	if !exists {
+		return []Content{}, nil
+	}
+	return content, nil
 }
 
 func (m *mockServiceRepo) GetUserByUsername(ctx context.Context, username string) (auth.User, error) {
