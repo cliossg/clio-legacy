@@ -71,6 +71,8 @@ type mockServiceRepo struct {
 	getContentForTagErr              error
 	getContentImagesByContentIDErr   error
 	getSectionImagesBySectionIDErr   error
+	deleteContentImageErr            error
+	deleteSectionImageErr            error
 
 	createTagCalled      bool
 	addTagToContentCalled bool
