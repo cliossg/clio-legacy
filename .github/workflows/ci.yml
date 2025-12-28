@@ -39,7 +39,7 @@ jobs:
 
       - name: Run tests with coverage
         run: |
-          go test -v -race -coverprofile=coverage.out ./...
+          go test -v -race -coverprofile=coverage.out $(go list ./... | grep -v -e '/scripts/seeding' -e '/tmp/seeding')
 
       - name: Check coverage percentage
         run: |

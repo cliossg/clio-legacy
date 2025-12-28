@@ -211,7 +211,7 @@ test-coverage-summary:
 	@echo "┌────────────────────────────────────────────────────────┬──────────┐"
 	@echo "│ Package                                                │ Coverage │"
 	@echo "├────────────────────────────────────────────────────────┼──────────┤"
-	@for pkg in $$(go list ./... | grep -v "/build/"); do \
+	@for pkg in $$(go list ./... | grep -v -e "/build/" -e "/scripts/seeding" -e "/tmp/seeding"); do \
 		pkgname=$$(echo $$pkg | sed 's|github.com/hermesgen/clio||' | sed 's|^/||'); \
 		if [ -z "$$pkgname" ]; then pkgname="."; fi; \
 		result=$$(go test -cover $$pkg 2>&1); \
