@@ -87,7 +87,9 @@ func setupTestSsgRepo(t *testing.T) (*ClioRepo, uuid.UUID) {
 			site_id TEXT NOT NULL,
 			short_id TEXT,
 			name TEXT NOT NULL,
-			template TEXT,
+			description TEXT,
+			code TEXT,
+			header_image_id TEXT,
 			created_by TEXT,
 			updated_by TEXT,
 			created_at TIMESTAMP,
@@ -1110,6 +1112,395 @@ func TestClioRepoDeleteTag(t *testing.T) {
 				_, err := repo.GetTag(ctx, tt.id)
 				if err == nil {
 					t.Error("DeleteTag() tag still exists after deletion")
+				}
+			}
+		})
+	}
+}
+
+func TestClioRepoCreateLayout(t *testing.T) {
+	repo, siteID := setupTestSsgRepo(t)
+	defer repo.db.Close()
+	ctx := ssg.NewContextWithSite("test-site", siteID)
+
+	tests := []struct {
+		name    string
+		layout  ssg.Layout
+		wantErr bool
+	}{
+		{
+			name: "creates layout successfully",
+			layout: ssg.Layout{
+				ID:     uuid.New(),
+				SiteID: siteID,
+				Name:   "Default Layout",
+			},
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := repo.CreateLayout(ctx, tt.layout)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("CreateLayout() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestClioRepoGetAllLayouts(t *testing.T) {
+	repo, siteID := setupTestSsgRepo(t)
+	defer repo.db.Close()
+	ctx := ssg.NewContextWithSite("test-site", siteID)
+
+	layout1 := ssg.Layout{
+		ID:     uuid.New(),
+		SiteID: siteID,
+		Name:   "Layout 1",
+	}
+	layout2 := ssg.Layout{
+		ID:     uuid.New(),
+		SiteID: siteID,
+		Name:   "Layout 2",
+	}
+	repo.CreateLayout(ctx, layout1)
+	repo.CreateLayout(ctx, layout2)
+
+	layouts, err := repo.GetAllLayouts(ctx)
+	if err != nil {
+		t.Errorf("GetAllLayouts() error = %v", err)
+		return
+	}
+
+	if len(layouts) != 2 {
+		t.Errorf("GetAllLayouts() got %d layouts, want 2", len(layouts))
+	}
+}
+
+func TestClioRepoGetLayout(t *testing.T) {
+	repo, siteID := setupTestSsgRepo(t)
+	defer repo.db.Close()
+	ctx := ssg.NewContextWithSite("test-site", siteID)
+
+	layout := ssg.Layout{
+		ID:     uuid.New(),
+		SiteID: siteID,
+		Name:   "Test Layout",
+	}
+	repo.CreateLayout(ctx, layout)
+
+	tests := []struct {
+		name    string
+		id      uuid.UUID
+		wantErr bool
+	}{
+		{
+			name:    "gets existing layout",
+			id:      layout.ID,
+			wantErr: false,
+		},
+		{
+			name:    "fails with non-existent layout",
+			id:      uuid.New(),
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := repo.GetLayout(ctx, tt.id)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetLayout() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !tt.wantErr && got.ID != tt.id {
+				t.Errorf("GetLayout() got ID = %v, want %v", got.ID, tt.id)
+			}
+		})
+	}
+}
+
+func TestClioRepoUpdateLayout(t *testing.T) {
+	repo, siteID := setupTestSsgRepo(t)
+	defer repo.db.Close()
+	ctx := ssg.NewContextWithSite("test-site", siteID)
+
+	layout := ssg.Layout{
+		ID:     uuid.New(),
+		SiteID: siteID,
+		Name:   "Original Layout",
+	}
+	repo.CreateLayout(ctx, layout)
+
+	tests := []struct {
+		name    string
+		layout  ssg.Layout
+		wantErr bool
+	}{
+		{
+			name: "updates layout successfully",
+			layout: ssg.Layout{
+				ID:     layout.ID,
+				SiteID: layout.SiteID,
+				Name:   "Updated Layout",
+			},
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := repo.UpdateLayout(ctx, tt.layout)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("UpdateLayout() error = %v, wantErr %v", err, tt.wantErr)
+			}
+
+			if !tt.wantErr {
+				updated, _ := repo.GetLayout(ctx, tt.layout.ID)
+				if updated.Name != tt.layout.Name {
+					t.Errorf("UpdateLayout() name = %v, want %v", updated.Name, tt.layout.Name)
+				}
+			}
+		})
+	}
+}
+
+func TestClioRepoDeleteLayout(t *testing.T) {
+	repo, siteID := setupTestSsgRepo(t)
+	defer repo.db.Close()
+	ctx := ssg.NewContextWithSite("test-site", siteID)
+
+	layout := ssg.Layout{
+		ID:     uuid.New(),
+		SiteID: siteID,
+		Name:   "Test Layout",
+	}
+	repo.CreateLayout(ctx, layout)
+
+	tests := []struct {
+		name    string
+		id      uuid.UUID
+		wantErr bool
+	}{
+		{
+			name:    "deletes layout successfully",
+			id:      layout.ID,
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := repo.DeleteLayout(ctx, tt.id)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("DeleteLayout() error = %v, wantErr %v", err, tt.wantErr)
+			}
+
+			if !tt.wantErr {
+				_, err := repo.GetLayout(ctx, tt.id)
+				if err == nil {
+					t.Error("DeleteLayout() layout still exists after deletion")
+				}
+			}
+		})
+	}
+}
+
+func TestClioRepoCreateImage(t *testing.T) {
+	repo, siteID := setupTestSsgRepo(t)
+	defer repo.db.Close()
+	ctx := ssg.NewContextWithSite("test-site", siteID)
+
+	tests := []struct {
+		name    string
+		image   *ssg.Image
+		wantErr bool
+	}{
+		{
+			name: "creates image successfully",
+			image: &ssg.Image{
+				ID:       uuid.New(),
+				SiteID:   siteID,
+				FileName: "test.jpg",
+				FilePath: "/images/test.jpg",
+				AltText:  "Test Image",
+			},
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := repo.CreateImage(ctx, tt.image)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("CreateImage() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestClioRepoGetImage(t *testing.T) {
+	repo, siteID := setupTestSsgRepo(t)
+	defer repo.db.Close()
+	ctx := ssg.NewContextWithSite("test-site", siteID)
+
+	image := &ssg.Image{
+		ID:       uuid.New(),
+		SiteID:   siteID,
+		FileName: "test.jpg",
+		FilePath: "/images/test.jpg",
+		AltText:  "Test Image",
+	}
+	repo.CreateImage(ctx, image)
+
+	tests := []struct {
+		name    string
+		id      uuid.UUID
+		wantErr bool
+	}{
+		{
+			name:    "gets existing image",
+			id:      image.ID,
+			wantErr: false,
+		},
+		{
+			name:    "fails with non-existent image",
+			id:      uuid.New(),
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := repo.GetImage(ctx, tt.id)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetImage() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !tt.wantErr && got.ID != tt.id {
+				t.Errorf("GetImage() got ID = %v, want %v", got.ID, tt.id)
+			}
+		})
+	}
+}
+
+func TestClioRepoListImages(t *testing.T) {
+	repo, siteID := setupTestSsgRepo(t)
+	defer repo.db.Close()
+	ctx := ssg.NewContextWithSite("test-site", siteID)
+
+	image1 := &ssg.Image{
+		ID:       uuid.New(),
+		SiteID:   siteID,
+		FileName: "test1.jpg",
+		FilePath: "/images/test1.jpg",
+	}
+	image2 := &ssg.Image{
+		ID:       uuid.New(),
+		SiteID:   siteID,
+		FileName: "test2.jpg",
+		FilePath: "/images/test2.jpg",
+	}
+	repo.CreateImage(ctx, image1)
+	repo.CreateImage(ctx, image2)
+
+	images, err := repo.ListImages(ctx)
+	if err != nil {
+		t.Errorf("ListImages() error = %v", err)
+		return
+	}
+
+	if len(images) != 2 {
+		t.Errorf("ListImages() got %d images, want 2", len(images))
+	}
+}
+
+func TestClioRepoUpdateImage(t *testing.T) {
+	repo, siteID := setupTestSsgRepo(t)
+	defer repo.db.Close()
+	ctx := ssg.NewContextWithSite("test-site", siteID)
+
+	image := &ssg.Image{
+		ID:       uuid.New(),
+		SiteID:   siteID,
+		FileName: "test.jpg",
+		FilePath: "/images/test.jpg",
+		AltText:  "Original Alt Text",
+	}
+	repo.CreateImage(ctx, image)
+
+	tests := []struct {
+		name    string
+		image   *ssg.Image
+		wantErr bool
+	}{
+		{
+			name: "updates image successfully",
+			image: &ssg.Image{
+				ID:       image.ID,
+				SiteID:   image.SiteID,
+				FileName: image.FileName,
+				FilePath: image.FilePath,
+				AltText:  "Updated Alt Text",
+			},
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := repo.UpdateImage(ctx, tt.image)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("UpdateImage() error = %v, wantErr %v", err, tt.wantErr)
+			}
+
+			if !tt.wantErr {
+				updated, _ := repo.GetImage(ctx, tt.image.ID)
+				if updated.AltText != tt.image.AltText {
+					t.Errorf("UpdateImage() altText = %v, want %v", updated.AltText, tt.image.AltText)
+				}
+			}
+		})
+	}
+}
+
+func TestClioRepoDeleteImage(t *testing.T) {
+	repo, siteID := setupTestSsgRepo(t)
+	defer repo.db.Close()
+	ctx := ssg.NewContextWithSite("test-site", siteID)
+
+	image := &ssg.Image{
+		ID:       uuid.New(),
+		SiteID:   siteID,
+		FileName: "test.jpg",
+		FilePath: "/images/test.jpg",
+	}
+	repo.CreateImage(ctx, image)
+
+	tests := []struct {
+		name    string
+		id      uuid.UUID
+		wantErr bool
+	}{
+		{
+			name:    "deletes image successfully",
+			id:      image.ID,
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := repo.DeleteImage(ctx, tt.id)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("DeleteImage() error = %v, wantErr %v", err, tt.wantErr)
+			}
+
+			if !tt.wantErr {
+				_, err := repo.GetImage(ctx, tt.id)
+				if err == nil {
+					t.Error("DeleteImage() image still exists after deletion")
 				}
 			}
 		})
