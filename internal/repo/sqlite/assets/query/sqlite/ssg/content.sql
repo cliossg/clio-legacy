@@ -97,5 +97,5 @@ SELECT COUNT(DISTINCT c.id)
 FROM content c
 LEFT JOIN section s ON c.section_id = s.id
 WHERE
-    s.site_id = ?
+    c.site_id = ?
     AND (? = '' OR c.heading LIKE '%' || ? || '%');

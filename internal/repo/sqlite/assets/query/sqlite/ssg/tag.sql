@@ -48,7 +48,7 @@ JOIN content_tag ct ON t.id = ct.tag_id
 WHERE ct.content_id = ?;
 
 -- GetContentForTag
-SELECT c.id, c.short_id, c.user_id, c.section_id, c.heading, c.body, c.status, c.created_by, c.updated_by, c.created_at, c.updated_at
+SELECT c.id, c.site_id, c.short_id, c.user_id, c.section_id, c.kind, c.heading, c.summary, c.body, c.draft, c.featured, c.series, c.series_order, c.published_at, c.created_by, c.updated_by, c.created_at, c.updated_at
 FROM content c
 JOIN content_tag ct ON c.id = ct.content_id
 WHERE ct.tag_id = ?;
