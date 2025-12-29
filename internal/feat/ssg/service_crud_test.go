@@ -69,7 +69,9 @@ type mockServiceRepo struct {
 	removeTagFromContentErr          error
 	getTagsForContentErr             error
 	getContentForTagErr              error
+	createContentImageErr            error
 	getContentImagesByContentIDErr   error
+	createSectionImageErr            error
 	getSectionImagesBySectionIDErr   error
 	deleteContentImageErr            error
 	deleteSectionImageErr            error
@@ -520,6 +522,9 @@ func (m *mockServiceRepo) DeleteImageVariant(ctx context.Context, id uuid.UUID) 
 }
 
 func (m *mockServiceRepo) CreateContentImage(ctx context.Context, contentImage *ContentImage) error {
+	if m.createContentImageErr != nil {
+		return m.createContentImageErr
+	}
 	return nil
 }
 
@@ -539,6 +544,9 @@ func (m *mockServiceRepo) GetContentImagesByContentID(ctx context.Context, conte
 }
 
 func (m *mockServiceRepo) CreateSectionImage(ctx context.Context, sectionImage *SectionImage) error {
+	if m.createSectionImageErr != nil {
+		return m.createSectionImageErr
+	}
 	return nil
 }
 
