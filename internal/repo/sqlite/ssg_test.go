@@ -692,3 +692,426 @@ func TestClioRepoGetParamByRefKey(t *testing.T) {
 		})
 	}
 }
+
+func TestClioRepoGetParam(t *testing.T) {
+	repo, siteID := setupTestSsgRepo(t)
+	defer repo.db.Close()
+	ctx := ssg.NewContextWithSite("test-site", siteID)
+
+	param := &ssg.Param{
+		ID:     uuid.New(),
+		SiteID: siteID,
+		Name:   "site.title",
+		RefKey: "ssg.site.title",
+		Value:  "My Site",
+	}
+	repo.CreateParam(ctx, param)
+
+	tests := []struct {
+		name    string
+		id      uuid.UUID
+		wantErr bool
+	}{
+		{
+			name:    "gets existing param",
+			id:      param.ID,
+			wantErr: false,
+		},
+		{
+			name:    "fails with non-existent param",
+			id:      uuid.New(),
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := repo.GetParam(ctx, tt.id)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetParam() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !tt.wantErr && got.ID != tt.id {
+				t.Errorf("GetParam() got ID = %v, want %v", got.ID, tt.id)
+			}
+		})
+	}
+}
+
+func TestClioRepoListParams(t *testing.T) {
+	repo, siteID := setupTestSsgRepo(t)
+	defer repo.db.Close()
+	ctx := ssg.NewContextWithSite("test-site", siteID)
+
+	param1 := &ssg.Param{
+		ID:     uuid.New(),
+		SiteID: siteID,
+		Name:   "site.title",
+		RefKey: "ssg.site.title",
+		Value:  "My Site",
+	}
+	param2 := &ssg.Param{
+		ID:     uuid.New(),
+		SiteID: siteID,
+		Name:   "site.author",
+		RefKey: "ssg.site.author",
+		Value:  "John Doe",
+	}
+	repo.CreateParam(ctx, param1)
+	repo.CreateParam(ctx, param2)
+
+	params, err := repo.ListParams(ctx)
+	if err != nil {
+		t.Errorf("ListParams() error = %v", err)
+		return
+	}
+
+	if len(params) != 2 {
+		t.Errorf("ListParams() got %d params, want 2", len(params))
+	}
+}
+
+func TestClioRepoUpdateParam(t *testing.T) {
+	repo, siteID := setupTestSsgRepo(t)
+	defer repo.db.Close()
+	ctx := ssg.NewContextWithSite("test-site", siteID)
+
+	param := &ssg.Param{
+		ID:     uuid.New(),
+		SiteID: siteID,
+		Name:   "site.title",
+		RefKey: "ssg.site.title",
+		Value:  "Original Title",
+	}
+	repo.CreateParam(ctx, param)
+
+	tests := []struct {
+		name    string
+		param   *ssg.Param
+		wantErr bool
+	}{
+		{
+			name: "updates param successfully",
+			param: &ssg.Param{
+				ID:     param.ID,
+				SiteID: param.SiteID,
+				Name:   param.Name,
+				RefKey: param.RefKey,
+				Value:  "Updated Title",
+			},
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := repo.UpdateParam(ctx, tt.param)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("UpdateParam() error = %v, wantErr %v", err, tt.wantErr)
+			}
+
+			if !tt.wantErr {
+				updated, _ := repo.GetParam(ctx, tt.param.ID)
+				if updated.Value != tt.param.Value {
+					t.Errorf("UpdateParam() value = %v, want %v", updated.Value, tt.param.Value)
+				}
+			}
+		})
+	}
+}
+
+func TestClioRepoDeleteParam(t *testing.T) {
+	repo, siteID := setupTestSsgRepo(t)
+	defer repo.db.Close()
+	ctx := ssg.NewContextWithSite("test-site", siteID)
+
+	param := &ssg.Param{
+		ID:     uuid.New(),
+		SiteID: siteID,
+		Name:   "site.title",
+		RefKey: "ssg.site.title",
+		Value:  "My Site",
+	}
+	repo.CreateParam(ctx, param)
+
+	tests := []struct {
+		name    string
+		id      uuid.UUID
+		wantErr bool
+	}{
+		{
+			name:    "deletes param successfully",
+			id:      param.ID,
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := repo.DeleteParam(ctx, tt.id)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("DeleteParam() error = %v, wantErr %v", err, tt.wantErr)
+			}
+
+			if !tt.wantErr {
+				_, err := repo.GetParam(ctx, tt.id)
+				if err == nil {
+					t.Error("DeleteParam() param still exists after deletion")
+				}
+			}
+		})
+	}
+}
+
+func TestClioRepoUpdateSection(t *testing.T) {
+	repo, siteID := setupTestSsgRepo(t)
+	defer repo.db.Close()
+	ctx := ssg.NewContextWithSite("test-site", siteID)
+
+	section := ssg.Section{
+		ID:     uuid.New(),
+		SiteID: siteID,
+		Name:   "Original Section",
+		Path:   "original-section",
+	}
+	repo.CreateSection(ctx, section)
+
+	tests := []struct {
+		name    string
+		section ssg.Section
+		wantErr bool
+	}{
+		{
+			name: "updates section successfully",
+			section: ssg.Section{
+				ID:     section.ID,
+				SiteID: section.SiteID,
+				Name:   "Updated Section",
+				Path:   "updated-section",
+			},
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := repo.UpdateSection(ctx, tt.section)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("UpdateSection() error = %v, wantErr %v", err, tt.wantErr)
+			}
+
+			if !tt.wantErr {
+				updated, _ := repo.GetSection(ctx, tt.section.ID)
+				if updated.Name != tt.section.Name {
+					t.Errorf("UpdateSection() name = %v, want %v", updated.Name, tt.section.Name)
+				}
+			}
+		})
+	}
+}
+
+func TestClioRepoDeleteSection(t *testing.T) {
+	repo, siteID := setupTestSsgRepo(t)
+	defer repo.db.Close()
+	ctx := ssg.NewContextWithSite("test-site", siteID)
+
+	section := ssg.Section{
+		ID:     uuid.New(),
+		SiteID: siteID,
+		Name:   "Test Section",
+		Path:   "test-section",
+	}
+	repo.CreateSection(ctx, section)
+
+	tests := []struct {
+		name    string
+		id      uuid.UUID
+		wantErr bool
+	}{
+		{
+			name:    "deletes section successfully",
+			id:      section.ID,
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := repo.DeleteSection(ctx, tt.id)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("DeleteSection() error = %v, wantErr %v", err, tt.wantErr)
+			}
+
+			if !tt.wantErr {
+				_, err := repo.GetSection(ctx, tt.id)
+				if err == nil {
+					t.Error("DeleteSection() section still exists after deletion")
+				}
+			}
+		})
+	}
+}
+
+func TestClioRepoGetTag(t *testing.T) {
+	repo, siteID := setupTestSsgRepo(t)
+	defer repo.db.Close()
+	ctx := ssg.NewContextWithSite("test-site", siteID)
+
+	tag := ssg.Tag{
+		ID:        uuid.New(),
+		SiteID:    siteID,
+		Name:      "golang",
+		SlugField: "golang",
+	}
+	repo.CreateTag(ctx, tag)
+
+	tests := []struct {
+		name    string
+		id      uuid.UUID
+		wantErr bool
+	}{
+		{
+			name:    "gets existing tag",
+			id:      tag.ID,
+			wantErr: false,
+		},
+		{
+			name:    "fails with non-existent tag",
+			id:      uuid.New(),
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := repo.GetTag(ctx, tt.id)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetTag() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !tt.wantErr && got.ID != tt.id {
+				t.Errorf("GetTag() got ID = %v, want %v", got.ID, tt.id)
+			}
+		})
+	}
+}
+
+func TestClioRepoGetAllTags(t *testing.T) {
+	repo, siteID := setupTestSsgRepo(t)
+	defer repo.db.Close()
+	ctx := ssg.NewContextWithSite("test-site", siteID)
+
+	tag1 := ssg.Tag{
+		ID:        uuid.New(),
+		SiteID:    siteID,
+		Name:      "golang",
+		SlugField: "golang",
+	}
+	tag2 := ssg.Tag{
+		ID:        uuid.New(),
+		SiteID:    siteID,
+		Name:      "rust",
+		SlugField: "rust",
+	}
+	repo.CreateTag(ctx, tag1)
+	repo.CreateTag(ctx, tag2)
+
+	tags, err := repo.GetAllTags(ctx)
+	if err != nil {
+		t.Errorf("GetAllTags() error = %v", err)
+		return
+	}
+
+	if len(tags) != 2 {
+		t.Errorf("GetAllTags() got %d tags, want 2", len(tags))
+	}
+}
+
+func TestClioRepoUpdateTag(t *testing.T) {
+	repo, siteID := setupTestSsgRepo(t)
+	defer repo.db.Close()
+	ctx := ssg.NewContextWithSite("test-site", siteID)
+
+	tag := ssg.Tag{
+		ID:        uuid.New(),
+		SiteID:    siteID,
+		Name:      "golang",
+		SlugField: "golang",
+	}
+	repo.CreateTag(ctx, tag)
+
+	tests := []struct {
+		name    string
+		tag     ssg.Tag
+		wantErr bool
+	}{
+		{
+			name: "updates tag successfully",
+			tag: ssg.Tag{
+				ID:        tag.ID,
+				SiteID:    tag.SiteID,
+				Name:      "go-lang",
+				SlugField: "go-lang",
+			},
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := repo.UpdateTag(ctx, tt.tag)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("UpdateTag() error = %v, wantErr %v", err, tt.wantErr)
+			}
+
+			if !tt.wantErr {
+				updated, _ := repo.GetTag(ctx, tt.tag.ID)
+				if updated.Name != tt.tag.Name {
+					t.Errorf("UpdateTag() name = %v, want %v", updated.Name, tt.tag.Name)
+				}
+			}
+		})
+	}
+}
+
+func TestClioRepoDeleteTag(t *testing.T) {
+	repo, siteID := setupTestSsgRepo(t)
+	defer repo.db.Close()
+	ctx := ssg.NewContextWithSite("test-site", siteID)
+
+	tag := ssg.Tag{
+		ID:        uuid.New(),
+		SiteID:    siteID,
+		Name:      "golang",
+		SlugField: "golang",
+	}
+	repo.CreateTag(ctx, tag)
+
+	tests := []struct {
+		name    string
+		id      uuid.UUID
+		wantErr bool
+	}{
+		{
+			name:    "deletes tag successfully",
+			id:      tag.ID,
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := repo.DeleteTag(ctx, tt.id)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("DeleteTag() error = %v, wantErr %v", err, tt.wantErr)
+			}
+
+			if !tt.wantErr {
+				_, err := repo.GetTag(ctx, tt.id)
+				if err == nil {
+					t.Error("DeleteTag() tag still exists after deletion")
+				}
+			}
+		})
+	}
+}
