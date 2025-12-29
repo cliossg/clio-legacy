@@ -1506,3 +1506,161 @@ func TestClioRepoDeleteImage(t *testing.T) {
 		})
 	}
 }
+
+func TestClioRepoAddTagToContent(t *testing.T) {
+	repo, siteID := setupTestSsgRepo(t)
+	defer repo.db.Close()
+	ctx := ssg.NewContextWithSite("test-site", siteID)
+
+	content := &ssg.Content{
+		ID:      uuid.New(),
+		SiteID:  siteID,
+		Heading: "Test Content",
+	}
+	repo.CreateContent(ctx, content)
+
+	tag := ssg.Tag{
+		ID:        uuid.New(),
+		SiteID:    siteID,
+		Name:      "golang",
+		SlugField: "golang",
+	}
+	repo.CreateTag(ctx, tag)
+
+	tests := []struct {
+		name      string
+		contentID uuid.UUID
+		tagID     uuid.UUID
+		wantErr   bool
+	}{
+		{
+			name:      "adds tag to content successfully",
+			contentID: content.ID,
+			tagID:     tag.ID,
+			wantErr:   false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := repo.AddTagToContent(ctx, tt.contentID, tt.tagID)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("AddTagToContent() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestClioRepoRemoveTagFromContent(t *testing.T) {
+	repo, siteID := setupTestSsgRepo(t)
+	defer repo.db.Close()
+	ctx := ssg.NewContextWithSite("test-site", siteID)
+
+	content := &ssg.Content{
+		ID:      uuid.New(),
+		SiteID:  siteID,
+		Heading: "Test Content",
+	}
+	repo.CreateContent(ctx, content)
+
+	tag := ssg.Tag{
+		ID:        uuid.New(),
+		SiteID:    siteID,
+		Name:      "golang",
+		SlugField: "golang",
+	}
+	repo.CreateTag(ctx, tag)
+	repo.AddTagToContent(ctx, content.ID, tag.ID)
+
+	tests := []struct {
+		name      string
+		contentID uuid.UUID
+		tagID     uuid.UUID
+		wantErr   bool
+	}{
+		{
+			name:      "removes tag from content successfully",
+			contentID: content.ID,
+			tagID:     tag.ID,
+			wantErr:   false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := repo.RemoveTagFromContent(ctx, tt.contentID, tt.tagID)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("RemoveTagFromContent() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestClioRepoGetTagsForContent(t *testing.T) {
+	repo, siteID := setupTestSsgRepo(t)
+	defer repo.db.Close()
+	ctx := ssg.NewContextWithSite("test-site", siteID)
+
+	content := &ssg.Content{
+		ID:      uuid.New(),
+		SiteID:  siteID,
+		Heading: "Test Content",
+	}
+	repo.CreateContent(ctx, content)
+
+	tag1 := ssg.Tag{
+		ID:        uuid.New(),
+		SiteID:    siteID,
+		Name:      "golang",
+		SlugField: "golang",
+	}
+	tag2 := ssg.Tag{
+		ID:        uuid.New(),
+		SiteID:    siteID,
+		Name:      "rust",
+		SlugField: "rust",
+	}
+	repo.CreateTag(ctx, tag1)
+	repo.CreateTag(ctx, tag2)
+	repo.AddTagToContent(ctx, content.ID, tag1.ID)
+	repo.AddTagToContent(ctx, content.ID, tag2.ID)
+
+	tags, err := repo.GetTagsForContent(ctx, content.ID)
+	if err != nil {
+		t.Errorf("GetTagsForContent() error = %v", err)
+		return
+	}
+
+	if len(tags) != 2 {
+		t.Errorf("GetTagsForContent() got %d tags, want 2", len(tags))
+	}
+}
+
+func TestClioRepoGetAllContentWithMeta(t *testing.T) {
+	repo, siteID := setupTestSsgRepo(t)
+	defer repo.db.Close()
+	ctx := ssg.NewContextWithSite("test-site", siteID)
+
+	content1 := &ssg.Content{
+		ID:      uuid.New(),
+		SiteID:  siteID,
+		Heading: "Content 1",
+	}
+	content2 := &ssg.Content{
+		ID:      uuid.New(),
+		SiteID:  siteID,
+		Heading: "Content 2",
+	}
+	repo.CreateContent(ctx, content1)
+	repo.CreateContent(ctx, content2)
+
+	contents, err := repo.GetAllContentWithMeta(ctx)
+	if err != nil {
+		t.Errorf("GetAllContentWithMeta() error = %v", err)
+		return
+	}
+
+	if len(contents) < 2 {
+		t.Errorf("GetAllContentWithMeta() got %d contents, want at least 2", len(contents))
+	}
+}
