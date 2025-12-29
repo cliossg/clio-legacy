@@ -24,3 +24,4 @@ scripts/priv/
 go.work*
 coverage.out
 coverage.html
+*.test
