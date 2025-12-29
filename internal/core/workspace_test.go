@@ -11,6 +11,17 @@ import (
 	"github.com/hermesgen/hm"
 )
 
+func TestNewWorkspace(t *testing.T) {
+	cfg := hm.NewConfig()
+	params := hm.XParams{Cfg: cfg}
+
+	ws := core.NewWorkspace(params)
+
+	if ws == nil {
+		t.Fatal("NewWorkspace() returned nil")
+	}
+}
+
 func TestWorkspaceSetup(t *testing.T) {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
