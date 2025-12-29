@@ -169,3 +169,10 @@ func RequireSiteID(ctx context.Context) (uuid.UUID, error) {
 	}
 	return id, nil
 }
+
+// NewContextWithSite creates a context with site information for testing.
+func NewContextWithSite(siteSlug string, siteID uuid.UUID) context.Context {
+	ctx := context.WithValue(context.Background(), siteSlugKey, siteSlug)
+	ctx = context.WithValue(ctx, siteIDKey, siteID)
+	return ctx
+}

@@ -32,7 +32,7 @@ DELETE FROM content WHERE id = :id;
 
 -- GetAllContentWithMeta
 SELECT
-    c.id, c.user_id, c.section_id, c.kind, c.heading, c.body, c.draft, c.featured, c.published_at, c.short_id,
+    c.id, c.site_id, c.user_id, c.section_id, c.kind, c.heading, c.body, c.draft, c.featured, c.published_at, c.short_id,
     c.created_by, c.updated_by, c.created_at, c.updated_at,
     COALESCE(s.path, '') AS section_path, COALESCE(s.name, '') AS section_name,
     COALESCE(m.id, '') AS meta_id, COALESCE(m.description, '') AS description, COALESCE(m.keywords, '') AS keywords,
@@ -56,13 +56,13 @@ LEFT JOIN
 LEFT JOIN
     image i ON ci.image_id = i.id
 WHERE
-    s.site_id = ?
+    c.site_id = ?
 ORDER BY
     c.published_at DESC, c.created_at DESC, c.id ASC;
 
 -- GetContentWithPaginationAndSearch
 SELECT
-    c.id, c.user_id, c.section_id, c.kind, c.heading, c.body, c.draft, c.featured, c.published_at, c.short_id,
+    c.id, c.site_id, c.user_id, c.section_id, c.kind, c.heading, c.body, c.draft, c.featured, c.published_at, c.short_id,
     c.created_by, c.updated_by, c.created_at, c.updated_at,
     COALESCE(s.path, '') AS section_path, COALESCE(s.name, '') AS section_name,
     COALESCE(m.id, '') AS meta_id, COALESCE(m.description, '') AS description, COALESCE(m.keywords, '') AS keywords,
@@ -86,7 +86,7 @@ LEFT JOIN
 LEFT JOIN
     image i ON ci.image_id = i.id
 WHERE
-    s.site_id = ?
+    c.site_id = ?
     AND (? = '' OR c.heading LIKE '%' || ? || '%')
 ORDER BY
     c.published_at DESC, c.created_at DESC, c.id ASC
