@@ -1664,3 +1664,487 @@ func TestClioRepoGetAllContentWithMeta(t *testing.T) {
 		t.Errorf("GetAllContentWithMeta() got %d contents, want at least 2", len(contents))
 	}
 }
+
+func TestClioRepoGetSiteBySlug(t *testing.T) {
+	repo, _ := setupTestSsgRepo(t)
+	defer repo.db.Close()
+	ctx := context.Background()
+
+	site, err := repo.GetSiteBySlug(ctx, "test-site")
+	if err != nil {
+		t.Errorf("GetSiteBySlug() error = %v", err)
+		return
+	}
+
+	if site.Slug() != "test-site" {
+		t.Errorf("GetSiteBySlug() slug = %v, want test-site", site.Slug())
+	}
+}
+
+func TestClioRepoGetImageByShortID(t *testing.T) {
+	repo, siteID := setupTestSsgRepo(t)
+	defer repo.db.Close()
+	ctx := ssg.NewContextWithSite("test-site", siteID)
+
+	image := &ssg.Image{
+		ID:       uuid.New(),
+		SiteID:   siteID,
+		ShortID:  "img123",
+		FileName: "test.jpg",
+	}
+	repo.CreateImage(ctx, image)
+
+	retrieved, err := repo.GetImageByShortID(ctx, "img123")
+	if err != nil {
+		t.Errorf("GetImageByShortID() error = %v", err)
+		return
+	}
+
+	if retrieved.ShortID != "img123" {
+		t.Errorf("GetImageByShortID() shortID = %v, want img123", retrieved.ShortID)
+	}
+}
+
+func TestClioRepoGetImageByContentHash(t *testing.T) {
+	repo, siteID := setupTestSsgRepo(t)
+	defer repo.db.Close()
+	ctx := ssg.NewContextWithSite("test-site", siteID)
+
+	image := &ssg.Image{
+		ID:       uuid.New(),
+		SiteID:   siteID,
+		ShortID:  "img456",
+		FileName: "test.jpg",
+	}
+	repo.CreateImage(ctx, image)
+
+	retrieved, err := repo.GetImageByContentHash(ctx, "hash456")
+	if err == nil {
+		t.Error("GetImageByContentHash() expected error for non-existent hash")
+	}
+
+	_ = retrieved
+}
+
+func TestClioRepoGetContentForTag(t *testing.T) {
+	repo, siteID := setupTestSsgRepo(t)
+	defer repo.db.Close()
+	ctx := ssg.NewContextWithSite("test-site", siteID)
+
+	tag := &ssg.Tag{
+		ID:        uuid.New(),
+		SiteID:    siteID,
+		Name:      "test-tag",
+		SlugField: "test-tag",
+	}
+	repo.CreateTag(ctx, *tag)
+
+	content := &ssg.Content{
+		ID:      uuid.New(),
+		SiteID:  siteID,
+		Heading: "Tagged Content",
+	}
+	repo.CreateContent(ctx, content)
+	repo.AddTagToContent(ctx, content.ID, tag.ID)
+
+	contents, err := repo.GetContentForTag(ctx, tag.ID)
+	if err != nil {
+		t.Errorf("GetContentForTag() error = %v", err)
+		return
+	}
+
+	if len(contents) == 0 {
+		t.Error("GetContentForTag() returned no contents")
+	}
+}
+
+func TestClioRepoCreateImageVariant(t *testing.T) {
+	repo, siteID := setupTestSsgRepo(t)
+	defer repo.db.Close()
+	ctx := ssg.NewContextWithSite("test-site", siteID)
+
+	image := &ssg.Image{
+		ID:       uuid.New(),
+		SiteID:   siteID,
+		ShortID:  "img789",
+		FileName: "test.jpg",
+	}
+	repo.CreateImage(ctx, image)
+
+	variant := &ssg.ImageVariant{
+		ID:      uuid.New(),
+		ImageID: image.ID,
+		Kind:    "thumbnail",
+		Width:   150,
+		Height:  150,
+		BlobRef: "test_thumb.jpg",
+	}
+
+	err := repo.CreateImageVariant(ctx, variant)
+	if err != nil {
+		t.Errorf("CreateImageVariant() error = %v", err)
+	}
+}
+
+func TestClioRepoGetImageVariant(t *testing.T) {
+	repo, siteID := setupTestSsgRepo(t)
+	defer repo.db.Close()
+	ctx := ssg.NewContextWithSite("test-site", siteID)
+
+	image := &ssg.Image{
+		ID:       uuid.New(),
+		SiteID:   siteID,
+		ShortID:  "img101",
+		FileName: "test.jpg",
+	}
+	repo.CreateImage(ctx, image)
+
+	variant := &ssg.ImageVariant{
+		ID:      uuid.New(),
+		ImageID: image.ID,
+		Kind:    "medium",
+		Width:   500,
+		Height:  500,
+		BlobRef: "test_medium.jpg",
+	}
+	repo.CreateImageVariant(ctx, variant)
+
+	retrieved, err := repo.GetImageVariant(ctx, variant.ID)
+	if err != nil {
+		t.Errorf("GetImageVariant() error = %v", err)
+		return
+	}
+
+	if retrieved.Kind != "medium" {
+		t.Errorf("GetImageVariant() kind = %v, want medium", retrieved.Kind)
+	}
+}
+
+func TestClioRepoListImageVariantsByImageID(t *testing.T) {
+	repo, siteID := setupTestSsgRepo(t)
+	defer repo.db.Close()
+	ctx := ssg.NewContextWithSite("test-site", siteID)
+
+	image := &ssg.Image{
+		ID:       uuid.New(),
+		SiteID:   siteID,
+		ShortID:  "img202",
+		FileName: "test.jpg",
+	}
+	repo.CreateImage(ctx, image)
+
+	variant1 := &ssg.ImageVariant{
+		ID:      uuid.New(),
+		ImageID: image.ID,
+		Kind:    "small",
+		BlobRef: "test_small.jpg",
+	}
+	variant2 := &ssg.ImageVariant{
+		ID:      uuid.New(),
+		ImageID: image.ID,
+		Kind:    "large",
+		BlobRef: "test_large.jpg",
+	}
+	repo.CreateImageVariant(ctx, variant1)
+	repo.CreateImageVariant(ctx, variant2)
+
+	variants, err := repo.ListImageVariantsByImageID(ctx, image.ID)
+	if err != nil {
+		t.Errorf("ListImageVariantsByImageID() error = %v", err)
+		return
+	}
+
+	if len(variants) < 2 {
+		t.Errorf("ListImageVariantsByImageID() got %d variants, want at least 2", len(variants))
+	}
+}
+
+func TestClioRepoUpdateImageVariant(t *testing.T) {
+	repo, siteID := setupTestSsgRepo(t)
+	defer repo.db.Close()
+	ctx := ssg.NewContextWithSite("test-site", siteID)
+
+	image := &ssg.Image{
+		ID:       uuid.New(),
+		SiteID:   siteID,
+		ShortID:  "img303",
+		FileName: "test.jpg",
+	}
+	repo.CreateImage(ctx, image)
+
+	variant := &ssg.ImageVariant{
+		ID:      uuid.New(),
+		ImageID: image.ID,
+		Kind:    "original",
+		BlobRef: "test_original.jpg",
+	}
+	repo.CreateImageVariant(ctx, variant)
+
+	variant.Kind = "updated"
+	err := repo.UpdateImageVariant(ctx, variant)
+	if err != nil {
+		t.Errorf("UpdateImageVariant() error = %v", err)
+	}
+}
+
+func TestClioRepoDeleteImageVariant(t *testing.T) {
+	repo, siteID := setupTestSsgRepo(t)
+	defer repo.db.Close()
+	ctx := ssg.NewContextWithSite("test-site", siteID)
+
+	image := &ssg.Image{
+		ID:       uuid.New(),
+		SiteID:   siteID,
+		ShortID:  "img404",
+		FileName: "test.jpg",
+	}
+	repo.CreateImage(ctx, image)
+
+	variant := &ssg.ImageVariant{
+		ID:      uuid.New(),
+		ImageID: image.ID,
+		Kind:    "todelete",
+		BlobRef: "test_delete.jpg",
+	}
+	repo.CreateImageVariant(ctx, variant)
+
+	err := repo.DeleteImageVariant(ctx, variant.ID)
+	if err != nil {
+		t.Errorf("DeleteImageVariant() error = %v", err)
+	}
+}
+
+func TestClioRepoCreateContentImage(t *testing.T) {
+	repo, siteID := setupTestSsgRepo(t)
+	defer repo.db.Close()
+	ctx := ssg.NewContextWithSite("test-site", siteID)
+
+	content := &ssg.Content{
+		ID:      uuid.New(),
+		SiteID:  siteID,
+		Heading: "Content with image",
+	}
+	repo.CreateContent(ctx, content)
+
+	image := &ssg.Image{
+		ID:       uuid.New(),
+		SiteID:   siteID,
+		ShortID:  "img505",
+		FileName: "content.jpg",
+	}
+	repo.CreateImage(ctx, image)
+
+	contentImage := &ssg.ContentImage{
+		ID:        uuid.New(),
+		ContentID: content.ID,
+		ImageID:   image.ID,
+	}
+
+	err := repo.CreateContentImage(ctx, contentImage)
+	if err != nil {
+		t.Errorf("CreateContentImage() error = %v", err)
+	}
+}
+
+func TestClioRepoGetContentImagesByContentID(t *testing.T) {
+	repo, siteID := setupTestSsgRepo(t)
+	defer repo.db.Close()
+	ctx := ssg.NewContextWithSite("test-site", siteID)
+
+	content := &ssg.Content{
+		ID:      uuid.New(),
+		SiteID:  siteID,
+		Heading: "Content with images",
+	}
+	repo.CreateContent(ctx, content)
+
+	image := &ssg.Image{
+		ID:       uuid.New(),
+		SiteID:   siteID,
+		ShortID:  "img606",
+		FileName: "content2.jpg",
+	}
+	repo.CreateImage(ctx, image)
+
+	contentImage := &ssg.ContentImage{
+		ID:        uuid.New(),
+		ContentID: content.ID,
+		ImageID:   image.ID,
+	}
+	repo.CreateContentImage(ctx, contentImage)
+
+	images, err := repo.GetContentImagesByContentID(ctx, content.ID)
+	if err != nil {
+		t.Errorf("GetContentImagesByContentID() error = %v", err)
+		return
+	}
+
+	if len(images) == 0 {
+		t.Error("GetContentImagesByContentID() returned no images")
+	}
+}
+
+func TestClioRepoDeleteContentImage(t *testing.T) {
+	repo, siteID := setupTestSsgRepo(t)
+	defer repo.db.Close()
+	ctx := ssg.NewContextWithSite("test-site", siteID)
+
+	content := &ssg.Content{
+		ID:      uuid.New(),
+		SiteID:  siteID,
+		Heading: "Content",
+	}
+	repo.CreateContent(ctx, content)
+
+	image := &ssg.Image{
+		ID:       uuid.New(),
+		SiteID:   siteID,
+		ShortID:  "img707",
+		FileName: "content3.jpg",
+	}
+	repo.CreateImage(ctx, image)
+
+	contentImage := &ssg.ContentImage{
+		ID:        uuid.New(),
+		ContentID: content.ID,
+		ImageID:   image.ID,
+	}
+	repo.CreateContentImage(ctx, contentImage)
+
+	err := repo.DeleteContentImage(ctx, contentImage.ID)
+	if err != nil {
+		t.Errorf("DeleteContentImage() error = %v", err)
+	}
+}
+
+func TestClioRepoCreateSectionImage(t *testing.T) {
+	repo, siteID := setupTestSsgRepo(t)
+	defer repo.db.Close()
+	ctx := ssg.NewContextWithSite("test-site", siteID)
+
+	section := &ssg.Section{
+		ID:     uuid.New(),
+		SiteID: siteID,
+		Name:   "Section with image",
+	}
+	repo.CreateSection(ctx, *section)
+
+	image := &ssg.Image{
+		ID:       uuid.New(),
+		SiteID:   siteID,
+		ShortID:  "img808",
+		FileName: "section.jpg",
+	}
+	repo.CreateImage(ctx, image)
+
+	sectionImage := &ssg.SectionImage{
+		ID:        uuid.New(),
+		SectionID: section.ID,
+		ImageID:   image.ID,
+	}
+
+	err := repo.CreateSectionImage(ctx, sectionImage)
+	if err != nil {
+		t.Errorf("CreateSectionImage() error = %v", err)
+	}
+}
+
+func TestClioRepoGetSectionImagesBySectionID(t *testing.T) {
+	repo, siteID := setupTestSsgRepo(t)
+	defer repo.db.Close()
+	ctx := ssg.NewContextWithSite("test-site", siteID)
+
+	section := &ssg.Section{
+		ID:     uuid.New(),
+		SiteID: siteID,
+		Name:   "Section with images",
+	}
+	repo.CreateSection(ctx, *section)
+
+	image := &ssg.Image{
+		ID:       uuid.New(),
+		SiteID:   siteID,
+		ShortID:  "img909",
+		FileName: "section2.jpg",
+	}
+	repo.CreateImage(ctx, image)
+
+	sectionImage := &ssg.SectionImage{
+		ID:        uuid.New(),
+		SectionID: section.ID,
+		ImageID:   image.ID,
+	}
+	repo.CreateSectionImage(ctx, sectionImage)
+
+	images, err := repo.GetSectionImagesBySectionID(ctx, section.ID)
+	if err != nil {
+		t.Errorf("GetSectionImagesBySectionID() error = %v", err)
+		return
+	}
+
+	if len(images) == 0 {
+		t.Error("GetSectionImagesBySectionID() returned no images")
+	}
+}
+
+func TestClioRepoDeleteSectionImage(t *testing.T) {
+	repo, siteID := setupTestSsgRepo(t)
+	defer repo.db.Close()
+	ctx := ssg.NewContextWithSite("test-site", siteID)
+
+	section := &ssg.Section{
+		ID:     uuid.New(),
+		SiteID: siteID,
+		Name:   "Section",
+	}
+	repo.CreateSection(ctx, *section)
+
+	image := &ssg.Image{
+		ID:       uuid.New(),
+		SiteID:   siteID,
+		ShortID:  "img000",
+		FileName: "section3.jpg",
+	}
+	repo.CreateImage(ctx, image)
+
+	sectionImage := &ssg.SectionImage{
+		ID:        uuid.New(),
+		SectionID: section.ID,
+		ImageID:   image.ID,
+	}
+	repo.CreateSectionImage(ctx, sectionImage)
+
+	err := repo.DeleteSectionImage(ctx, sectionImage.ID)
+	if err != nil {
+		t.Errorf("DeleteSectionImage() error = %v", err)
+	}
+}
+
+func TestClioRepoGetContentWithPaginationAndSearch(t *testing.T) {
+	repo, siteID := setupTestSsgRepo(t)
+	defer repo.db.Close()
+	ctx := ssg.NewContextWithSite("test-site", siteID)
+
+	for i := 0; i < 5; i++ {
+		content := &ssg.Content{
+			ID:      uuid.New(),
+			SiteID:  siteID,
+			Heading: "Searchable Content",
+		}
+		repo.CreateContent(ctx, content)
+	}
+
+	contents, total, err := repo.GetContentWithPaginationAndSearch(ctx, 0, 10, "Searchable")
+	if err != nil {
+		t.Errorf("GetContentWithPaginationAndSearch() error = %v", err)
+		return
+	}
+
+	if len(contents) == 0 {
+		t.Error("GetContentWithPaginationAndSearch() returned no contents")
+	}
+
+	if total == 0 {
+		t.Error("GetContentWithPaginationAndSearch() total = 0")
+	}
+}
