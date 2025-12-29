@@ -1,0 +1,50 @@
+{{ define "layout-form-new" }}
+{{ $form := .Form }}
+<form action="{{ $form.Action }}" method="post" class="space-y-4">
+  <input type="hidden" name="_method" value="{{ $form.Method }}" />
+  <input type="hidden" name="hm.csrf.token" value="{{ $form.CSRF }}" />
+  <input type="hidden" name="id" value="{{ .Data.ID }}" />
+  <div>
+    <label for="name" class="block text-sm font-medium text-gray-700">Name:</label>
+    <input
+      type="text"
+      id="name"
+      name="name"
+      value="{{ $form.Name }}"
+      class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+      required
+    />
+    {{ FieldMsg $form "name" }}
+  </div>
+  <div>
+    <label for="description" class="block text-sm font-medium text-gray-700">Description:</label>
+    <textarea
+      id="description"
+      name="description"
+      class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+      rows="3"
+    >{{ $form.Description }}</textarea>
+    {{ FieldMsg $form "description" }}
+  </div>
+  <div>
+    <label for="code" class="block text-sm font-medium text-gray-700">Code:</label>
+    <textarea
+      id="code"
+      name="code"
+      class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+      rows="8"
+      placeholder="&lt;html&gt;...&lt;/html&gt;"
+    >{{ $form.Code }}</textarea>
+    {{ FieldMsg $form "code" }}
+  </div>
+  {{ template "css.tmpl" . }}
+  <div>
+    <button
+      type="submit"
+      class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+    >
+      {{ if eq $form.Action (printf "%s/create-layout" .Feat.Path) }}Create{{ else if eq $form.Action (printf "%s/update-layout" .Feat.Path) }}Update{{ else }}{{ $form.Button.Text }}{{ end }}
+    </button>
+  </div>
+</form>
+{{ end }}

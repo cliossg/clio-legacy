@@ -1,0 +1,29 @@
+{{ define "flash" }}
+{{ if .Flash.Notifications }}
+<div class="fixed top-4 right-4 z-50">
+    {{ range $i, $n := .Flash.Notifications }}
+    <div class="mb-4 p-4 rounded-lg shadow-lg relative
+    {{ if eq .Type "success" }}bg-green-100 text-green-800
+    {{ else if eq .Type "error" }}bg-red-100 text-red-800
+    {{ else if eq .Type "info" }}bg-blue-100 text-blue-800
+    {{ else if eq .Type "warning" }}bg-yellow-100 text-yellow-800
+    {{ else }}bg-gray-100 text-gray-800{{ end }}"
+    id="flash-{{ $i }}">
+        <button type="button" aria-label="Close"
+            class="absolute top-2 right-2 text-xl leading-none text-gray-500 hover:text-gray-800"
+            onclick="document.getElementById('flash-{{ $i }}').style.display='none'">
+            &times;
+        </button>
+        {{ .Msg | safeHTML }}
+    </div>
+    {{ end }}
+</div>
+<script>
+  document.querySelectorAll('[id^=flash-]').forEach(function(el) {
+    setTimeout(function() {
+      if (el) el.style.display = 'none';
+    }, 4000);
+  });
+</script>
+{{ end }}
+{{ end }}

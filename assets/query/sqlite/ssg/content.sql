@@ -9,10 +9,10 @@ INSERT INTO content (
 );
 
 -- GetAll
-SELECT id, user_id, section_id, heading, body, draft, featured, published_at, short_id, created_by, updated_by, created_at, updated_at FROM content;
+SELECT id, site_id, user_id, section_id, heading, body, draft, featured, published_at, short_id, created_by, updated_by, created_at, updated_at FROM content;
 
 -- Get
-SELECT id, user_id, section_id, heading, body, draft, featured, published_at, short_id, created_by, updated_by, created_at, updated_at FROM content WHERE id = :id;
+SELECT id, site_id, user_id, section_id, heading, body, draft, featured, published_at, short_id, created_by, updated_by, created_at, updated_at FROM content WHERE id = :id;
 
 -- Update
 UPDATE content SET
@@ -32,7 +32,7 @@ DELETE FROM content WHERE id = :id;
 
 -- GetAllContentWithMeta
 SELECT
-    c.id, c.user_id, c.section_id, c.kind, c.heading, c.body, c.draft, c.featured, c.published_at, c.short_id,
+    c.id, c.site_id, c.user_id, c.section_id, c.kind, c.heading, c.body, c.draft, c.featured, c.published_at, c.short_id,
     c.created_by, c.updated_by, c.created_at, c.updated_at,
     COALESCE(s.path, '') AS section_path, COALESCE(s.name, '') AS section_name,
     COALESCE(m.id, '') AS meta_id, COALESCE(m.description, '') AS description, COALESCE(m.keywords, '') AS keywords,
@@ -62,7 +62,7 @@ ORDER BY
 
 -- GetContentWithPaginationAndSearch
 SELECT
-    c.id, c.user_id, c.section_id, c.kind, c.heading, c.body, c.draft, c.featured, c.published_at, c.short_id,
+    c.id, c.site_id, c.user_id, c.section_id, c.kind, c.heading, c.body, c.draft, c.featured, c.published_at, c.short_id,
     c.created_by, c.updated_by, c.created_at, c.updated_at,
     COALESCE(s.path, '') AS section_path, COALESCE(s.name, '') AS section_name,
     COALESCE(m.id, '') AS meta_id, COALESCE(m.description, '') AS description, COALESCE(m.keywords, '') AS keywords,

@@ -1,0 +1,31 @@
+{{ define "page" }}
+{{ template "layout" . }}
+{{ end }}
+
+{{ define "title" }}
+{{ .Data.Name }}
+{{ end }}
+
+{{ define "content" }}
+<div class="space-y-4">
+    <h1 class="text-2xl font-bold">Layout: {{ .Data.Name }}</h1>
+
+    <div class="mb-4">
+        <h2 class="text-xl font-semibold">Description:</h2>
+        <p class="text-gray-700">{{ .Data.Description }}</p>
+    </div>
+
+    <div class="mb-4">
+        <h2 class="text-xl font-semibold">Code:</h2>
+        <pre class="bg-gray-100 p-4 rounded-md overflow-auto text-sm">{{ .Data.Code }}</pre>
+    </div>
+</div>
+{{ end }}
+
+{{ define "submenu" }}
+<div class="mx-auto p-4">
+  <div class="flex space-x-4 justify-center">
+    <a href="{{ listPath "layout" }}" class="btn btn-secondary">Back</a>
+  </div>
+</div>
+{{ end }}

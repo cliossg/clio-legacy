@@ -9,10 +9,10 @@ INSERT INTO content (
 );
 
 -- GetAll
-SELECT id, user_id, section_id, heading, body, draft, featured, published_at, short_id, created_by, updated_by, created_at, updated_at FROM content;
+SELECT id, site_id, user_id, section_id, heading, body, draft, featured, published_at, short_id, created_by, updated_by, created_at, updated_at FROM content;
 
 -- Get
-SELECT id, user_id, section_id, heading, body, draft, featured, published_at, short_id, created_by, updated_by, created_at, updated_at FROM content WHERE id = :id;
+SELECT id, site_id, user_id, section_id, heading, body, draft, featured, published_at, short_id, created_by, updated_by, created_at, updated_at FROM content WHERE id = :id;
 
 -- Update
 UPDATE content SET

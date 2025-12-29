@@ -3,19 +3,19 @@
 
 -- Create
 INSERT INTO tag (
-    id, short_id, name, slug, created_by, updated_by, created_at, updated_at
+    id, site_id, short_id, name, slug, created_by, updated_by, created_at, updated_at
 ) VALUES (
-    :id, :short_id, :name, :slug, :created_by, :updated_by, :created_at, :updated_at
+    :id, :site_id, :short_id, :name, :slug, :created_by, :updated_by, :created_at, :updated_at
 );
 
 -- GetAll
-SELECT id, short_id, name, slug, created_by, updated_by, created_at, updated_at FROM tag;
+SELECT id, site_id, short_id, name, slug, created_by, updated_by, created_at, updated_at FROM tag;
 
 -- Get
-SELECT id, short_id, name, slug, created_by, updated_by, created_at, updated_at FROM tag WHERE id = :id;
+SELECT id, site_id, short_id, name, slug, created_by, updated_by, created_at, updated_at FROM tag WHERE id = :id;
 
 -- GetByName
-SELECT id, short_id, name, slug, created_by, updated_by, created_at, updated_at FROM tag WHERE name = :name;
+SELECT id, site_id, short_id, name, slug, created_by, updated_by, created_at, updated_at FROM tag WHERE name = :name;
 
 -- Update
 UPDATE tag SET
@@ -42,13 +42,13 @@ INSERT INTO content_tag (
 DELETE FROM content_tag WHERE content_id = ? AND tag_id = ?;
 
 -- GetTagsForContent
-SELECT t.id, t.short_id, t.name, t.slug, t.created_by, t.updated_by, t.created_at, t.updated_at
+SELECT t.id, t.site_id, t.short_id, t.name, t.slug, t.created_by, t.updated_by, t.created_at, t.updated_at
 FROM tag t
 JOIN content_tag ct ON t.id = ct.tag_id
 WHERE ct.content_id = ?;
 
 -- GetContentForTag
-SELECT c.id, c.short_id, c.user_id, c.section_id, c.heading, c.body, c.status, c.created_by, c.updated_by, c.created_at, c.updated_at
+SELECT c.id, c.site_id, c.short_id, c.user_id, c.section_id, c.heading, c.body, c.status, c.created_by, c.updated_by, c.created_at, c.updated_at
 FROM content c
 JOIN content_tag ct ON c.id = ct.content_id
 WHERE ct.tag_id = ?;

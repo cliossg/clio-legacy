@@ -1,0 +1,62 @@
+{{ define "js.tmpl" }}
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script>
+  function updatePreview() {
+    const md = document.getElementById('body').value;
+    const preview = document.getElementById('preview');
+    preview.innerHTML = window.marked.parse(md);
+
+    // Force reload of images that might be cached
+    const images = preview.querySelectorAll('img');
+    images.forEach(img => {
+      const originalSrc = img.src;
+      if (originalSrc.includes('/static/images/')) {
+        // Add a timestamp parameter to bust cache for recently uploaded images
+        const url = new URL(originalSrc, window.location.origin);
+        url.searchParams.set('t', Date.now());
+        img.src = url.toString();
+
+        // Fallback: if image fails to load, try original URL
+        img.onerror = function() {
+          this.onerror = null; // Prevent infinite loop
+          this.src = originalSrc;
+        };
+      }
+    });
+  }
+  document.getElementById('body').addEventListener('input', updatePreview);
+  updatePreview();
+
+  // Splitter logic
+  const splitter = document.getElementById('splitter');
+  const markdownPane = document.getElementById('markdown-pane');
+  const previewPane = document.getElementById('preview-pane');
+  let isDragging = false;
+
+  splitter.addEventListener('mousedown', function(e) {
+    isDragging = true;
+    document.body.style.cursor = 'col-resize';
+  });
+  document.addEventListener('mousemove', function(e) {
+    if (!isDragging) return;
+    const container = splitter.parentElement;
+    const rect = container.getBoundingClientRect();
+    let x = e.clientX - rect.left;
+    // Minimum and maximum widths (10% - 90%)
+    const min = rect.width * 0.1;
+    const max = rect.width * 0.9;
+    if (x < min) x = min;
+    if (x > max) x = max;
+    const percent = (x / rect.width) * 100;
+    markdownPane.style.width = percent + '%';
+    previewPane.style.width = (100 - percent) + '%';
+  });
+  document.addEventListener('mouseup', function() {
+    if (isDragging) {
+      isDragging = false;
+      document.body.style.cursor = '';
+    }
+  });
+</script>
+{{ end }}
+

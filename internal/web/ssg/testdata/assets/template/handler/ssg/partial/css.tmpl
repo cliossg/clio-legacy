@@ -1,0 +1,26 @@
+{{ define "css.tmpl" }}
+<!-- WIP: Using marked.js and github-markdown-css from CDN and configured inline for now. This will be improved later. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css/github-markdown.min.css">
+<style>
+  #preview.markdown-body {
+    --bgColor-default: #fff !important;
+    --fgColor-default: #24292e !important;
+    background-color: var(--bgColor-default) !important;
+    color: var(--fgColor-default) !important;
+  }
+  #preview.markdown-body ul,
+  #preview.markdown-body ol {
+    padding-left: 2em !important;
+    list-style-type: disc !important;
+  }
+  #preview.markdown-body ul {
+    list-style-position: inside !important;
+  }
+  #preview.markdown-body pre,
+  #preview.markdown-body code {
+    background-color: #f6f8fa !important;
+    color: #24292e !important;
+  }
+</style>
+{{ end }}
+

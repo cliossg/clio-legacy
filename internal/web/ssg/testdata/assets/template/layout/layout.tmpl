@@ -1,0 +1,30 @@
+{{ define "layout" }}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ block "title" . }}Title{{ end }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="/static/css/main.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.css" rel="stylesheet" type="text/css" />
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.polyfills.min.js"></script>
+    <script src="/static/js/api-helpers.js"></script>
+</head>
+<body class="bg-gray-100 text-gray-900">
+{{ block "header" . }}Header{{ end }}
+{{ block "flash" . }}
+{{ end }}
+<main class="p-4">
+    {{ block "content" . }}Content{{ end }}
+</main>
+<aside class="p-4">
+    {{ block "submenu" . }}{{ end }}
+</aside>
+<footer class="bg-gray-200 text-center p-4 mt-4">
+    <p>&copy; 2025 clio</p>
+</footer>
+    </body>
+</html>
+{{ end }}

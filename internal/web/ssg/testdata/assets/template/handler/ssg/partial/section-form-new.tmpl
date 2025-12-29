@@ -1,0 +1,254 @@
+{{ define "section-form-new" }}
+{{ $form := .Form }}
+{{ $nameField := "name" }}
+{{ $descriptionField := "description" }}
+<form id="section-form" action="{{ $form.Action }}" method="post" class="space-y-4">
+  <input type="hidden" name="_method" value="{{ $form.Method }}" />
+  <input type="hidden" name="hm.csrf.token" value="{{ $form.CSRF }}" />
+  <input type="hidden" name="id" value="{{ .Data.ID }}" />
+  <!-- Hidden fields for image paths -->
+  <input type="hidden" id="header" name="header" value="{{ .Data.Header }}" />
+  <input type="hidden" id="blog_header" name="blog_header" value="{{ .Data.BlogHeader }}" />
+
+  <!-- Section Header Image - Primary (at top) -->
+  <div class="mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50">
+    <h4 class="text-sm font-medium text-gray-700 mb-3">Section Header Image</h4>
+    <div id="section-header-gallery" class="w-full">
+      <!-- Section header image will be populated here -->
+    </div>
+  </div>
+
+  <div>
+    <label for="{{$nameField}}" class="block text-sm font-medium text-gray-700">
+      Name:
+    </label>
+    <input
+      type="text"
+      id="{{$nameField}}"
+      name="{{$nameField}}"
+      value="{{ $form.Name }}"
+      class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+    />
+    {{ FieldMsg $form $nameField }}
+  </div>
+  <div>
+    <label for="{{$descriptionField}}" class="block text-sm font-medium text-gray-700">Description:</label>
+    <textarea
+      id="{{$descriptionField}}"
+      name="{{$descriptionField}}"
+      class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+      rows="5"
+    >{{ $form.Description }}</textarea>
+    {{ FieldMsg $form $descriptionField }}
+  </div>
+  <div>
+    <label for="path" class="block text-sm font-medium text-gray-700">Path:</label>
+    <input
+      type="text"
+      id="path"
+      name="path"
+      value="{{ $form.Path }}"
+      placeholder="/section-path"
+      class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+    />
+    {{ FieldMsg $form "path" }}
+  </div>
+  <div>
+    <label for="layout_id" class="block text-sm font-medium text-gray-700">Layout:</label>
+    <select
+      id="layout_id"
+      name="layout_id"
+      class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+    >
+      {{- range $layout := .Select.layouts }}
+        <option value="{{ $layout.Value }}" {{ if eq $form.LayoutID $layout.Value }}selected{{ end }}>{{ $layout.Label }}</option>
+      {{- end }}
+    </select>
+    {{ FieldMsg $form "layout_id" }}
+  </div>
+  {{ template "css.tmpl" . }}
+</form>
+
+<!-- Blog Header Image - Secondary -->
+<div class="mt-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
+  <h4 class="text-sm font-medium text-gray-700 mb-3">Blog Header Image</h4>
+  <div id="blog-header-gallery" class="w-full">
+    <!-- Blog header image will be populated here -->
+  </div>
+</div>
+
+<script>
+// Load and display section images
+function loadSectionImages() {
+  const sectionId = document.querySelector('input[name="id"]').value;
+  if (!sectionId || sectionId === '00000000-0000-0000-0000-000000000000') {
+    return;
+  }
+
+  // Get current image values from hidden fields
+  const sectionHeaderPath = document.getElementById('header').value;
+  const blogHeaderPath = document.getElementById('blog_header').value;
+
+  displaySectionImages(sectionHeaderPath, blogHeaderPath);
+}
+
+// Display section images in separate galleries
+function displaySectionImages(sectionHeaderPath, blogHeaderPath) {
+  const sectionGallery = document.getElementById('section-header-gallery');
+  const blogGallery = document.getElementById('blog-header-gallery');
+
+  sectionGallery.innerHTML = '';
+  blogGallery.innerHTML = '';
+
+  // Section Header Image
+  if (sectionHeaderPath) {
+    const sectionDiv = createImageCard(sectionHeaderPath, 'Section Header', 'section_header');
+    sectionGallery.appendChild(sectionDiv);
+  } else {
+    const placeholderDiv = createPlaceholderCard('Section Header', 'section_header');
+    sectionGallery.appendChild(placeholderDiv);
+  }
+
+  // Blog Header Image
+  if (blogHeaderPath) {
+    const blogDiv = createImageCard(blogHeaderPath, 'Blog Header', 'blog_header');
+    blogGallery.appendChild(blogDiv);
+  } else {
+    const placeholderDiv = createPlaceholderCard('Blog Header', 'blog_header');
+    blogGallery.appendChild(placeholderDiv);
+  }
+}
+
+// Create image card with delete button
+function createImageCard(imagePath, label, imageType) {
+  const div = document.createElement('div');
+  div.className = 'relative border border-gray-300 rounded-lg overflow-hidden bg-white w-full';
+
+  const imageUrl = `/static/images/${imagePath}`;
+
+  div.innerHTML = `
+    <img src="${imageUrl}" alt="${label}" class="w-full h-48 object-cover">
+    <div class="absolute top-2 right-2">
+      <button
+        type="button"
+        onclick="removeSectionImage('${imageType}')"
+        class="bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+        title="Remove image"
+      >
+        ×
+      </button>
+    </div>
+    <div class="p-2 text-center">
+      <span class="text-xs text-gray-500">${label}</span>
+    </div>
+  `;
+
+  return div;
+}
+
+// Create placeholder card for empty state
+function createPlaceholderCard(label, imageType) {
+  const div = document.createElement('div');
+  div.className = 'border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 h-48 flex flex-col items-center justify-center w-full';
+
+  div.innerHTML = `
+    <div class="text-gray-400 text-2xl mb-2">📷</div>
+    <span class="text-xs text-gray-500 mb-2">${label}</span>
+    <button
+      type="button"
+      onclick="uploadSectionImage('${imageType}')"
+      class="text-xs text-blue-500 hover:text-blue-700"
+    >
+      Click to upload
+    </button>
+  `;
+
+  return div;
+}
+
+// Upload section image (for placeholder buttons)
+function uploadSectionImage(imageType) {
+  const sectionId = document.querySelector('input[name="id"]').value;
+  const targetField = imageType === 'section_header' ? 'header' : 'blog_header';
+  openImageUploadModal(sectionId, 'section', targetField, imageType);
+}
+
+// Remove section image
+function removeSectionImage(imageType) {
+  if (!confirm('Are you sure you want to remove this image?')) {
+    return;
+  }
+
+  const sectionId = document.querySelector('input[name="id"]').value;
+
+  // Clear the hidden field first
+  if (imageType === 'section_header') {
+    document.getElementById('header').value = '';
+  } else if (imageType === 'blog_header') {
+    document.getElementById('blog_header').value = '';
+  }
+
+  // Refresh gallery immediately
+  loadSectionImages();
+
+  // Make API call to delete from server and filesystem
+  deleteSectionImageFromServer(sectionId, imageType);
+}
+
+// Delete section image from server
+async function deleteSectionImageFromServer(sectionId, imageType) {
+  if (!sectionId || sectionId === '00000000-0000-0000-0000-000000000000') {
+    return;
+  }
+
+  try {
+    // TODO: API base URL should be configurable - hardcoded port is fragile
+    const response = await fetch(`http://localhost:8081/api/v1/ssg/sections/${sectionId}/images/${imageType}`, {
+      method: 'DELETE',
+      headers: {
+        'X-Site-Slug': 'structured'
+      }
+    });
+
+    if (!response.ok) {
+      console.error('Failed to delete image from server:', response.statusText);
+      // Could show a warning to user that file wasn't deleted from server
+    }
+  } catch (error) {
+    console.error('Error deleting image from server:', error);
+  }
+}
+
+// Update section image fields after successful upload
+function onImageUploadSuccess(result) {
+  // Update hidden fields based on image type
+  if (result.imageType === 'section_header') {
+    document.getElementById('header').value = result.relative_path;
+  } else if (result.imageType === 'blog_header') {
+    document.getElementById('blog_header').value = result.relative_path;
+  }
+
+  // Refresh gallery to show new image
+  loadSectionImages();
+}
+
+// Load images when page loads
+document.addEventListener('DOMContentLoaded', function() {
+  loadSectionImages();
+});
+</script>
+
+<!-- Update Button -->
+<div class="mt-4">
+  <button
+    type="submit"
+    form="section-form"
+    class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+  >
+    {{ if eq .Form.Action (printf "%s/create-section" .Feat.Path) }}Create{{ else
+    if eq .Form.Action (printf "%s/update-section" .Feat.Path) }}Update{{ else
+    }}{{ .Form.Button.Text }}{{ end }}
+  </button>
+</div>
+
+{{ end }}

@@ -1,0 +1,342 @@
+{{ define "image-upload-modal" }}
+<!-- Image Upload Modal -->
+<div id="image-upload-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden z-50">
+  <div class="bg-white rounded-lg shadow-lg w-full max-w-md mx-4">
+    <div class="flex items-center justify-between p-4 border-b">
+      <h3 class="text-lg font-medium text-gray-900">Upload Image</h3>
+      <button type="button" onclick="closeImageUploadModal()" class="text-gray-400 hover:text-gray-600">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+
+    <div class="p-4">
+      <!-- Image Type Selection -->
+      <div class="mb-4">
+        <label for="image-type-select" class="block text-sm font-medium text-gray-700 mb-2">Image Type:</label>
+        <select id="image-type-select" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+          <!-- Options will be populated by JavaScript based on context -->
+        </select>
+      </div>
+
+      <!-- File Upload -->
+      <div class="mb-4">
+        <label for="image-file-input" class="block text-sm font-medium text-gray-700 mb-2">Select Image:</label>
+        <input type="file" id="image-file-input" accept="image/*"
+               class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+        <p class="text-xs text-gray-500 mt-1">Accepted formats: PNG, JPG, JPEG, WEBP</p>
+      </div>
+
+      <!-- Accessibility Fields -->
+      <div class="mb-4">
+        <label for="image-alt-text" class="block text-sm font-medium text-gray-700 mb-2">Alt Text (Accessibility):</label>
+        <input type="text" id="image-alt-text" placeholder="Describe the image for screen readers"
+               class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+        <p class="text-xs text-gray-500 mt-1">Essential for users with visual impairments. Describe what's in the image.</p>
+      </div>
+
+      <div class="mb-4">
+        <label for="image-caption" class="block text-sm font-medium text-gray-700 mb-2">Caption:</label>
+        <input type="text" id="image-caption" placeholder="Caption text that appears below the image"
+               class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+        <p class="text-xs text-gray-500 mt-1">Optional text that will be displayed under the image.</p>
+      </div>
+
+      <!-- Upload Progress -->
+      <div id="upload-progress" class="mb-4 hidden">
+        <div class="bg-gray-200 rounded-full h-2">
+          <div id="progress-bar" class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+        </div>
+        <p class="text-sm text-gray-600 mt-1">Uploading...</p>
+      </div>
+
+      <!-- Error Message -->
+      <div id="upload-error" class="mb-4 hidden">
+        <div class="bg-red-50 border border-red-200 rounded-md p-3">
+          <p class="text-sm text-red-600" id="error-message"></p>
+        </div>
+      </div>
+
+      <!-- Success Message -->
+      <div id="upload-success" class="mb-4 hidden">
+        <div class="bg-green-50 border border-green-200 rounded-md p-3">
+          <p class="text-sm text-green-600" id="success-message"></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex items-center justify-end gap-3 px-4 py-3 border-t bg-gray-50 rounded-b-lg">
+      <button type="button" onclick="closeImageUploadModal()"
+              class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+        Cancel
+      </button>
+      <button type="button" onclick="uploadImage()" id="upload-btn"
+              class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700">
+        Upload
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentUploadContext = {
+  entityId: null,
+  entityType: null, // 'content' or 'section'
+  targetField: null
+};
+
+function openImageUploadModal(entityId, entityType, targetField, presetImageType) {
+  // Check if this is a new entity (all zeros UUID) and trigger autosave first
+  if (entityId === '00000000-0000-0000-0000-000000000000') {
+    // Trigger autosave for new content before opening modal
+    if (entityType === 'content') {
+      const form = document.querySelector('form[hx-post]');
+      if (form) {
+        // Trigger HTMX form submission to save content first
+        htmx.trigger(form, 'submit');
+
+        // Wait a moment for the save to complete, then retry
+        setTimeout(() => {
+          // Get the updated ID from the form after save
+          const idField = document.querySelector('input[name="id"]');
+          if (idField && idField.value && idField.value !== '00000000-0000-0000-0000-000000000000') {
+            openImageUploadModal(idField.value, entityType, targetField, presetImageType);
+          } else {
+            alert('Please save the content first before uploading images.');
+          }
+        }, 1000);
+        return;
+      }
+    }
+
+    alert('Please save the ' + entityType + ' first before uploading images.');
+    return;
+  }
+
+  currentUploadContext = { entityId, entityType, targetField };
+
+  // Clear previous state
+  clearUploadState();
+
+  // Populate image type options based on entity type and preset
+  const imageTypeSelect = document.getElementById('image-type-select');
+  const modalTitle = document.querySelector('#image-upload-modal h3');
+
+  imageTypeSelect.innerHTML = '';
+
+  if (presetImageType) {
+    // Pre-configured mode - no selector needed, direct upload
+    let typeLabel, modalTitleText;
+    switch (presetImageType) {
+      case 'section_header':
+        typeLabel = 'Section Header';
+        modalTitleText = 'Upload Section Header Image';
+        break;
+      case 'blog_header':
+        typeLabel = 'Blog Header';
+        modalTitleText = 'Upload Blog Header Image';
+        break;
+      case 'header':
+        typeLabel = 'Header Image';
+        modalTitleText = 'Upload Header Image';
+        break;
+      case 'content':
+        typeLabel = 'Content Image';
+        modalTitleText = 'Upload Content Image';
+        break;
+      default:
+        typeLabel = presetImageType;
+        modalTitleText = 'Upload Image';
+    }
+
+    imageTypeSelect.innerHTML = `<option value="${presetImageType}">${typeLabel}</option>`;
+    imageTypeSelect.style.display = 'none';
+    document.querySelector('label[for="image-type-select"]').style.display = 'none';
+    modalTitle.textContent = modalTitleText;
+  } else {
+    // Legacy mode with selector
+    imageTypeSelect.style.display = 'block';
+    document.querySelector('label[for="image-type-select"]').style.display = 'block';
+    modalTitle.textContent = 'Upload Image';
+
+    if (entityType === 'content') {
+      imageTypeSelect.innerHTML = `
+        <option value="header">Header Image</option>
+        <option value="content">Content Image</option>
+      `;
+    } else if (entityType === 'section') {
+      // Map target field to image type for sections
+      if (targetField === 'image') {
+        imageTypeSelect.innerHTML = `<option value="section_header">Section Header</option>`;
+      } else if (targetField === 'blog_image') {
+        imageTypeSelect.innerHTML = `<option value="blog_header">Blog Header</option>`;
+      } else {
+        imageTypeSelect.innerHTML = `
+          <option value="section_header">Section Header</option>
+          <option value="blog_header">Blog Header</option>
+        `;
+      }
+    }
+  }
+
+  // Show modal
+  document.getElementById('image-upload-modal').classList.remove('hidden');
+}
+
+function closeImageUploadModal() {
+  document.getElementById('image-upload-modal').classList.add('hidden');
+  clearUploadState();
+}
+
+function clearUploadState() {
+  // Clear file input
+  document.getElementById('image-file-input').value = '';
+
+  // Clear accessibility fields
+  document.getElementById('image-alt-text').value = '';
+  document.getElementById('image-caption').value = '';
+
+  // Hide all status elements
+  document.getElementById('upload-progress').classList.add('hidden');
+  document.getElementById('upload-error').classList.add('hidden');
+  document.getElementById('upload-success').classList.add('hidden');
+
+  // Reset progress bar
+  document.getElementById('progress-bar').style.width = '0%';
+
+  // Enable upload button
+  document.getElementById('upload-btn').disabled = false;
+}
+
+function showError(message) {
+  document.getElementById('error-message').textContent = message;
+  document.getElementById('upload-error').classList.remove('hidden');
+  document.getElementById('upload-progress').classList.add('hidden');
+}
+
+function showSuccess(message, resultData, imageType) {
+  document.getElementById('success-message').textContent = message;
+  document.getElementById('upload-success').classList.remove('hidden');
+  document.getElementById('upload-progress').classList.add('hidden');
+
+  // Call success callback if it exists
+  if (window.onImageUploadSuccess && resultData) {
+    window.onImageUploadSuccess({
+      relative_path: resultData.relative_path,
+      filename: resultData.filename,
+      imageType: imageType
+    });
+  }
+
+  // Auto-close modal after success
+  setTimeout(() => {
+    closeImageUploadModal();
+  }, 1500);
+}
+
+function showProgress() {
+  document.getElementById('upload-progress').classList.remove('hidden');
+  document.getElementById('upload-error').classList.add('hidden');
+  document.getElementById('upload-success').classList.add('hidden');
+  document.getElementById('upload-btn').disabled = true;
+}
+
+function updateProgress(percent) {
+  document.getElementById('progress-bar').style.width = percent + '%';
+}
+
+async function uploadImage() {
+  const fileInput = document.getElementById('image-file-input');
+  const imageTypeSelect = document.getElementById('image-type-select');
+
+  // Validate inputs
+  if (!fileInput.files || fileInput.files.length === 0) {
+    showError('Please select an image file');
+    return;
+  }
+
+  const file = fileInput.files[0];
+  const imageType = imageTypeSelect.value;
+
+  // Validate file type
+  if (!file.type.startsWith('image/')) {
+    showError('Please select a valid image file');
+    return;
+  }
+
+  // Validate file size (e.g., 5MB limit)
+  const maxSize = 5 * 1024 * 1024; // 5MB
+  if (file.size > maxSize) {
+    showError('Image file is too large. Maximum size is 5MB');
+    return;
+  }
+
+  showProgress();
+
+  try {
+    const formData = new FormData();
+    formData.append('image', file);
+    formData.append('image_type', imageType);
+
+    // Add accessibility fields
+    const altText = document.getElementById('image-alt-text').value;
+    const caption = document.getElementById('image-caption').value;
+
+    if (altText) {
+      formData.append('alt_text', altText);
+    }
+    if (caption) {
+      formData.append('caption', caption);
+    }
+
+    // TODO: Move these URLs to config - hardcoded ports break when backend changes
+    const endpoint = currentUploadContext.entityType === 'content'
+      ? `http://localhost:8081/api/v1/ssg/contents/${currentUploadContext.entityId}/images`
+      : `http://localhost:8081/api/v1/ssg/sections/${currentUploadContext.entityId}/images`;
+
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'X-Site-Slug': 'structured'
+      },
+      body: formData
+    });
+
+    const result = await response.json();
+
+    if (response.ok) {
+      updateProgress(100);
+      showSuccess(`Image uploaded successfully: ${result.data.filename}`, result.data, imageType);
+
+      // Update the form field if specified
+      if (currentUploadContext.targetField) {
+        const fieldElement = document.getElementById(currentUploadContext.targetField);
+        if (fieldElement) {
+          fieldElement.value = result.data.relative_path;
+        }
+      }
+    } else {
+      showError(result.error || 'Upload failed');
+    }
+  } catch (error) {
+    console.error('Upload error:', error);
+    showError('Upload failed. Please try again.');
+  }
+}
+
+// Close modal when clicking outside
+document.getElementById('image-upload-modal').addEventListener('click', function(e) {
+  if (e.target === this) {
+    closeImageUploadModal();
+  }
+});
+
+// Handle escape key
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape' && !document.getElementById('image-upload-modal').classList.contains('hidden')) {
+    closeImageUploadModal();
+  }
+});
+</script>
+{{ end }}

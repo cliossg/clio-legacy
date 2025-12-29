@@ -1,0 +1,76 @@
+{{ define "tag-form-new" }}
+{{ $form := .Form }}
+{{ $nameField := "name" }}
+<form hx-post="{{ $form.Action }}" hx-trigger="keyup changed delay:500ms, every 30s, submit" hx-target="#save-status" hx-swap="outerHTML" method="post" class="space-y-4">
+  <div id="save-status" class="text-sm text-gray-500"></div>
+  <input type="hidden" name="_method" value="{{ $form.Method }}" />
+  <input type="hidden" name="hm.csrf.token" value="{{ $form.CSRF }}" />
+  <input type="hidden" name="id" value="{{ .Data.ID }}" />
+  <div>
+    <label for="{{$nameField}}" class="block text-sm font-medium text-gray-700">
+      Name:
+    </label>
+    <input
+      type="text"
+      id="{{$nameField}}"
+      name="{{$nameField}}"
+      value="{{ .Data.Name }}"
+      class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+    />
+    {{ FieldMsg $form $nameField }}
+  </div>
+  <div>
+    <button
+      type="submit"
+      class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+    >
+      {{ if eq $form.Action (printf "%s/create-tag" .Feat.Path) }}Create{{ else
+      if eq $form.Action (printf "%s/update-tag" .Feat.Path) }}Update{{ else
+      }}{{ $form.Button.Text }}{{ end }}
+    </button>
+  </div>
+</form>
+
+<script>
+  function updateSaveStatus(timestamp) {
+    const saveStatusDiv = document.getElementById('save-status');
+    if (!saveStatusDiv) return;
+
+    if (timestamp) {
+      const now = new Date();
+      const savedAt = new Date(timestamp);
+      const diffSeconds = Math.floor((now - savedAt) / 1000);
+
+      let message;
+      if (diffSeconds < 5) {
+        message = 'Last saved: just now';
+      } else if (diffSeconds < 60) {
+        message = `Last saved: ${diffSeconds} seconds ago`;
+      } else if (diffSeconds < 3600) {
+        const minutes = Math.floor(diffSeconds / 60);
+        message = `Last saved: ${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+      } else {
+        message = `Last saved: ${savedAt.toLocaleTimeString()}`;
+      }
+      saveStatusDiv.textContent = message;
+    } else {
+      saveStatusDiv.textContent = '';
+    }
+  }
+
+  const initialTimestamp = document.getElementById('save-status').dataset.timestamp;
+  if (initialTimestamp) {
+    updateSaveStatus(initialTimestamp);
+  }
+
+  document.querySelector('form').addEventListener('htmx:afterSwap', function(event) {
+    const newSaveStatusDiv = event.detail.target.querySelector('#save-status');
+    if (newSaveStatusDiv) {
+      const newTimestamp = newSaveStatusDiv.dataset.timestamp;
+      if (newTimestamp) {
+        updateSaveStatus(newTimestamp);
+      }
+    }
+  });
+</script>
+{{ end }}

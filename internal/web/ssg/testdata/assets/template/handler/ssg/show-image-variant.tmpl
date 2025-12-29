@@ -1,0 +1,52 @@
+{{ define "page" }}
+{{ template "layout" . }}
+{{ end }}
+
+{{ define "title" }}
+{{ .Data.Name }} Variant
+{{ end }}
+
+{{ define "content" }}
+<div class="space-y-4">
+    <h1 class="text-2xl font-bold">Image Variant: {{ .Data.Name }}</h1>
+
+    <div class="mb-4">
+        <h2 class="text-xl font-semibold">Preview:</h2>
+        <img src="{{ .Data.URL }}" alt="{{ .Data.Name }}" class="max-w-full h-auto rounded-md shadow-md" />
+    </div>
+
+    <div class="mb-4">
+        <h2 class="text-xl font-semibold">Image ID:</h2>
+        <p class="text-gray-700">{{ .Data.ImageID }}</p>
+    </div>
+
+    <div class="mb-4">
+        <h2 class="text-xl font-semibold">Path:</h2>
+        <p class="text-gray-700 break-all">{{ .Data.Path }}</p>
+    </div>
+
+    <div class="mb-4">
+        <h2 class="text-xl font-semibold">URL:</h2>
+        <p class="text-blue-600 break-all">{{ .Data.URL }}</p>
+    </div>
+
+    <div class="mb-4">
+        <h2 class="text-xl font-semibold">Mime Type:</h2>
+        <p class="text-gray-700">{{ .Data.MimeType }}</p>
+    </div>
+
+    <div class="mb-4">
+        <h2 class="text-xl font-semibold">Size:</h2>
+        <p class="text-gray-700">{{ .Data.Size }} bytes</p>
+    </div>
+
+    <div class="mb-4">
+        <h2 class="text-xl font-semibold">Dimensions:</h2>
+        <p class="text-gray-700">{{ .Data.Width }}x{{ .Data.Height }}</p>
+    </div>
+</div>
+{{ end }}
+
+{{ define "submenu" }}
+{{ template "menu" . }}
+{{ end }}

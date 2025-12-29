@@ -1,0 +1,16 @@
+{{ define "page" }}
+{{ template "layout" . }}
+{{ end }}
+
+{{ define "title" }}
+New Image Variant
+{{ end }}
+
+{{ define "content" }}
+<h1>New Image Variant</h1>
+{{ template "image-variant-form-new" . }}
+{{ end }}
+
+{{ define "submenu" }}
+{{ template "menu" . }}
+{{ end }}

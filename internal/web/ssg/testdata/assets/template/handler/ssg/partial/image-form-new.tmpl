@@ -1,0 +1,61 @@
+{{ define "image-form-new" }}
+{{ $form := .Form }}
+<form action="{{ $form.Action }}" method="post" enctype="multipart/form-data" class="space-y-4">
+  <input type="hidden" name="_method" value="{{ $form.Method }}" />
+  <input type="hidden" name="hm.csrf.token" value="{{ $form.CSRF }}" />
+  <input type="hidden" name="id" value="{{ .Data.ID }}" />
+  <div>
+    <label for="name" class="block text-sm font-medium text-gray-700">Name:</label>
+    <input
+      type="text"
+      id="name"
+      name="name"
+      value="{{ $form.Name }}"
+      class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+      required
+    />
+    {{ FieldMsg $form "name" }}
+  </div>
+  <div>
+    <label for="description" class="block text-sm font-medium text-gray-700">Description:</label>
+    <textarea
+      id="description"
+      name="description"
+      class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+      rows="3"
+    >{{ $form.Description }}</textarea>
+    {{ FieldMsg $form "description" }}
+  </div>
+  <div>
+    <label for="altText" class="block text-sm font-medium text-gray-700">Alt Text:</label>
+    <input
+      type="text"
+      id="altText"
+      name="altText"
+      value="{{ $form.AltText }}"
+      class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+    />
+    {{ FieldMsg $form "altText" }}
+  </div>
+  <div>
+    <label for="file" class="block text-sm font-medium text-gray-700">Image File:</label>
+    <input
+      type="file"
+      id="file"
+      name="file"
+      class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+      {{ if .IsNew }}required{{ end }}
+    />
+    {{ FieldMsg $form "file" }}
+  </div>
+  {{ template "css.tmpl" . }}
+  <div>
+    <button
+      type="submit"
+      class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+    >
+      {{ if eq $form.Action (printf "%s/create-image" .Feat.Path) }}Create{{ else if eq $form.Action (printf "%s/update-image" .Feat.Path) }}Update{{ else }}{{ $form.Button.Text }}{{ end }}
+    </button>
+  </div>
+</form>
+{{ end }}
