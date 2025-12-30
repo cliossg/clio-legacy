@@ -154,6 +154,12 @@ func TestAPIHandlerGetParamByName(t *testing.T) {
 			wantStatusCode: http.StatusOK,
 		},
 		{
+			name:           "fails with empty name",
+			paramName:      "",
+			setupRepo:      func(m *mockServiceRepo) {},
+			wantStatusCode: http.StatusBadRequest,
+		},
+		{
 			name: "fails when param not found",
 			setupRepo: func(m *mockServiceRepo) {
 				m.getParamErr = fmt.Errorf("not found")
@@ -199,6 +205,12 @@ func TestAPIHandlerGetParamByRefKey(t *testing.T) {
 			},
 			refKey:         "test-ref",
 			wantStatusCode: http.StatusOK,
+		},
+		{
+			name:           "fails with empty ref key",
+			refKey:         "",
+			setupRepo:      func(m *mockServiceRepo) {},
+			wantStatusCode: http.StatusBadRequest,
 		},
 		{
 			name: "fails when param not found",
