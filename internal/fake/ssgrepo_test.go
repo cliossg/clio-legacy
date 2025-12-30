@@ -939,6 +939,13 @@ func TestSsgRepoRemoveTagFromContent(t *testing.T) {
 			expectedErr: nil,
 		},
 		{
+			name:        "returns nil when tag not found",
+			setupFake:   func(f *fake.SsgRepo) {},
+			contentID:   contentID,
+			tagID:       tagID,
+			expectedErr: nil,
+		},
+		{
 			name: "returns error from custom function",
 			setupFake: func(f *fake.SsgRepo) {
 				f.RemoveTagFromContentFn = func(ctx context.Context, contentID, tagID uuid.UUID) error {
@@ -2364,6 +2371,12 @@ func TestSsgRepoDeleteContentImage(t *testing.T) {
 			id:          ciID,
 			expectedErr: nil,
 		},
+		{
+			name:        "returns nil when content image not found",
+			setupFake:   func(f *fake.SsgRepo) {},
+			id:          uuid.New(),
+			expectedErr: nil,
+		},
 	}
 
 	for _, tt := range tests {
@@ -2483,6 +2496,12 @@ func TestSsgRepoDeleteSectionImage(t *testing.T) {
 				f.CreateSectionImage(context.Background(), &ssg.SectionImage{ID: siID})
 			},
 			id:          siID,
+			expectedErr: nil,
+		},
+		{
+			name:        "returns nil when section image not found",
+			setupFake:   func(f *fake.SsgRepo) {},
+			id:          uuid.New(),
 			expectedErr: nil,
 		},
 	}
@@ -2659,6 +2678,282 @@ func TestSsgRepoGetSiteBySlugWithCustomFn(t *testing.T) {
 	}
 
 	_, err := f.GetSiteBySlug(context.Background(), "test-site")
+	if err == nil || err.Error() != "custom error" {
+		t.Errorf("expected custom error, got %v", err)
+	}
+}
+
+func TestSsgRepoListParamsWithCustomFn(t *testing.T) {
+	f := fake.NewSsgRepo()
+	f.ListParamsFn = func(ctx context.Context) ([]ssg.Param, error) {
+		return nil, errors.New("custom error")
+	}
+
+	_, err := f.ListParams(context.Background())
+	if err == nil || err.Error() != "custom error" {
+		t.Errorf("expected custom error, got %v", err)
+	}
+}
+
+func TestSsgRepoUpdateParamWithCustomFn(t *testing.T) {
+	f := fake.NewSsgRepo()
+	f.UpdateParamFn = func(ctx context.Context, param *ssg.Param) error {
+		return errors.New("custom error")
+	}
+
+	err := f.UpdateParam(context.Background(), &ssg.Param{})
+	if err == nil || err.Error() != "custom error" {
+		t.Errorf("expected custom error, got %v", err)
+	}
+}
+
+func TestSsgRepoUpdateImageWithCustomFn(t *testing.T) {
+	f := fake.NewSsgRepo()
+	f.UpdateImageFn = func(ctx context.Context, image *ssg.Image) error {
+		return errors.New("custom error")
+	}
+
+	err := f.UpdateImage(context.Background(), &ssg.Image{})
+	if err == nil || err.Error() != "custom error" {
+		t.Errorf("expected custom error, got %v", err)
+	}
+}
+
+func TestSsgRepoListImagesWithCustomFn(t *testing.T) {
+	f := fake.NewSsgRepo()
+	f.ListImagesFn = func(ctx context.Context) ([]ssg.Image, error) {
+		return nil, errors.New("custom error")
+	}
+
+	_, err := f.ListImages(context.Background())
+	if err == nil || err.Error() != "custom error" {
+		t.Errorf("expected custom error, got %v", err)
+	}
+}
+
+func TestSsgRepoCreateImageVariantWithCustomFn(t *testing.T) {
+	f := fake.NewSsgRepo()
+	f.CreateImageVariantFn = func(ctx context.Context, variant *ssg.ImageVariant) error {
+		return errors.New("custom error")
+	}
+
+	err := f.CreateImageVariant(context.Background(), &ssg.ImageVariant{})
+	if err == nil || err.Error() != "custom error" {
+		t.Errorf("expected custom error, got %v", err)
+	}
+}
+
+func TestSsgRepoUpdateImageVariantWithCustomFn(t *testing.T) {
+	f := fake.NewSsgRepo()
+	f.UpdateImageVariantFn = func(ctx context.Context, variant *ssg.ImageVariant) error {
+		return errors.New("custom error")
+	}
+
+	err := f.UpdateImageVariant(context.Background(), &ssg.ImageVariant{})
+	if err == nil || err.Error() != "custom error" {
+		t.Errorf("expected custom error, got %v", err)
+	}
+}
+
+func TestSsgRepoDeleteImageVariantWithCustomFn(t *testing.T) {
+	f := fake.NewSsgRepo()
+	f.DeleteImageVariantFn = func(ctx context.Context, id uuid.UUID) error {
+		return errors.New("custom error")
+	}
+
+	err := f.DeleteImageVariant(context.Background(), uuid.New())
+	if err == nil || err.Error() != "custom error" {
+		t.Errorf("expected custom error, got %v", err)
+	}
+}
+
+func TestSsgRepoListImageVariantsByImageIDWithCustomFn(t *testing.T) {
+	f := fake.NewSsgRepo()
+	f.ListImageVariantsByImageIDFn = func(ctx context.Context, imageID uuid.UUID) ([]ssg.ImageVariant, error) {
+		return nil, errors.New("custom error")
+	}
+
+	_, err := f.ListImageVariantsByImageID(context.Background(), uuid.New())
+	if err == nil || err.Error() != "custom error" {
+		t.Errorf("expected custom error, got %v", err)
+	}
+}
+
+func TestSsgRepoCreateContentImageWithCustomFn(t *testing.T) {
+	f := fake.NewSsgRepo()
+	f.CreateContentImageFn = func(ctx context.Context, ci *ssg.ContentImage) error {
+		return errors.New("custom error")
+	}
+
+	err := f.CreateContentImage(context.Background(), &ssg.ContentImage{})
+	if err == nil || err.Error() != "custom error" {
+		t.Errorf("expected custom error, got %v", err)
+	}
+}
+
+func TestSsgRepoDeleteContentImageWithCustomFn(t *testing.T) {
+	f := fake.NewSsgRepo()
+	f.DeleteContentImageFn = func(ctx context.Context, id uuid.UUID) error {
+		return errors.New("custom error")
+	}
+
+	err := f.DeleteContentImage(context.Background(), uuid.New())
+	if err == nil || err.Error() != "custom error" {
+		t.Errorf("expected custom error, got %v", err)
+	}
+}
+
+func TestSsgRepoGetContentImagesByContentIDWithCustomFn(t *testing.T) {
+	f := fake.NewSsgRepo()
+	f.GetContentImagesByContentIDFn = func(ctx context.Context, contentID uuid.UUID) ([]ssg.ContentImage, error) {
+		return nil, errors.New("custom error")
+	}
+
+	_, err := f.GetContentImagesByContentID(context.Background(), uuid.New())
+	if err == nil || err.Error() != "custom error" {
+		t.Errorf("expected custom error, got %v", err)
+	}
+}
+
+func TestSsgRepoCreateSectionImageWithCustomFn(t *testing.T) {
+	f := fake.NewSsgRepo()
+	f.CreateSectionImageFn = func(ctx context.Context, si *ssg.SectionImage) error {
+		return errors.New("custom error")
+	}
+
+	err := f.CreateSectionImage(context.Background(), &ssg.SectionImage{})
+	if err == nil || err.Error() != "custom error" {
+		t.Errorf("expected custom error, got %v", err)
+	}
+}
+
+func TestSsgRepoDeleteSectionImageWithCustomFn(t *testing.T) {
+	f := fake.NewSsgRepo()
+	f.DeleteSectionImageFn = func(ctx context.Context, id uuid.UUID) error {
+		return errors.New("custom error")
+	}
+
+	err := f.DeleteSectionImage(context.Background(), uuid.New())
+	if err == nil || err.Error() != "custom error" {
+		t.Errorf("expected custom error, got %v", err)
+	}
+}
+
+func TestSsgRepoGetSectionImagesBySectionIDWithCustomFn(t *testing.T) {
+	f := fake.NewSsgRepo()
+	f.GetSectionImagesBySectionIDFn = func(ctx context.Context, sectionID uuid.UUID) ([]ssg.SectionImage, error) {
+		return nil, errors.New("custom error")
+	}
+
+	_, err := f.GetSectionImagesBySectionID(context.Background(), uuid.New())
+	if err == nil || err.Error() != "custom error" {
+		t.Errorf("expected custom error, got %v", err)
+	}
+}
+
+func TestSsgRepoRemoveTagFromContentWithCustomFn(t *testing.T) {
+	f := fake.NewSsgRepo()
+	f.RemoveTagFromContentFn = func(ctx context.Context, contentID, tagID uuid.UUID) error {
+		return errors.New("custom error")
+	}
+
+	err := f.RemoveTagFromContent(context.Background(), uuid.New(), uuid.New())
+	if err == nil || err.Error() != "custom error" {
+		t.Errorf("expected custom error, got %v", err)
+	}
+}
+
+func TestSsgRepoGetSectionsWithCustomFn(t *testing.T) {
+	f := fake.NewSsgRepo()
+	f.GetSectionsFn = func(ctx context.Context) ([]ssg.Section, error) {
+		return nil, errors.New("custom error")
+	}
+
+	_, err := f.GetSections(context.Background())
+	if err == nil || err.Error() != "custom error" {
+		t.Errorf("expected custom error, got %v", err)
+	}
+}
+
+func TestSsgRepoUpdateSectionWithCustomFn(t *testing.T) {
+	f := fake.NewSsgRepo()
+	f.UpdateSectionFn = func(ctx context.Context, section ssg.Section) error {
+		return errors.New("custom error")
+	}
+
+	err := f.UpdateSection(context.Background(), ssg.Section{})
+	if err == nil || err.Error() != "custom error" {
+		t.Errorf("expected custom error, got %v", err)
+	}
+}
+
+func TestSsgRepoDeleteSectionWithCustomFn(t *testing.T) {
+	f := fake.NewSsgRepo()
+	f.DeleteSectionFn = func(ctx context.Context, id uuid.UUID) error {
+		return errors.New("custom error")
+	}
+
+	err := f.DeleteSection(context.Background(), uuid.New())
+	if err == nil || err.Error() != "custom error" {
+		t.Errorf("expected custom error, got %v", err)
+	}
+}
+
+func TestSsgRepoCreateLayoutWithCustomFn(t *testing.T) {
+	f := fake.NewSsgRepo()
+	f.CreateLayoutFn = func(ctx context.Context, layout ssg.Layout) error {
+		return errors.New("custom error")
+	}
+
+	err := f.CreateLayout(context.Background(), ssg.Layout{})
+	if err == nil || err.Error() != "custom error" {
+		t.Errorf("expected custom error, got %v", err)
+	}
+}
+
+func TestSsgRepoGetAllLayoutsWithCustomFn(t *testing.T) {
+	f := fake.NewSsgRepo()
+	f.GetAllLayoutsFn = func(ctx context.Context) ([]ssg.Layout, error) {
+		return nil, errors.New("custom error")
+	}
+
+	_, err := f.GetAllLayouts(context.Background())
+	if err == nil || err.Error() != "custom error" {
+		t.Errorf("expected custom error, got %v", err)
+	}
+}
+
+func TestSsgRepoUpdateLayoutWithCustomFn(t *testing.T) {
+	f := fake.NewSsgRepo()
+	f.UpdateLayoutFn = func(ctx context.Context, layout ssg.Layout) error {
+		return errors.New("custom error")
+	}
+
+	err := f.UpdateLayout(context.Background(), ssg.Layout{})
+	if err == nil || err.Error() != "custom error" {
+		t.Errorf("expected custom error, got %v", err)
+	}
+}
+
+func TestSsgRepoDeleteLayoutWithCustomFn(t *testing.T) {
+	f := fake.NewSsgRepo()
+	f.DeleteLayoutFn = func(ctx context.Context, id uuid.UUID) error {
+		return errors.New("custom error")
+	}
+
+	err := f.DeleteLayout(context.Background(), uuid.New())
+	if err == nil || err.Error() != "custom error" {
+		t.Errorf("expected custom error, got %v", err)
+	}
+}
+
+func TestSsgRepoGetAllTagsWithCustomFn(t *testing.T) {
+	f := fake.NewSsgRepo()
+	f.GetAllTagsFn = func(ctx context.Context) ([]ssg.Tag, error) {
+		return nil, errors.New("custom error")
+	}
+
+	_, err := f.GetAllTags(context.Background())
 	if err == nil || err.Error() != "custom error" {
 		t.Errorf("expected custom error, got %v", err)
 	}

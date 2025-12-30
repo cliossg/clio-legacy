@@ -127,3 +127,21 @@ func TestTemplateManagerRegisterFunctions(t *testing.T) {
 		})
 	}
 }
+
+func TestTemplateManagerGetWithCustomFunctions(t *testing.T) {
+	tm := NewTemplateManager()
+
+	tm.RegisterFunctions(template.FuncMap{
+		"upper": func(s string) string { return s },
+		"lower": func(s string) string { return s },
+	})
+
+	tmpl, err := tm.Get("ssg", "test")
+	if err != nil {
+		t.Fatalf("Get() error = %v", err)
+	}
+
+	if tmpl == nil {
+		t.Error("Get() returned nil template")
+	}
+}
