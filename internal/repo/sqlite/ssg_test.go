@@ -1248,31 +1248,59 @@ func TestClioRepoCreateLayout(t *testing.T) {
 }
 
 func TestClioRepoGetAllLayouts(t *testing.T) {
-	repo, siteID := setupTestSsgRepo(t)
-	defer repo.db.Close()
-	ctx := ssg.NewContextWithSite("test-site", siteID)
-
-	layout1 := ssg.Layout{
-		ID:     uuid.New(),
-		SiteID: siteID,
-		Name:   "Layout 1",
+	tests := []struct {
+		name      string
+		setup     func(*ClioRepo, uuid.UUID)
+		wantCount int
+		wantErr   bool
+	}{
+		{
+			name: "gets multiple layouts successfully",
+			setup: func(r *ClioRepo, siteID uuid.UUID) {
+				ctx := ssg.NewContextWithSite("test-site", siteID)
+				layout1 := ssg.Layout{
+					ID:     uuid.New(),
+					SiteID: siteID,
+					Name:   "Layout 1",
+				}
+				layout2 := ssg.Layout{
+					ID:     uuid.New(),
+					SiteID: siteID,
+					Name:   "Layout 2",
+				}
+				r.CreateLayout(ctx, layout1)
+				r.CreateLayout(ctx, layout2)
+			},
+			wantCount: 2,
+			wantErr:   false,
+		},
+		{
+			name: "returns empty list when no layouts",
+			setup: func(r *ClioRepo, siteID uuid.UUID) {
+			},
+			wantCount: 0,
+			wantErr:   false,
+		},
 	}
-	layout2 := ssg.Layout{
-		ID:     uuid.New(),
-		SiteID: siteID,
-		Name:   "Layout 2",
-	}
-	repo.CreateLayout(ctx, layout1)
-	repo.CreateLayout(ctx, layout2)
 
-	layouts, err := repo.GetAllLayouts(ctx)
-	if err != nil {
-		t.Errorf("GetAllLayouts() error = %v", err)
-		return
-	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			repo, siteID := setupTestSsgRepo(t)
+			defer repo.db.Close()
+			ctx := ssg.NewContextWithSite("test-site", siteID)
 
-	if len(layouts) != 2 {
-		t.Errorf("GetAllLayouts() got %d layouts, want 2", len(layouts))
+			tt.setup(repo, siteID)
+
+			layouts, err := repo.GetAllLayouts(ctx)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetAllLayouts() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			if len(layouts) != tt.wantCount {
+				t.Errorf("GetAllLayouts() got %d layouts, want %d", len(layouts), tt.wantCount)
+			}
+		})
 	}
 }
 
@@ -1829,31 +1857,59 @@ func TestClioRepoGetTagsForContent(t *testing.T) {
 }
 
 func TestClioRepoGetAllContentWithMeta(t *testing.T) {
-	repo, siteID := setupTestSsgRepo(t)
-	defer repo.db.Close()
-	ctx := ssg.NewContextWithSite("test-site", siteID)
-
-	content1 := &ssg.Content{
-		ID:      uuid.New(),
-		SiteID:  siteID,
-		Heading: "Content 1",
+	tests := []struct {
+		name      string
+		setup     func(*ClioRepo, uuid.UUID)
+		wantCount int
+		wantErr   bool
+	}{
+		{
+			name: "gets multiple contents with meta successfully",
+			setup: func(r *ClioRepo, siteID uuid.UUID) {
+				ctx := ssg.NewContextWithSite("test-site", siteID)
+				content1 := &ssg.Content{
+					ID:      uuid.New(),
+					SiteID:  siteID,
+					Heading: "Content 1",
+				}
+				content2 := &ssg.Content{
+					ID:      uuid.New(),
+					SiteID:  siteID,
+					Heading: "Content 2",
+				}
+				r.CreateContent(ctx, content1)
+				r.CreateContent(ctx, content2)
+			},
+			wantCount: 2,
+			wantErr:   false,
+		},
+		{
+			name: "returns empty list when no content",
+			setup: func(r *ClioRepo, siteID uuid.UUID) {
+			},
+			wantCount: 0,
+			wantErr:   false,
+		},
 	}
-	content2 := &ssg.Content{
-		ID:      uuid.New(),
-		SiteID:  siteID,
-		Heading: "Content 2",
-	}
-	repo.CreateContent(ctx, content1)
-	repo.CreateContent(ctx, content2)
 
-	contents, err := repo.GetAllContentWithMeta(ctx)
-	if err != nil {
-		t.Errorf("GetAllContentWithMeta() error = %v", err)
-		return
-	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			repo, siteID := setupTestSsgRepo(t)
+			defer repo.db.Close()
+			ctx := ssg.NewContextWithSite("test-site", siteID)
 
-	if len(contents) < 2 {
-		t.Errorf("GetAllContentWithMeta() got %d contents, want at least 2", len(contents))
+			tt.setup(repo, siteID)
+
+			contents, err := repo.GetAllContentWithMeta(ctx)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetAllContentWithMeta() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			if len(contents) != tt.wantCount {
+				t.Errorf("GetAllContentWithMeta() got %d contents, want %d", len(contents), tt.wantCount)
+			}
+		})
 	}
 }
 
