@@ -179,31 +179,59 @@ func TestClioRepoGetUserByUsername(t *testing.T) {
 }
 
 func TestClioRepoGetUsers(t *testing.T) {
-	repo := setupTestRepo(t)
-	defer repo.db.Close()
-	ctx := context.Background()
-
-	user1 := &auth.User{
-		ID:           uuid.New(),
-		Username:     "user1",
-		Name:     "User One",
+	tests := []struct {
+		name      string
+		setup     func(*ClioRepo)
+		wantCount int
+		wantErr   bool
+	}{
+		{
+			name: "gets multiple users successfully",
+			setup: func(r *ClioRepo) {
+				ctx := context.Background()
+				user1 := &auth.User{
+					ID:       uuid.New(),
+					Username: "user1",
+					Name:     "User One",
+				}
+				user2 := &auth.User{
+					ID:       uuid.New(),
+					Username: "user2",
+					Name:     "User Two",
+				}
+				r.CreateUser(ctx, user1)
+				r.CreateUser(ctx, user2)
+			},
+			wantCount: 2,
+			wantErr:   false,
+		},
+		{
+			name: "returns empty list when no users",
+			setup: func(r *ClioRepo) {
+			},
+			wantCount: 0,
+			wantErr:   false,
+		},
 	}
-	user2 := &auth.User{
-		ID:           uuid.New(),
-		Username:     "user2",
-		Name:     "User Two",
-	}
-	repo.CreateUser(ctx, user1)
-	repo.CreateUser(ctx, user2)
 
-	users, err := repo.GetUsers(ctx)
-	if err != nil {
-		t.Errorf("GetUsers() error = %v", err)
-		return
-	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			repo := setupTestRepo(t)
+			defer repo.db.Close()
+			ctx := context.Background()
 
-	if len(users) != 2 {
-		t.Errorf("GetUsers() got %d users, want 2", len(users))
+			tt.setup(repo)
+
+			users, err := repo.GetUsers(ctx)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetUsers() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			if !tt.wantErr && len(users) != tt.wantCount {
+				t.Errorf("GetUsers() got %d users, want %d", len(users), tt.wantCount)
+			}
+		})
 	}
 }
 
