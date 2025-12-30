@@ -285,7 +285,8 @@ func TestAPIHandlerUpdateParam(t *testing.T) {
 	tests := []struct {
 		name           string
 		setupRepo      func(*mockServiceRepo) uuid.UUID
-		requestBody    map[string]interface{}
+		requestBody    interface{}
+		paramID        string
 		wantStatusCode int
 	}{
 		{
@@ -302,17 +303,95 @@ func TestAPIHandlerUpdateParam(t *testing.T) {
 			wantStatusCode: http.StatusOK,
 		},
 		{
-			name: "fails when trying to change system param name",
+			name:    "fails with invalid UUID",
+			paramID: "invalid-uuid",
+			setupRepo: func(m *mockServiceRepo) uuid.UUID {
+				return uuid.Nil
+			},
+			requestBody: map[string]interface{}{
+				"name": "test",
+			},
+			wantStatusCode: http.StatusBadRequest,
+		},
+		{
+			name: "fails with invalid JSON body",
 			setupRepo: func(m *mockServiceRepo) uuid.UUID {
 				id := uuid.New()
-				m.params[id] = Param{ID: id, Name: "system-param", System: 1}
+				m.params[id] = Param{ID: id, Name: "test", System: 0}
+				return id
+			},
+			requestBody:    "invalid json",
+			wantStatusCode: http.StatusBadRequest,
+		},
+		{
+			name: "fails when cannot get existing param",
+			setupRepo: func(m *mockServiceRepo) uuid.UUID {
+				id := uuid.New()
+				m.getParamErr = fmt.Errorf("param not found")
 				return id
 			},
 			requestBody: map[string]interface{}{
-				"name":  "different-name",
-				"value": "value",
+				"name": "test",
+			},
+			wantStatusCode: http.StatusInternalServerError,
+		},
+		{
+			name: "fails when trying to change system param name",
+			setupRepo: func(m *mockServiceRepo) uuid.UUID {
+				id := uuid.New()
+				m.params[id] = Param{ID: id, Name: "system-param", RefKey: "sys.key", Description: "Desc", System: 1}
+				return id
+			},
+			requestBody: map[string]interface{}{
+				"name":   "different-name",
+				"refKey": "sys.key",
+				"value":  "value",
 			},
 			wantStatusCode: http.StatusBadRequest,
+		},
+		{
+			name: "fails when trying to change system param refkey",
+			setupRepo: func(m *mockServiceRepo) uuid.UUID {
+				id := uuid.New()
+				m.params[id] = Param{ID: id, Name: "system-param", RefKey: "sys.key", Description: "Desc", System: 1}
+				return id
+			},
+			requestBody: map[string]interface{}{
+				"name":    "system-param",
+				"ref_key": "different.key",
+				"value":   "value",
+			},
+			wantStatusCode: http.StatusBadRequest,
+		},
+		{
+			name: "fails when trying to change system param description",
+			setupRepo: func(m *mockServiceRepo) uuid.UUID {
+				id := uuid.New()
+				m.params[id] = Param{ID: id, Name: "system-param", RefKey: "sys.key", Description: "Original", System: 1}
+				return id
+			},
+			requestBody: map[string]interface{}{
+				"name":        "system-param",
+				"ref_key":     "sys.key",
+				"description": "Different description",
+				"value":       "value",
+			},
+			wantStatusCode: http.StatusBadRequest,
+		},
+		{
+			name: "updates system param value successfully",
+			setupRepo: func(m *mockServiceRepo) uuid.UUID {
+				id := uuid.New()
+				m.params[id] = Param{ID: id, Name: "system-param", RefKey: "sys.key", Description: "Desc", System: 1}
+				return id
+			},
+			requestBody: map[string]interface{}{
+				"name":        "system-param",
+				"ref_key":     "sys.key",
+				"description": "Desc",
+				"value":       "new-value",
+			},
+			wantStatusCode: http.StatusOK,
 		},
 		{
 			name: "fails when service returns error",
@@ -338,13 +417,24 @@ func TestAPIHandlerUpdateParam(t *testing.T) {
 			cfg := hm.NewConfig()
 			handler := NewAPIHandler("test-api", svc, nil, hm.XParams{Cfg: cfg})
 
-			body, err := json.Marshal(tt.requestBody)
-			if err != nil {
-				t.Fatal(err)
+			var body []byte
+			if str, ok := tt.requestBody.(string); ok {
+				body = []byte(str)
+			} else {
+				var err error
+				body, err = json.Marshal(tt.requestBody)
+				if err != nil {
+					t.Fatal(err)
+				}
 			}
 
-			req := httptest.NewRequest(http.MethodPut, "/ssg/params/"+paramID.String(), bytes.NewReader(body))
-			req.SetPathValue("id", paramID.String())
+			idStr := tt.paramID
+			if idStr == "" {
+				idStr = paramID.String()
+			}
+
+			req := httptest.NewRequest(http.MethodPut, "/ssg/params/"+idStr, bytes.NewReader(body))
+			req.SetPathValue("id", idStr)
 			req.Header.Set("Content-Type", "application/json")
 			w := httptest.NewRecorder()
 
