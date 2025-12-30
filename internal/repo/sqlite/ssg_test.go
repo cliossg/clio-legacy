@@ -1670,14 +1670,36 @@ func TestClioRepoGetSiteBySlug(t *testing.T) {
 	defer repo.db.Close()
 	ctx := context.Background()
 
-	site, err := repo.GetSiteBySlug(ctx, "test-site")
-	if err != nil {
-		t.Errorf("GetSiteBySlug() error = %v", err)
-		return
+	tests := []struct {
+		name     string
+		slug     string
+		wantSlug string
+		wantErr  bool
+	}{
+		{
+			name:     "gets site by slug successfully",
+			slug:     "test-site",
+			wantSlug: "test-site",
+			wantErr:  false,
+		},
+		{
+			name:    "returns error when site not found",
+			slug:    "nonexistent-site",
+			wantErr: true,
+		},
 	}
 
-	if site.Slug() != "test-site" {
-		t.Errorf("GetSiteBySlug() slug = %v, want test-site", site.Slug())
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			site, err := repo.GetSiteBySlug(ctx, tt.slug)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetSiteBySlug() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !tt.wantErr && site.Slug() != tt.wantSlug {
+				t.Errorf("GetSiteBySlug() slug = %v, want %v", site.Slug(), tt.wantSlug)
+			}
+		})
 	}
 }
 
@@ -1694,14 +1716,36 @@ func TestClioRepoGetImageByShortID(t *testing.T) {
 	}
 	repo.CreateImage(ctx, image)
 
-	retrieved, err := repo.GetImageByShortID(ctx, "img123")
-	if err != nil {
-		t.Errorf("GetImageByShortID() error = %v", err)
-		return
+	tests := []struct {
+		name         string
+		shortID      string
+		wantShortID  string
+		wantErr      bool
+	}{
+		{
+			name:        "gets image by short ID successfully",
+			shortID:     "img123",
+			wantShortID: "img123",
+			wantErr:     false,
+		},
+		{
+			name:    "returns error when image not found",
+			shortID: "nonexistent",
+			wantErr: true,
+		},
 	}
 
-	if retrieved.ShortID != "img123" {
-		t.Errorf("GetImageByShortID() shortID = %v, want img123", retrieved.ShortID)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			retrieved, err := repo.GetImageByShortID(ctx, tt.shortID)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetImageByShortID() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !tt.wantErr && retrieved.ShortID != tt.wantShortID {
+				t.Errorf("GetImageByShortID() shortID = %v, want %v", retrieved.ShortID, tt.wantShortID)
+			}
+		})
 	}
 }
 
@@ -1715,15 +1759,41 @@ func TestClioRepoGetImageByContentHash(t *testing.T) {
 		SiteID:   siteID,
 		ShortID:  "img456",
 		FileName: "test.jpg",
+		FilePath: "images/test_hash.jpg",
 	}
 	repo.CreateImage(ctx, image)
 
-	retrieved, err := repo.GetImageByContentHash(ctx, "hash456")
-	if err == nil {
-		t.Error("GetImageByContentHash() expected error for non-existent hash")
+	tests := []struct {
+		name         string
+		contentHash  string
+		wantFilePath string
+		wantErr      bool
+	}{
+		{
+			name:         "gets image by content hash successfully",
+			contentHash:  "images/test_hash.jpg",
+			wantFilePath: "images/test_hash.jpg",
+			wantErr:      false,
+		},
+		{
+			name:        "returns error when image not found",
+			contentHash: "nonexistent_hash",
+			wantErr:     true,
+		},
 	}
 
-	_ = retrieved
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			retrieved, err := repo.GetImageByContentHash(ctx, tt.contentHash)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetImageByContentHash() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !tt.wantErr && retrieved.FilePath != tt.wantFilePath {
+				t.Errorf("GetImageByContentHash() filePath = %v, want %v", retrieved.FilePath, tt.wantFilePath)
+			}
+		})
+	}
 }
 
 func TestClioRepoGetContentForTag(t *testing.T) {
