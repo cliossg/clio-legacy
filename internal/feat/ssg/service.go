@@ -109,6 +109,9 @@ type BaseService struct {
 }
 
 func NewService(assetsFS embed.FS, repo Repo, gen *Generator, publisher Publisher, pm *ParamManager, im *ImageManager, params hm.XParams) *BaseService {
+	if repo == nil {
+		panic("ssg.NewService: repo is required and cannot be nil")
+	}
 	return &BaseService{
 		Service:  hm.NewService("ssg-svc", params),
 		assetsFS: assetsFS,
@@ -120,11 +123,9 @@ func NewService(assetsFS embed.FS, repo Repo, gen *Generator, publisher Publishe
 	}
 }
 
-func (svc *BaseService) getRepo(ctx context.Context) (Repo, error) {
-	if svc.repo != nil {
-		return svc.repo, nil
-	}
-	return nil, fmt.Errorf("no repository available in service")
+func (svc *BaseService) getRepo(ctx context.Context) Repo {
+	// repo is guaranteed to be non-nil by NewService validation
+	return svc.repo
 }
 
 // Publish delegates the publishing task to the underlying pub.
@@ -222,10 +223,7 @@ func (svc *BaseService) GenerateMarkdown(ctx context.Context) error {
 func (svc *BaseService) GenerateHTMLFromContent(ctx context.Context) error {
 	svc.Log().Info("Service starting HTML generation")
 
-	repo, err := svc.getRepo(ctx)
-	if err != nil {
-		return fmt.Errorf("repo not available: %w", err)
-	}
+	repo := svc.getRepo(ctx)
 
 	contents, err := repo.GetAllContentWithMeta(ctx)
 	if err != nil {
@@ -530,337 +528,174 @@ func (svc *BaseService) GenerateHTMLFromContent(ctx context.Context) error {
 // Content related
 
 func (svc *BaseService) CreateContent(ctx context.Context, content *Content) error {
-	repo, err := svc.getRepo(ctx)
-	if err != nil {
-		return err
-	}
-	return repo.CreateContent(ctx, content)
+	return svc.getRepo(ctx).CreateContent(ctx, content)
 }
 
 func (svc *BaseService) GetContent(ctx context.Context, id uuid.UUID) (Content, error) {
-	repo, err := svc.getRepo(ctx)
-	if err != nil {
-		return Content{}, err
-	}
-	return repo.GetContent(ctx, id)
+	return svc.getRepo(ctx).GetContent(ctx, id)
 }
 
 func (svc *BaseService) UpdateContent(ctx context.Context, content *Content) error {
-	repo, err := svc.getRepo(ctx)
-	if err != nil {
-		return err
-	}
-	return repo.UpdateContent(ctx, content)
+	return svc.getRepo(ctx).UpdateContent(ctx, content)
 }
 
 func (svc *BaseService) DeleteContent(ctx context.Context, id uuid.UUID) error {
-	repo, err := svc.getRepo(ctx)
-	if err != nil {
-		return err
-	}
-	return repo.DeleteContent(ctx, id)
+	return svc.getRepo(ctx).DeleteContent(ctx, id)
 }
 
 func (svc *BaseService) GetAllContentWithMeta(ctx context.Context) ([]Content, error) {
-	repo, err := svc.getRepo(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return repo.GetAllContentWithMeta(ctx)
+	return svc.getRepo(ctx).GetAllContentWithMeta(ctx)
 }
 
 func (svc *BaseService) GetContentWithPaginationAndSearch(ctx context.Context, offset, limit int, searchQuery string) ([]Content, int, error) {
-	repo, err := svc.getRepo(ctx)
-	if err != nil {
-		return nil, 0, err
-	}
-	return repo.GetContentWithPaginationAndSearch(ctx, offset, limit, searchQuery)
+	return svc.getRepo(ctx).GetContentWithPaginationAndSearch(ctx, offset, limit, searchQuery)
 }
 
 // Section related
 func (svc *BaseService) CreateSection(ctx context.Context, section Section) error {
-	repo, err := svc.getRepo(ctx)
-	if err != nil {
-		return err
-	}
-	return repo.CreateSection(ctx, section)
+	return svc.getRepo(ctx).CreateSection(ctx, section)
 }
 
 func (svc *BaseService) GetSection(ctx context.Context, id uuid.UUID) (Section, error) {
-	repo, err := svc.getRepo(ctx)
-	if err != nil {
-		return Section{}, err
-	}
-	return repo.GetSection(ctx, id)
+	return svc.getRepo(ctx).GetSection(ctx, id)
 }
 
 func (svc *BaseService) GetSections(ctx context.Context) ([]Section, error) {
-	repo, err := svc.getRepo(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return repo.GetSections(ctx)
+	return svc.getRepo(ctx).GetSections(ctx)
 }
 
 func (svc *BaseService) UpdateSection(ctx context.Context, section Section) error {
-	repo, err := svc.getRepo(ctx)
-	if err != nil {
-		return err
-	}
-	return repo.UpdateSection(ctx, section)
+	return svc.getRepo(ctx).UpdateSection(ctx, section)
 }
 
 func (svc *BaseService) DeleteSection(ctx context.Context, id uuid.UUID) error {
-	repo, err := svc.getRepo(ctx)
-	if err != nil {
-		return err
-	}
-	return repo.DeleteSection(ctx, id)
+	return svc.getRepo(ctx).DeleteSection(ctx, id)
 }
 
 // Layout related
 func (svc *BaseService) CreateLayout(ctx context.Context, layout Layout) error {
-	repo, err := svc.getRepo(ctx)
-	if err != nil {
-		return err
-	}
-	return repo.CreateLayout(ctx, layout)
+	return svc.getRepo(ctx).CreateLayout(ctx, layout)
 }
 
 func (svc *BaseService) GetLayout(ctx context.Context, id uuid.UUID) (Layout, error) {
-	repo, err := svc.getRepo(ctx)
-	if err != nil {
-		return Layout{}, err
-	}
-	return repo.GetLayout(ctx, id)
+	return svc.getRepo(ctx).GetLayout(ctx, id)
 }
 
 func (svc *BaseService) GetAllLayouts(ctx context.Context) ([]Layout, error) {
-	repo, err := svc.getRepo(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return repo.GetAllLayouts(ctx)
+	return svc.getRepo(ctx).GetAllLayouts(ctx)
 }
 
 func (svc *BaseService) UpdateLayout(ctx context.Context, layout Layout) error {
-	repo, err := svc.getRepo(ctx)
-	if err != nil {
-		return err
-	}
-	return repo.UpdateLayout(ctx, layout)
+	return svc.getRepo(ctx).UpdateLayout(ctx, layout)
 }
 
 func (svc *BaseService) DeleteLayout(ctx context.Context, id uuid.UUID) error {
-	repo, err := svc.getRepo(ctx)
-	if err != nil {
-		return err
-	}
-	return repo.DeleteLayout(ctx, id)
+	return svc.getRepo(ctx).DeleteLayout(ctx, id)
 }
 
 // Tag related
 func (svc *BaseService) CreateTag(ctx context.Context, tag Tag) error {
-	repo, err := svc.getRepo(ctx)
-	if err != nil {
-		return err
-	}
-	return repo.CreateTag(ctx, tag)
+	return svc.getRepo(ctx).CreateTag(ctx, tag)
 }
 
 func (svc *BaseService) GetTag(ctx context.Context, id uuid.UUID) (Tag, error) {
-	repo, err := svc.getRepo(ctx)
-	if err != nil {
-		return Tag{}, err
-	}
-	return repo.GetTag(ctx, id)
+	return svc.getRepo(ctx).GetTag(ctx, id)
 }
 
 func (svc *BaseService) GetTagByName(ctx context.Context, name string) (Tag, error) {
-	repo, err := svc.getRepo(ctx)
-	if err != nil {
-		return Tag{}, err
-	}
-	return repo.GetTagByName(ctx, name)
+	return svc.getRepo(ctx).GetTagByName(ctx, name)
 }
 
 func (svc *BaseService) GetAllTags(ctx context.Context) ([]Tag, error) {
-	repo, err := svc.getRepo(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return repo.GetAllTags(ctx)
+	return svc.getRepo(ctx).GetAllTags(ctx)
 }
 
 func (svc *BaseService) UpdateTag(ctx context.Context, tag Tag) error {
-	repo, err := svc.getRepo(ctx)
-	if err != nil {
-		return err
-	}
-	return repo.UpdateTag(ctx, tag)
+	return svc.getRepo(ctx).UpdateTag(ctx, tag)
 }
 
 func (svc *BaseService) DeleteTag(ctx context.Context, id uuid.UUID) error {
-	repo, err := svc.getRepo(ctx)
-	if err != nil {
-		return err
-	}
-	return repo.DeleteTag(ctx, id)
+	return svc.getRepo(ctx).DeleteTag(ctx, id)
 }
 
 // Param related
 func (svc *BaseService) CreateParam(ctx context.Context, param *Param) error {
-	repo, err := svc.getRepo(ctx)
-	if err != nil {
-		return err
-	}
-	return repo.CreateParam(ctx, param)
+	return svc.getRepo(ctx).CreateParam(ctx, param)
 }
 
 func (svc *BaseService) GetParam(ctx context.Context, id uuid.UUID) (Param, error) {
-	repo, err := svc.getRepo(ctx)
-	if err != nil {
-		return Param{}, err
-	}
-	return repo.GetParam(ctx, id)
+	return svc.getRepo(ctx).GetParam(ctx, id)
 }
 
 func (svc *BaseService) GetParamByName(ctx context.Context, name string) (Param, error) {
-	repo, err := svc.getRepo(ctx)
-	if err != nil {
-		return Param{}, err
-	}
-	return repo.GetParamByName(ctx, name)
+	return svc.getRepo(ctx).GetParamByName(ctx, name)
 }
 
 func (svc *BaseService) GetParamByRefKey(ctx context.Context, refKey string) (Param, error) {
-	repo, err := svc.getRepo(ctx)
-	if err != nil {
-		return Param{}, err
-	}
-	return repo.GetParamByRefKey(ctx, refKey)
+	return svc.getRepo(ctx).GetParamByRefKey(ctx, refKey)
 }
 
 func (svc *BaseService) ListParams(ctx context.Context) ([]Param, error) {
-	repo, err := svc.getRepo(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return repo.ListParams(ctx)
+	return svc.getRepo(ctx).ListParams(ctx)
 }
 
 func (svc *BaseService) UpdateParam(ctx context.Context, param *Param) error {
-	repo, err := svc.getRepo(ctx)
-	if err != nil {
-		return err
-	}
-	return repo.UpdateParam(ctx, param)
+	return svc.getRepo(ctx).UpdateParam(ctx, param)
 }
 
 func (svc *BaseService) DeleteParam(ctx context.Context, id uuid.UUID) error {
-	repo, err := svc.getRepo(ctx)
-	if err != nil {
-		return err
-	}
-	return repo.DeleteParam(ctx, id)
+	return svc.getRepo(ctx).DeleteParam(ctx, id)
 }
 
 // Image related
 func (svc *BaseService) CreateImage(ctx context.Context, image *Image) error {
-	repo, err := svc.getRepo(ctx)
-	if err != nil {
-		return err
-	}
-	return repo.CreateImage(ctx, image)
+	return svc.getRepo(ctx).CreateImage(ctx, image)
 }
 
 func (svc *BaseService) GetImage(ctx context.Context, id uuid.UUID) (Image, error) {
-	repo, err := svc.getRepo(ctx)
-	if err != nil {
-		return Image{}, err
-	}
-	return repo.GetImage(ctx, id)
+	return svc.getRepo(ctx).GetImage(ctx, id)
 }
 
 func (svc *BaseService) GetImageByShortID(ctx context.Context, shortID string) (Image, error) {
-	repo, err := svc.getRepo(ctx)
-	if err != nil {
-		return Image{}, err
-	}
-	return repo.GetImageByShortID(ctx, shortID)
+	return svc.getRepo(ctx).GetImageByShortID(ctx, shortID)
 }
 
 func (svc *BaseService) ListImages(ctx context.Context) ([]Image, error) {
-	repo, err := svc.getRepo(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return repo.ListImages(ctx)
+	return svc.getRepo(ctx).ListImages(ctx)
 }
 
 func (svc *BaseService) UpdateImage(ctx context.Context, image *Image) error {
-	repo, err := svc.getRepo(ctx)
-	if err != nil {
-		return err
-	}
-	return repo.UpdateImage(ctx, image)
+	return svc.getRepo(ctx).UpdateImage(ctx, image)
 }
 
 func (svc *BaseService) DeleteImage(ctx context.Context, id uuid.UUID) error {
-	repo, err := svc.getRepo(ctx)
-	if err != nil {
-		return err
-	}
-	return repo.DeleteImage(ctx, id)
+	return svc.getRepo(ctx).DeleteImage(ctx, id)
 }
 
 // ImageVariant related
 func (svc *BaseService) CreateImageVariant(ctx context.Context, variant *ImageVariant) error {
-	repo, err := svc.getRepo(ctx)
-	if err != nil {
-		return err
-	}
-	return repo.CreateImageVariant(ctx, variant)
+	return svc.getRepo(ctx).CreateImageVariant(ctx, variant)
 }
 
 func (svc *BaseService) GetImageVariant(ctx context.Context, id uuid.UUID) (ImageVariant, error) {
-	repo, err := svc.getRepo(ctx)
-	if err != nil {
-		return ImageVariant{}, err
-	}
-	return repo.GetImageVariant(ctx, id)
+	return svc.getRepo(ctx).GetImageVariant(ctx, id)
 }
 
 func (svc *BaseService) ListImageVariantsByImageID(ctx context.Context, imageID uuid.UUID) ([]ImageVariant, error) {
-	repo, err := svc.getRepo(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return repo.ListImageVariantsByImageID(ctx, imageID)
+	return svc.getRepo(ctx).ListImageVariantsByImageID(ctx, imageID)
 }
 
 func (svc *BaseService) UpdateImageVariant(ctx context.Context, variant *ImageVariant) error {
-	repo, err := svc.getRepo(ctx)
-	if err != nil {
-		return err
-	}
-	return repo.UpdateImageVariant(ctx, variant)
+	return svc.getRepo(ctx).UpdateImageVariant(ctx, variant)
 }
 
 func (svc *BaseService) DeleteImageVariant(ctx context.Context, id uuid.UUID) error {
-	repo, err := svc.getRepo(ctx)
-	if err != nil {
-		return err
-	}
-	return repo.DeleteImageVariant(ctx, id)
+	return svc.getRepo(ctx).DeleteImageVariant(ctx, id)
 }
 
 // ContentTag related
 func (svc *BaseService) AddTagToContent(ctx context.Context, contentID uuid.UUID, tagName string) error {
-	repo, err := svc.getRepo(ctx)
-	if err != nil {
-		return err
-	}
+	repo := svc.getRepo(ctx)
 
 	tag, err := repo.GetTagByName(ctx, tagName)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
@@ -881,27 +716,15 @@ func (svc *BaseService) AddTagToContent(ctx context.Context, contentID uuid.UUID
 }
 
 func (svc *BaseService) RemoveTagFromContent(ctx context.Context, contentID, tagID uuid.UUID) error {
-	repo, err := svc.getRepo(ctx)
-	if err != nil {
-		return err
-	}
-	return repo.RemoveTagFromContent(ctx, contentID, tagID)
+	return svc.getRepo(ctx).RemoveTagFromContent(ctx, contentID, tagID)
 }
 
 func (svc *BaseService) GetTagsForContent(ctx context.Context, contentID uuid.UUID) ([]Tag, error) {
-	repo, err := svc.getRepo(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return repo.GetTagsForContent(ctx, contentID)
+	return svc.getRepo(ctx).GetTagsForContent(ctx, contentID)
 }
 
 func (svc *BaseService) GetContentForTag(ctx context.Context, tagID uuid.UUID) ([]Content, error) {
-	repo, err := svc.getRepo(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return repo.GetContentForTag(ctx, tagID)
+	return svc.getRepo(ctx).GetContentForTag(ctx, tagID)
 }
 
 var firstH1Regex = regexp.MustCompile(`(?i)<h1[^>]*>.*?</h1>`)
@@ -994,10 +817,7 @@ type ImageWithMeta struct {
 func (svc *BaseService) GetContentImages(ctx context.Context, contentID uuid.UUID) ([]ImageWithMeta, error) {
 	svc.Log().Debugf("Getting content images: contentID=%s", contentID)
 
-	repo, err := svc.getRepo(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("repo not available: %w", err)
-	}
+	repo := svc.getRepo(ctx)
 
 	contentImages, err := repo.GetContentImagesByContentID(ctx, contentID)
 	if err != nil {

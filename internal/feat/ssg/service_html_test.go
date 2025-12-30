@@ -18,17 +18,6 @@ func TestServiceGenerateHTMLFromContent(t *testing.T) {
 		wantErr   bool
 	}{
 		{
-			name: "fails when repo is nil",
-			setupRepo: func(m *mockServiceRepo) {},
-			setupCtx: func() context.Context {
-				return context.WithValue(context.Background(), siteSlugKey, "test-site")
-			},
-			setupSvc: func(svc *BaseService) {
-				svc.repo = nil
-			},
-			wantErr: true,
-		},
-		{
 			name: "fails when GetAllContentWithMeta returns error",
 			setupRepo: func(m *mockServiceRepo) {
 				m.getContentErr = fmt.Errorf("db error")

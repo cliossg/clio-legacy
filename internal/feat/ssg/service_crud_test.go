@@ -678,15 +678,6 @@ func TestServiceCreateContent(t *testing.T) {
 	}
 }
 
-func TestServiceCreateContentWithNilRepo(t *testing.T) {
-	svc := newTestService(nil)
-	err := svc.CreateContent(context.Background(), &Content{ID: uuid.New()})
-
-	if err == nil {
-		t.Error("CreateContent() with nil repo should return error")
-	}
-}
-
 func TestServiceGetContent(t *testing.T) {
 	tests := []struct {
 		name    string
