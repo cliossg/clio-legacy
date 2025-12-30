@@ -1951,14 +1951,37 @@ func TestClioRepoGetImageVariant(t *testing.T) {
 	}
 	repo.CreateImageVariant(ctx, variant)
 
-	retrieved, err := repo.GetImageVariant(ctx, variant.ID)
-	if err != nil {
-		t.Errorf("GetImageVariant() error = %v", err)
-		return
+	tests := []struct {
+		name     string
+		id       uuid.UUID
+		wantKind string
+		wantErr  bool
+	}{
+		{
+			name:     "gets image variant successfully",
+			id:       variant.ID,
+			wantKind: "medium",
+			wantErr:  false,
+		},
+		{
+			name:    "returns error when variant not found",
+			id:      uuid.New(),
+			wantErr: true,
+		},
 	}
 
-	if retrieved.Kind != "medium" {
-		t.Errorf("GetImageVariant() kind = %v, want medium", retrieved.Kind)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			retrieved, err := repo.GetImageVariant(ctx, tt.id)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetImageVariant() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			if !tt.wantErr && retrieved.Kind != tt.wantKind {
+				t.Errorf("GetImageVariant() kind = %v, want %v", retrieved.Kind, tt.wantKind)
+			}
+		})
 	}
 }
 
