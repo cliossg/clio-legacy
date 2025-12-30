@@ -137,6 +137,60 @@ func TestAPIHandlerGetTag(t *testing.T) {
 	}
 }
 
+func TestAPIHandlerGetTagByName(t *testing.T) {
+	tests := []struct {
+		name           string
+		tagName        string
+		setupRepo      func(*mockServiceRepo)
+		wantStatusCode int
+	}{
+		{
+			name:    "gets tag by name successfully",
+			tagName: "test-tag",
+			setupRepo: func(m *mockServiceRepo) {
+				id := uuid.New()
+				m.tagsByName["test-tag"] = Tag{ID: id, Name: "test-tag"}
+			},
+			wantStatusCode: http.StatusOK,
+		},
+		{
+			name:    "fails when tag not found",
+			tagName: "nonexistent",
+			setupRepo: func(m *mockServiceRepo) {
+				m.getTagErr = fmt.Errorf("tag not found")
+			},
+			wantStatusCode: http.StatusInternalServerError,
+		},
+		{
+			name:           "fails with empty name",
+			tagName:        "",
+			setupRepo:      func(m *mockServiceRepo) {},
+			wantStatusCode: http.StatusBadRequest,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			repo := newMockServiceRepo()
+			tt.setupRepo(repo)
+			svc := newTestService(repo)
+
+			cfg := hm.NewConfig()
+			handler := NewAPIHandler("test-api", svc, nil, hm.XParams{Cfg: cfg})
+
+			req := httptest.NewRequest(http.MethodGet, "/ssg/tags/by-name/"+tt.tagName, nil)
+			req.SetPathValue("name", tt.tagName)
+			w := httptest.NewRecorder()
+
+			handler.GetTagByName(w, req)
+
+			if w.Code != tt.wantStatusCode {
+				t.Errorf("GetTagByName() status = %d, want %d", w.Code, tt.wantStatusCode)
+			}
+		})
+	}
+}
+
 func TestAPIHandlerGetAllTags(t *testing.T) {
 	tests := []struct {
 		name           string
