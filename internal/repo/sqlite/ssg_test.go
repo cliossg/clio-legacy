@@ -474,33 +474,61 @@ func TestClioRepoGetSection(t *testing.T) {
 }
 
 func TestClioRepoGetSections(t *testing.T) {
-	repo, siteID := setupTestSsgRepo(t)
-	defer repo.db.Close()
-	ctx := ssg.NewContextWithSite("test-site", siteID)
-
-	section1 := ssg.Section{
-		ID:     uuid.New(),
-		SiteID: siteID,
-		Name:   "Section 1",
-		Path:   "section-1",
+	tests := []struct {
+		name      string
+		setup     func(*ClioRepo, uuid.UUID)
+		wantCount int
+		wantErr   bool
+	}{
+		{
+			name: "gets multiple sections successfully",
+			setup: func(r *ClioRepo, siteID uuid.UUID) {
+				ctx := ssg.NewContextWithSite("test-site", siteID)
+				section1 := ssg.Section{
+					ID:     uuid.New(),
+					SiteID: siteID,
+					Name:   "Section 1",
+					Path:   "section-1",
+				}
+				section2 := ssg.Section{
+					ID:     uuid.New(),
+					SiteID: siteID,
+					Name:   "Section 2",
+					Path:   "section-2",
+				}
+				r.CreateSection(ctx, section1)
+				r.CreateSection(ctx, section2)
+			},
+			wantCount: 2,
+			wantErr:   false,
+		},
+		{
+			name: "returns empty list when no sections",
+			setup: func(r *ClioRepo, siteID uuid.UUID) {
+			},
+			wantCount: 0,
+			wantErr:   false,
+		},
 	}
-	section2 := ssg.Section{
-		ID:     uuid.New(),
-		SiteID: siteID,
-		Name:   "Section 2",
-		Path:   "section-2",
-	}
-	repo.CreateSection(ctx, section1)
-	repo.CreateSection(ctx, section2)
 
-	sections, err := repo.GetSections(ctx)
-	if err != nil {
-		t.Errorf("GetSections() error = %v", err)
-		return
-	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			repo, siteID := setupTestSsgRepo(t)
+			defer repo.db.Close()
+			ctx := ssg.NewContextWithSite("test-site", siteID)
 
-	if len(sections) != 2 {
-		t.Errorf("GetSections() got %d sections, want 2", len(sections))
+			tt.setup(repo, siteID)
+
+			sections, err := repo.GetSections(ctx)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetSections() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			if len(sections) != tt.wantCount {
+				t.Errorf("GetSections() got %d sections, want %d", len(sections), tt.wantCount)
+			}
+		})
 	}
 }
 
@@ -1724,42 +1752,79 @@ func TestClioRepoRemoveTagFromContent(t *testing.T) {
 }
 
 func TestClioRepoGetTagsForContent(t *testing.T) {
-	repo, siteID := setupTestSsgRepo(t)
-	defer repo.db.Close()
-	ctx := ssg.NewContextWithSite("test-site", siteID)
+	tests := []struct {
+		name      string
+		setup     func(*ClioRepo, uuid.UUID) uuid.UUID
+		wantCount int
+		wantErr   bool
+	}{
+		{
+			name: "gets multiple tags for content successfully",
+			setup: func(r *ClioRepo, siteID uuid.UUID) uuid.UUID {
+				ctx := ssg.NewContextWithSite("test-site", siteID)
+				content := &ssg.Content{
+					ID:      uuid.New(),
+					SiteID:  siteID,
+					Heading: "Test Content",
+				}
+				r.CreateContent(ctx, content)
 
-	content := &ssg.Content{
-		ID:      uuid.New(),
-		SiteID:  siteID,
-		Heading: "Test Content",
+				tag1 := ssg.Tag{
+					ID:        uuid.New(),
+					SiteID:    siteID,
+					Name:      "golang",
+					SlugField: "golang",
+				}
+				tag2 := ssg.Tag{
+					ID:        uuid.New(),
+					SiteID:    siteID,
+					Name:      "rust",
+					SlugField: "rust",
+				}
+				r.CreateTag(ctx, tag1)
+				r.CreateTag(ctx, tag2)
+				r.AddTagToContent(ctx, content.ID, tag1.ID)
+				r.AddTagToContent(ctx, content.ID, tag2.ID)
+				return content.ID
+			},
+			wantCount: 2,
+			wantErr:   false,
+		},
+		{
+			name: "returns empty list when content has no tags",
+			setup: func(r *ClioRepo, siteID uuid.UUID) uuid.UUID {
+				ctx := ssg.NewContextWithSite("test-site", siteID)
+				content := &ssg.Content{
+					ID:      uuid.New(),
+					SiteID:  siteID,
+					Heading: "Content Without Tags",
+				}
+				r.CreateContent(ctx, content)
+				return content.ID
+			},
+			wantCount: 0,
+			wantErr:   false,
+		},
 	}
-	repo.CreateContent(ctx, content)
 
-	tag1 := ssg.Tag{
-		ID:        uuid.New(),
-		SiteID:    siteID,
-		Name:      "golang",
-		SlugField: "golang",
-	}
-	tag2 := ssg.Tag{
-		ID:        uuid.New(),
-		SiteID:    siteID,
-		Name:      "rust",
-		SlugField: "rust",
-	}
-	repo.CreateTag(ctx, tag1)
-	repo.CreateTag(ctx, tag2)
-	repo.AddTagToContent(ctx, content.ID, tag1.ID)
-	repo.AddTagToContent(ctx, content.ID, tag2.ID)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			repo, siteID := setupTestSsgRepo(t)
+			defer repo.db.Close()
+			ctx := ssg.NewContextWithSite("test-site", siteID)
 
-	tags, err := repo.GetTagsForContent(ctx, content.ID)
-	if err != nil {
-		t.Errorf("GetTagsForContent() error = %v", err)
-		return
-	}
+			contentID := tt.setup(repo, siteID)
 
-	if len(tags) != 2 {
-		t.Errorf("GetTagsForContent() got %d tags, want 2", len(tags))
+			tags, err := repo.GetTagsForContent(ctx, contentID)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetTagsForContent() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			if len(tags) != tt.wantCount {
+				t.Errorf("GetTagsForContent() got %d tags, want %d", len(tags), tt.wantCount)
+			}
+		})
 	}
 }
 
@@ -1924,34 +1989,72 @@ func TestClioRepoGetImageByContentHash(t *testing.T) {
 }
 
 func TestClioRepoGetContentForTag(t *testing.T) {
-	repo, siteID := setupTestSsgRepo(t)
-	defer repo.db.Close()
-	ctx := ssg.NewContextWithSite("test-site", siteID)
+	tests := []struct {
+		name      string
+		setup     func(*ClioRepo, uuid.UUID) uuid.UUID
+		wantCount int
+		wantErr   bool
+	}{
+		{
+			name: "gets content for tag successfully",
+			setup: func(r *ClioRepo, siteID uuid.UUID) uuid.UUID {
+				ctx := ssg.NewContextWithSite("test-site", siteID)
+				tag := &ssg.Tag{
+					ID:        uuid.New(),
+					SiteID:    siteID,
+					Name:      "test-tag",
+					SlugField: "test-tag",
+				}
+				r.CreateTag(ctx, *tag)
 
-	tag := &ssg.Tag{
-		ID:        uuid.New(),
-		SiteID:    siteID,
-		Name:      "test-tag",
-		SlugField: "test-tag",
+				content := &ssg.Content{
+					ID:      uuid.New(),
+					SiteID:  siteID,
+					Heading: "Tagged Content",
+				}
+				r.CreateContent(ctx, content)
+				r.AddTagToContent(ctx, content.ID, tag.ID)
+				return tag.ID
+			},
+			wantCount: 1,
+			wantErr:   false,
+		},
+		{
+			name: "returns empty list when tag has no content",
+			setup: func(r *ClioRepo, siteID uuid.UUID) uuid.UUID {
+				ctx := ssg.NewContextWithSite("test-site", siteID)
+				tag := &ssg.Tag{
+					ID:        uuid.New(),
+					SiteID:    siteID,
+					Name:      "unused-tag",
+					SlugField: "unused-tag",
+				}
+				r.CreateTag(ctx, *tag)
+				return tag.ID
+			},
+			wantCount: 0,
+			wantErr:   false,
+		},
 	}
-	repo.CreateTag(ctx, *tag)
 
-	content := &ssg.Content{
-		ID:      uuid.New(),
-		SiteID:  siteID,
-		Heading: "Tagged Content",
-	}
-	repo.CreateContent(ctx, content)
-	repo.AddTagToContent(ctx, content.ID, tag.ID)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			repo, siteID := setupTestSsgRepo(t)
+			defer repo.db.Close()
+			ctx := ssg.NewContextWithSite("test-site", siteID)
 
-	contents, err := repo.GetContentForTag(ctx, tag.ID)
-	if err != nil {
-		t.Errorf("GetContentForTag() error = %v", err)
-		return
-	}
+			tagID := tt.setup(repo, siteID)
 
-	if len(contents) == 0 {
-		t.Error("GetContentForTag() returned no contents")
+			contents, err := repo.GetContentForTag(ctx, tagID)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetContentForTag() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			if len(contents) != tt.wantCount {
+				t.Errorf("GetContentForTag() got %d contents, want %d", len(contents), tt.wantCount)
+			}
+		})
 	}
 }
 
@@ -2070,41 +2173,79 @@ func TestClioRepoGetImageVariant(t *testing.T) {
 }
 
 func TestClioRepoListImageVariantsByImageID(t *testing.T) {
-	repo, siteID := setupTestSsgRepo(t)
-	defer repo.db.Close()
-	ctx := ssg.NewContextWithSite("test-site", siteID)
+	tests := []struct {
+		name      string
+		setup     func(*ClioRepo, uuid.UUID) uuid.UUID
+		wantCount int
+		wantErr   bool
+	}{
+		{
+			name: "lists multiple variants successfully",
+			setup: func(r *ClioRepo, siteID uuid.UUID) uuid.UUID {
+				ctx := ssg.NewContextWithSite("test-site", siteID)
+				image := &ssg.Image{
+					ID:       uuid.New(),
+					SiteID:   siteID,
+					ShortID:  "img202",
+					FileName: "test.jpg",
+				}
+				r.CreateImage(ctx, image)
 
-	image := &ssg.Image{
-		ID:       uuid.New(),
-		SiteID:   siteID,
-		ShortID:  "img202",
-		FileName: "test.jpg",
+				variant1 := &ssg.ImageVariant{
+					ID:      uuid.New(),
+					ImageID: image.ID,
+					Kind:    "small",
+					BlobRef: "test_small.jpg",
+				}
+				variant2 := &ssg.ImageVariant{
+					ID:      uuid.New(),
+					ImageID: image.ID,
+					Kind:    "large",
+					BlobRef: "test_large.jpg",
+				}
+				r.CreateImageVariant(ctx, variant1)
+				r.CreateImageVariant(ctx, variant2)
+				return image.ID
+			},
+			wantCount: 2,
+			wantErr:   false,
+		},
+		{
+			name: "returns empty list when no variants",
+			setup: func(r *ClioRepo, siteID uuid.UUID) uuid.UUID {
+				ctx := ssg.NewContextWithSite("test-site", siteID)
+				image := &ssg.Image{
+					ID:       uuid.New(),
+					SiteID:   siteID,
+					ShortID:  "img203",
+					FileName: "test.jpg",
+				}
+				r.CreateImage(ctx, image)
+				return image.ID
+			},
+			wantCount: 0,
+			wantErr:   false,
+		},
 	}
-	repo.CreateImage(ctx, image)
 
-	variant1 := &ssg.ImageVariant{
-		ID:      uuid.New(),
-		ImageID: image.ID,
-		Kind:    "small",
-		BlobRef: "test_small.jpg",
-	}
-	variant2 := &ssg.ImageVariant{
-		ID:      uuid.New(),
-		ImageID: image.ID,
-		Kind:    "large",
-		BlobRef: "test_large.jpg",
-	}
-	repo.CreateImageVariant(ctx, variant1)
-	repo.CreateImageVariant(ctx, variant2)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			repo, siteID := setupTestSsgRepo(t)
+			defer repo.db.Close()
+			ctx := ssg.NewContextWithSite("test-site", siteID)
 
-	variants, err := repo.ListImageVariantsByImageID(ctx, image.ID)
-	if err != nil {
-		t.Errorf("ListImageVariantsByImageID() error = %v", err)
-		return
-	}
+			imageID := tt.setup(repo, siteID)
 
-	if len(variants) < 2 {
-		t.Errorf("ListImageVariantsByImageID() got %d variants, want at least 2", len(variants))
+			variants, err := repo.ListImageVariantsByImageID(ctx, imageID)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ListImageVariantsByImageID() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			if len(variants) != tt.wantCount {
+				t.Errorf("ListImageVariantsByImageID() got %d variants, want %d", len(variants), tt.wantCount)
+			}
+		})
 	}
 }
 
