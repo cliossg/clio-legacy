@@ -128,10 +128,10 @@ func TestBaseServiceGetUser(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "returns empty user when not found",
+			name: "returns error when user not found",
 			setupRepo: func(f *fake.AuthRepo, id uuid.UUID) {
 			},
-			wantErr: false,
+			wantErr: true,
 		},
 	}
 

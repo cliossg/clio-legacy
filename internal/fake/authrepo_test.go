@@ -2,6 +2,7 @@ package fake_test
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"testing"
 
@@ -86,7 +87,7 @@ func TestAuthRepoGetUser(t *testing.T) {
 			setupFake:    func(f *fake.AuthRepo) {},
 			id:           uuid.New(),
 			expectedUser: auth.User{},
-			expectedErr:  nil,
+			expectedErr:  sql.ErrNoRows,
 			expectCalls:  1,
 		},
 		{
