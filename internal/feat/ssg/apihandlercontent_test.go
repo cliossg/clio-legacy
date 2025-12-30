@@ -493,6 +493,12 @@ func TestAPIHandlerAddTagToContent(t *testing.T) {
 			wantStatusCode: http.StatusBadRequest,
 		},
 		{
+			name:           "fails with invalid JSON body",
+			setupRepo:      func(m *mockServiceRepo) uuid.UUID { return uuid.New() },
+			requestBody:    "invalid json",
+			wantStatusCode: http.StatusBadRequest,
+		},
+		{
 			name: "fails when service returns error",
 			setupRepo: func(m *mockServiceRepo) uuid.UUID {
 				m.addTagToContentErr = fmt.Errorf("db error")
@@ -514,9 +520,15 @@ func TestAPIHandlerAddTagToContent(t *testing.T) {
 			cfg := hm.NewConfig()
 			handler := NewAPIHandler("test-api", svc, nil, hm.XParams{Cfg: cfg})
 
-			body, err := json.Marshal(tt.requestBody)
-			if err != nil {
-				t.Fatal(err)
+			var body []byte
+			if str, ok := tt.requestBody.(string); ok {
+				body = []byte(str)
+			} else {
+				var err error
+				body, err = json.Marshal(tt.requestBody)
+				if err != nil {
+					t.Fatal(err)
+				}
 			}
 
 			idStr := tt.contentID
@@ -561,6 +573,12 @@ func TestAPIHandlerRemoveTagFromContent(t *testing.T) {
 			name:           "fails with invalid content UUID",
 			contentID:      "invalid-uuid",
 			setupRepo:      func(m *mockServiceRepo) (uuid.UUID, uuid.UUID) { return uuid.Nil, uuid.Nil },
+			wantStatusCode: http.StatusBadRequest,
+		},
+		{
+			name:           "fails with invalid tag UUID",
+			tagID:          "invalid-uuid",
+			setupRepo:      func(m *mockServiceRepo) (uuid.UUID, uuid.UUID) { return uuid.New(), uuid.Nil },
 			wantStatusCode: http.StatusBadRequest,
 		},
 		{

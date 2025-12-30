@@ -451,6 +451,7 @@ func TestAPIHandlerDeleteParam(t *testing.T) {
 	tests := []struct {
 		name           string
 		setupRepo      func(*mockServiceRepo) uuid.UUID
+		paramID        string
 		wantStatusCode int
 	}{
 		{
@@ -461,6 +462,21 @@ func TestAPIHandlerDeleteParam(t *testing.T) {
 				return id
 			},
 			wantStatusCode: http.StatusOK,
+		},
+		{
+			name:           "fails with invalid UUID",
+			paramID:        "invalid-uuid",
+			setupRepo:      func(m *mockServiceRepo) uuid.UUID { return uuid.Nil },
+			wantStatusCode: http.StatusBadRequest,
+		},
+		{
+			name: "fails when cannot get existing param",
+			setupRepo: func(m *mockServiceRepo) uuid.UUID {
+				id := uuid.New()
+				m.getParamErr = fmt.Errorf("param not found")
+				return id
+			},
+			wantStatusCode: http.StatusInternalServerError,
 		},
 		{
 			name: "fails when trying to delete system param",
@@ -492,8 +508,13 @@ func TestAPIHandlerDeleteParam(t *testing.T) {
 			cfg := hm.NewConfig()
 			handler := NewAPIHandler("test-api", svc, nil, hm.XParams{Cfg: cfg})
 
-			req := httptest.NewRequest(http.MethodDelete, "/ssg/params/"+paramID.String(), nil)
-			req.SetPathValue("id", paramID.String())
+			idStr := tt.paramID
+			if idStr == "" {
+				idStr = paramID.String()
+			}
+
+			req := httptest.NewRequest(http.MethodDelete, "/ssg/params/"+idStr, nil)
+			req.SetPathValue("id", idStr)
 			w := httptest.NewRecorder()
 
 			handler.DeleteParam(w, req)
