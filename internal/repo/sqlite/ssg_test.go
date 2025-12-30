@@ -755,35 +755,63 @@ func TestClioRepoGetParam(t *testing.T) {
 }
 
 func TestClioRepoListParams(t *testing.T) {
-	repo, siteID := setupTestSsgRepo(t)
-	defer repo.db.Close()
-	ctx := ssg.NewContextWithSite("test-site", siteID)
-
-	param1 := &ssg.Param{
-		ID:     uuid.New(),
-		SiteID: siteID,
-		Name:   "site.title",
-		RefKey: "ssg.site.title",
-		Value:  "My Site",
+	tests := []struct {
+		name      string
+		setup     func(*ClioRepo, uuid.UUID)
+		wantCount int
+		wantErr   bool
+	}{
+		{
+			name: "gets multiple params successfully",
+			setup: func(r *ClioRepo, siteID uuid.UUID) {
+				ctx := ssg.NewContextWithSite("test-site", siteID)
+				param1 := &ssg.Param{
+					ID:     uuid.New(),
+					SiteID: siteID,
+					Name:   "site.title",
+					RefKey: "ssg.site.title",
+					Value:  "My Site",
+				}
+				param2 := &ssg.Param{
+					ID:     uuid.New(),
+					SiteID: siteID,
+					Name:   "site.author",
+					RefKey: "ssg.site.author",
+					Value:  "John Doe",
+				}
+				r.CreateParam(ctx, param1)
+				r.CreateParam(ctx, param2)
+			},
+			wantCount: 2,
+			wantErr:   false,
+		},
+		{
+			name: "returns empty list when no params",
+			setup: func(r *ClioRepo, siteID uuid.UUID) {
+			},
+			wantCount: 0,
+			wantErr:   false,
+		},
 	}
-	param2 := &ssg.Param{
-		ID:     uuid.New(),
-		SiteID: siteID,
-		Name:   "site.author",
-		RefKey: "ssg.site.author",
-		Value:  "John Doe",
-	}
-	repo.CreateParam(ctx, param1)
-	repo.CreateParam(ctx, param2)
 
-	params, err := repo.ListParams(ctx)
-	if err != nil {
-		t.Errorf("ListParams() error = %v", err)
-		return
-	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			repo, siteID := setupTestSsgRepo(t)
+			defer repo.db.Close()
+			ctx := ssg.NewContextWithSite("test-site", siteID)
 
-	if len(params) != 2 {
-		t.Errorf("ListParams() got %d params, want 2", len(params))
+			tt.setup(repo, siteID)
+
+			params, err := repo.ListParams(ctx)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ListParams() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			if len(params) != tt.wantCount {
+				t.Errorf("ListParams() got %d params, want %d", len(params), tt.wantCount)
+			}
+		})
 	}
 }
 
@@ -1013,33 +1041,61 @@ func TestClioRepoGetTag(t *testing.T) {
 }
 
 func TestClioRepoGetAllTags(t *testing.T) {
-	repo, siteID := setupTestSsgRepo(t)
-	defer repo.db.Close()
-	ctx := ssg.NewContextWithSite("test-site", siteID)
-
-	tag1 := ssg.Tag{
-		ID:        uuid.New(),
-		SiteID:    siteID,
-		Name:      "golang",
-		SlugField: "golang",
+	tests := []struct {
+		name      string
+		setup     func(*ClioRepo, uuid.UUID)
+		wantCount int
+		wantErr   bool
+	}{
+		{
+			name: "gets multiple tags successfully",
+			setup: func(r *ClioRepo, siteID uuid.UUID) {
+				ctx := ssg.NewContextWithSite("test-site", siteID)
+				tag1 := ssg.Tag{
+					ID:        uuid.New(),
+					SiteID:    siteID,
+					Name:      "golang",
+					SlugField: "golang",
+				}
+				tag2 := ssg.Tag{
+					ID:        uuid.New(),
+					SiteID:    siteID,
+					Name:      "rust",
+					SlugField: "rust",
+				}
+				r.CreateTag(ctx, tag1)
+				r.CreateTag(ctx, tag2)
+			},
+			wantCount: 2,
+			wantErr:   false,
+		},
+		{
+			name: "returns empty list when no tags",
+			setup: func(r *ClioRepo, siteID uuid.UUID) {
+			},
+			wantCount: 0,
+			wantErr:   false,
+		},
 	}
-	tag2 := ssg.Tag{
-		ID:        uuid.New(),
-		SiteID:    siteID,
-		Name:      "rust",
-		SlugField: "rust",
-	}
-	repo.CreateTag(ctx, tag1)
-	repo.CreateTag(ctx, tag2)
 
-	tags, err := repo.GetAllTags(ctx)
-	if err != nil {
-		t.Errorf("GetAllTags() error = %v", err)
-		return
-	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			repo, siteID := setupTestSsgRepo(t)
+			defer repo.db.Close()
+			ctx := ssg.NewContextWithSite("test-site", siteID)
 
-	if len(tags) != 2 {
-		t.Errorf("GetAllTags() got %d tags, want 2", len(tags))
+			tt.setup(repo, siteID)
+
+			tags, err := repo.GetAllTags(ctx)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetAllTags() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			if len(tags) != tt.wantCount {
+				t.Errorf("GetAllTags() got %d tags, want %d", len(tags), tt.wantCount)
+			}
+		})
 	}
 }
 
