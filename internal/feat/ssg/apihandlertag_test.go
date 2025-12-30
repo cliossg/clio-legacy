@@ -314,6 +314,7 @@ func TestAPIHandlerDeleteTag(t *testing.T) {
 	tests := []struct {
 		name           string
 		setupRepo      func(*mockServiceRepo) uuid.UUID
+		tagID          string
 		wantStatusCode int
 	}{
 		{
@@ -324,6 +325,12 @@ func TestAPIHandlerDeleteTag(t *testing.T) {
 				return id
 			},
 			wantStatusCode: http.StatusOK,
+		},
+		{
+			name:           "fails with invalid UUID",
+			tagID:          "invalid-uuid",
+			setupRepo:      func(m *mockServiceRepo) uuid.UUID { return uuid.Nil },
+			wantStatusCode: http.StatusBadRequest,
 		},
 		{
 			name: "fails when service returns error",
@@ -344,8 +351,13 @@ func TestAPIHandlerDeleteTag(t *testing.T) {
 			cfg := hm.NewConfig()
 			handler := NewAPIHandler("test-api", svc, nil, hm.XParams{Cfg: cfg})
 
-			req := httptest.NewRequest(http.MethodDelete, "/ssg/tags/"+tagID.String(), nil)
-			req.SetPathValue("id", tagID.String())
+			idStr := tt.tagID
+			if idStr == "" {
+				idStr = tagID.String()
+			}
+
+			req := httptest.NewRequest(http.MethodDelete, "/ssg/tags/"+idStr, nil)
+			req.SetPathValue("id", idStr)
 			w := httptest.NewRecorder()
 
 			handler.DeleteTag(w, req)

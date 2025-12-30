@@ -422,6 +422,7 @@ func TestAPIHandlerDeleteContent(t *testing.T) {
 	tests := []struct {
 		name           string
 		setupRepo      func(*mockServiceRepo) uuid.UUID
+		contentID      string
 		wantStatusCode int
 	}{
 		{
@@ -432,6 +433,12 @@ func TestAPIHandlerDeleteContent(t *testing.T) {
 				return id
 			},
 			wantStatusCode: http.StatusOK,
+		},
+		{
+			name:           "fails with invalid UUID",
+			contentID:      "invalid-uuid",
+			setupRepo:      func(m *mockServiceRepo) uuid.UUID { return uuid.Nil },
+			wantStatusCode: http.StatusBadRequest,
 		},
 		{
 			name: "fails when service returns error",
@@ -452,8 +459,13 @@ func TestAPIHandlerDeleteContent(t *testing.T) {
 			cfg := hm.NewConfig()
 			handler := NewAPIHandler("test-api", svc, nil, hm.XParams{Cfg: cfg})
 
-			req := httptest.NewRequest(http.MethodDelete, "/ssg/contents/"+contentID.String(), nil)
-			req.SetPathValue("id", contentID.String())
+			idStr := tt.contentID
+			if idStr == "" {
+				idStr = contentID.String()
+			}
+
+			req := httptest.NewRequest(http.MethodDelete, "/ssg/contents/"+idStr, nil)
+			req.SetPathValue("id", idStr)
 			w := httptest.NewRecorder()
 
 			handler.DeleteContent(w, req)
