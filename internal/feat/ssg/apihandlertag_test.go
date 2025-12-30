@@ -245,6 +245,7 @@ func TestAPIHandlerUpdateTag(t *testing.T) {
 		name           string
 		setupRepo      func(*mockServiceRepo) uuid.UUID
 		requestBody    interface{}
+		tagID          string
 		wantStatusCode int
 	}{
 		{
@@ -261,6 +262,19 @@ func TestAPIHandlerUpdateTag(t *testing.T) {
 				}
 			},
 			wantStatusCode: http.StatusOK,
+		},
+		{
+			name:           "fails with invalid UUID",
+			tagID:          "invalid-uuid",
+			setupRepo:      func(m *mockServiceRepo) uuid.UUID { return uuid.Nil },
+			requestBody:    map[string]string{"name": "test"},
+			wantStatusCode: http.StatusBadRequest,
+		},
+		{
+			name:           "fails with invalid JSON body",
+			setupRepo:      func(m *mockServiceRepo) uuid.UUID { return uuid.New() },
+			requestBody:    "invalid json",
+			wantStatusCode: http.StatusBadRequest,
 		},
 		{
 			name: "fails when service returns error",
@@ -284,21 +298,32 @@ func TestAPIHandlerUpdateTag(t *testing.T) {
 			cfg := hm.NewConfig()
 			handler := NewAPIHandler("test-api", svc, nil, hm.XParams{Cfg: cfg})
 
-			var bodyData interface{}
-			if fn, ok := tt.requestBody.(func(uuid.UUID) map[string]interface{}); ok {
-				bodyData = fn(tagID)
+			var body []byte
+			if str, ok := tt.requestBody.(string); ok {
+				body = []byte(str)
 			} else {
-				bodyData = tt.requestBody
+				var bodyData interface{}
+				if fn, ok := tt.requestBody.(func(uuid.UUID) map[string]interface{}); ok {
+					bodyData = fn(tagID)
+				} else {
+					bodyData = tt.requestBody
+				}
+
+				var err error
+				body, err = json.Marshal(bodyData)
+				if err != nil {
+					t.Fatal(err)
+				}
 			}
 
-			body, err := json.Marshal(bodyData)
-			if err != nil {
-				t.Fatal(err)
+			idStr := tt.tagID
+			if idStr == "" {
+				idStr = tagID.String()
 			}
 
-			req := httptest.NewRequest(http.MethodPut, "/ssg/tags/"+tagID.String(), bytes.NewReader(body))
+			req := httptest.NewRequest(http.MethodPut, "/ssg/tags/"+idStr, bytes.NewReader(body))
 			req.Header.Set("Content-Type", "application/json")
-			req.SetPathValue("id", tagID.String())
+			req.SetPathValue("id", idStr)
 			w := httptest.NewRecorder()
 
 			handler.UpdateTag(w, req)
