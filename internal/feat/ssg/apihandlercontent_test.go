@@ -239,6 +239,7 @@ func TestAPIHandlerUpdateContent(t *testing.T) {
 		setupRepo      func(*mockServiceRepo) uuid.UUID
 		requestBody    interface{}
 		setupContext   func(uuid.UUID) *http.Request
+		contentID      string
 		wantStatusCode int
 	}{
 		{
@@ -259,6 +260,48 @@ func TestAPIHandlerUpdateContent(t *testing.T) {
 			wantStatusCode: http.StatusOK,
 		},
 		{
+			name:      "fails with invalid UUID",
+			contentID: "invalid-uuid",
+			setupRepo: func(m *mockServiceRepo) uuid.UUID {
+				return uuid.Nil
+			},
+			requestBody: map[string]interface{}{
+				"heading": "Test",
+			},
+			setupContext: func(id uuid.UUID) *http.Request {
+				req := httptest.NewRequest(http.MethodPut, "/ssg/contents/invalid-uuid", nil)
+				ctx := addSiteIDToContext(req.Context(), uuid.New())
+				return req.WithContext(ctx)
+			},
+			wantStatusCode: http.StatusBadRequest,
+		},
+		{
+			name: "fails with invalid JSON body",
+			setupRepo: func(m *mockServiceRepo) uuid.UUID {
+				return uuid.New()
+			},
+			requestBody: "invalid json",
+			setupContext: func(id uuid.UUID) *http.Request {
+				req := httptest.NewRequest(http.MethodPut, "/ssg/contents/"+id.String(), nil)
+				ctx := addSiteIDToContext(req.Context(), uuid.New())
+				return req.WithContext(ctx)
+			},
+			wantStatusCode: http.StatusBadRequest,
+		},
+		{
+			name: "fails when no site selected",
+			setupRepo: func(m *mockServiceRepo) uuid.UUID {
+				return uuid.New()
+			},
+			requestBody: map[string]interface{}{
+				"heading": "Test",
+			},
+			setupContext: func(id uuid.UUID) *http.Request {
+				return httptest.NewRequest(http.MethodPut, "/ssg/contents/"+id.String(), nil)
+			},
+			wantStatusCode: http.StatusBadRequest,
+		},
+		{
 			name: "fails when service returns error",
 			setupRepo: func(m *mockServiceRepo) uuid.UUID {
 				m.updateContentErr = fmt.Errorf("db error")
@@ -266,6 +309,65 @@ func TestAPIHandlerUpdateContent(t *testing.T) {
 			},
 			requestBody: map[string]interface{}{
 				"heading": "Test",
+			},
+			setupContext: func(id uuid.UUID) *http.Request {
+				req := httptest.NewRequest(http.MethodPut, "/ssg/contents/"+id.String(), nil)
+				ctx := addSiteIDToContext(req.Context(), uuid.New())
+				return req.WithContext(ctx)
+			},
+			wantStatusCode: http.StatusInternalServerError,
+		},
+		{
+			name: "fails when cannot get existing tags",
+			setupRepo: func(m *mockServiceRepo) uuid.UUID {
+				id := uuid.New()
+				m.contents[id] = Content{ID: id, Heading: "Test"}
+				m.getTagsForContentErr = fmt.Errorf("cannot get tags")
+				return id
+			},
+			requestBody: map[string]interface{}{
+				"heading": "Test",
+			},
+			setupContext: func(id uuid.UUID) *http.Request {
+				req := httptest.NewRequest(http.MethodPut, "/ssg/contents/"+id.String(), nil)
+				ctx := addSiteIDToContext(req.Context(), uuid.New())
+				return req.WithContext(ctx)
+			},
+			wantStatusCode: http.StatusInternalServerError,
+		},
+		{
+			name: "fails when cannot remove tag from content",
+			setupRepo: func(m *mockServiceRepo) uuid.UUID {
+				id := uuid.New()
+				tagID := uuid.New()
+				m.contents[id] = Content{ID: id, Heading: "Test"}
+				m.contentTags[id] = []Tag{{ID: tagID, Name: "test-tag"}}
+				m.removeTagFromContentErr = fmt.Errorf("cannot remove tag")
+				return id
+			},
+			requestBody: map[string]interface{}{
+				"heading": "Test",
+			},
+			setupContext: func(id uuid.UUID) *http.Request {
+				req := httptest.NewRequest(http.MethodPut, "/ssg/contents/"+id.String(), nil)
+				ctx := addSiteIDToContext(req.Context(), uuid.New())
+				return req.WithContext(ctx)
+			},
+			wantStatusCode: http.StatusInternalServerError,
+		},
+		{
+			name: "fails when cannot add tag to content",
+			setupRepo: func(m *mockServiceRepo) uuid.UUID {
+				id := uuid.New()
+				m.contents[id] = Content{ID: id, Heading: "Test"}
+				m.addTagToContentErr = fmt.Errorf("cannot add tag")
+				return id
+			},
+			requestBody: map[string]interface{}{
+				"heading": "Test",
+				"tags": []map[string]string{
+					{"name": "new-tag"},
+				},
 			},
 			setupContext: func(id uuid.UUID) *http.Request {
 				req := httptest.NewRequest(http.MethodPut, "/ssg/contents/"+id.String(), nil)
@@ -285,16 +387,25 @@ func TestAPIHandlerUpdateContent(t *testing.T) {
 			cfg := hm.NewConfig()
 			handler := NewAPIHandler("test-api", svc, nil, hm.XParams{Cfg: cfg})
 
-			body, err := json.Marshal(tt.requestBody)
-			if err != nil {
-				t.Fatal(err)
+			var body []byte
+			if str, ok := tt.requestBody.(string); ok {
+				body = []byte(str)
+			} else {
+				var err error
+				body, err = json.Marshal(tt.requestBody)
+				if err != nil {
+					t.Fatal(err)
+				}
 			}
 
-			req := tt.setupContext(contentID)
-			req.Body = http.NoBody
-			req = httptest.NewRequest(http.MethodPut, "/ssg/contents/"+contentID.String(), bytes.NewReader(body))
+			idStr := tt.contentID
+			if idStr == "" {
+				idStr = contentID.String()
+			}
+
+			req := httptest.NewRequest(http.MethodPut, "/ssg/contents/"+idStr, bytes.NewReader(body))
 			req = req.WithContext(tt.setupContext(contentID).Context())
-			req.SetPathValue("id", contentID.String())
+			req.SetPathValue("id", idStr)
 			req.Header.Set("Content-Type", "application/json")
 			w := httptest.NewRecorder()
 
