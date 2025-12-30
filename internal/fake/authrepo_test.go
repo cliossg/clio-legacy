@@ -368,3 +368,27 @@ func TestAuthRepoGetUserByUsername(t *testing.T) {
 		})
 	}
 }
+
+func TestAuthRepoQuery(t *testing.T) {
+	f := fake.NewAuthRepo()
+	qm := f.Query()
+	if qm != nil {
+		t.Errorf("expected Query() to return nil, got %v", qm)
+	}
+}
+
+func TestAuthRepoBeginTx(t *testing.T) {
+	f := fake.NewAuthRepo()
+	ctx := context.Background()
+	returnedCtx, tx, err := f.BeginTx(ctx)
+
+	if err != nil {
+		t.Errorf("expected no error, got %v", err)
+	}
+	if tx != nil {
+		t.Errorf("expected tx to be nil, got %v", tx)
+	}
+	if returnedCtx != ctx {
+		t.Errorf("expected context to be unchanged")
+	}
+}
