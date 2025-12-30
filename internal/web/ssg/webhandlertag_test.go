@@ -72,6 +72,7 @@ func newTestWebHandlerWithMockAPI(getResp interface{}, getErr error, postResp in
 				return
 			}
 			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(map[string]interface{}{})
 		}
 	}))
 
