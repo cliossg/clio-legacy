@@ -1200,3 +1200,775 @@ func TestSsgRepoGetSiteBySlug(t *testing.T) {
 		})
 	}
 }
+
+func TestSsgRepoQuery(t *testing.T) {
+	f := fake.NewSsgRepo()
+	qm := f.Query()
+	if qm != nil {
+		t.Errorf("expected Query() to return nil, got %v", qm)
+	}
+}
+
+func TestSsgRepoBeginTx(t *testing.T) {
+	f := fake.NewSsgRepo()
+	ctx := context.Background()
+	returnedCtx, tx, err := f.BeginTx(ctx)
+
+	if err != nil {
+		t.Errorf("expected no error, got %v", err)
+	}
+	if tx != nil {
+		t.Errorf("expected tx to be nil, got %v", tx)
+	}
+	if returnedCtx != ctx {
+		t.Errorf("expected context to be unchanged")
+	}
+}
+
+func TestSsgRepoGetContentWithPaginationAndSearch(t *testing.T) {
+	tests := []struct {
+		name        string
+		setupFake   func(f *fake.SsgRepo)
+		offset      int
+		limit       int
+		search      string
+		wantCount   int
+		wantTotal   int
+		expectedErr error
+	}{
+		{
+			name: "returns paginated content",
+			setupFake: func(f *fake.SsgRepo) {
+				f.CreateContent(context.Background(), &ssg.Content{ID: uuid.New(), Heading: "Content 1"})
+				f.CreateContent(context.Background(), &ssg.Content{ID: uuid.New(), Heading: "Content 2"})
+			},
+			offset:      0,
+			limit:       10,
+			search:      "",
+			wantCount:   2,
+			wantTotal:   2,
+			expectedErr: nil,
+		},
+		{
+			name: "returns error from custom function",
+			setupFake: func(f *fake.SsgRepo) {
+				f.GetContentWithPaginationAndSearchFn = func(ctx context.Context, offset, limit int, search string) ([]ssg.Content, int, error) {
+					return nil, 0, errors.New("search failed")
+				}
+			},
+			offset:      0,
+			limit:       10,
+			search:      "",
+			wantCount:   0,
+			wantTotal:   0,
+			expectedErr: errors.New("search failed"),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			f := fake.NewSsgRepo()
+			tt.setupFake(f)
+
+			contents, total, err := f.GetContentWithPaginationAndSearch(context.Background(), tt.offset, tt.limit, tt.search)
+
+			if tt.expectedErr != nil {
+				if err == nil || err.Error() != tt.expectedErr.Error() {
+					t.Errorf("expected error %v, got %v", tt.expectedErr, err)
+				}
+			} else if err != nil {
+				t.Errorf("expected no error, got %v", err)
+			}
+
+			if len(contents) != tt.wantCount {
+				t.Errorf("expected %d contents, got %d", tt.wantCount, len(contents))
+			}
+
+			if total != tt.wantTotal {
+				t.Errorf("expected total %d, got %d", tt.wantTotal, total)
+			}
+		})
+	}
+}
+
+func TestSsgRepoCreateSection(t *testing.T) {
+	tests := []struct {
+		name        string
+		setupFake   func(f *fake.SsgRepo)
+		section     ssg.Section
+		expectedErr error
+	}{
+		{
+			name:        "creates section successfully",
+			setupFake:   func(f *fake.SsgRepo) {},
+			section:     ssg.Section{ID: uuid.New(), Name: "Blog"},
+			expectedErr: nil,
+		},
+		{
+			name: "returns error from custom function",
+			setupFake: func(f *fake.SsgRepo) {
+				f.CreateSectionFn = func(ctx context.Context, section ssg.Section) error {
+					return errors.New("create failed")
+				}
+			},
+			section:     ssg.Section{ID: uuid.New(), Name: "Blog"},
+			expectedErr: errors.New("create failed"),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			f := fake.NewSsgRepo()
+			tt.setupFake(f)
+
+			err := f.CreateSection(context.Background(), tt.section)
+
+			if tt.expectedErr != nil {
+				if err == nil || err.Error() != tt.expectedErr.Error() {
+					t.Errorf("expected error %v, got %v", tt.expectedErr, err)
+				}
+			} else if err != nil {
+				t.Errorf("expected no error, got %v", err)
+			}
+		})
+	}
+}
+
+func TestSsgRepoGetSection(t *testing.T) {
+	sectionID := uuid.New()
+
+	tests := []struct {
+		name            string
+		setupFake       func(f *fake.SsgRepo)
+		id              uuid.UUID
+		expectedSection ssg.Section
+		expectedErr     error
+	}{
+		{
+			name: "gets existing section",
+			setupFake: func(f *fake.SsgRepo) {
+				f.CreateSection(context.Background(), ssg.Section{ID: sectionID, Name: "Blog"})
+			},
+			id:              sectionID,
+			expectedSection: ssg.Section{ID: sectionID, Name: "Blog"},
+			expectedErr:     nil,
+		},
+		{
+			name:            "returns error when section not found",
+			setupFake:       func(f *fake.SsgRepo) {},
+			id:              uuid.New(),
+			expectedSection: ssg.Section{},
+			expectedErr:     errors.New("section not found"),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			f := fake.NewSsgRepo()
+			tt.setupFake(f)
+
+			section, err := f.GetSection(context.Background(), tt.id)
+
+			if tt.expectedErr != nil {
+				if err == nil || err.Error() != tt.expectedErr.Error() {
+					t.Errorf("expected error %v, got %v", tt.expectedErr, err)
+				}
+			} else if err != nil {
+				t.Errorf("expected no error, got %v", err)
+			}
+
+			if section.ID != tt.expectedSection.ID || section.Name != tt.expectedSection.Name {
+				t.Errorf("expected section %+v, got %+v", tt.expectedSection, section)
+			}
+		})
+	}
+}
+
+func TestSsgRepoGetSections(t *testing.T) {
+	tests := []struct {
+		name        string
+		setupFake   func(f *fake.SsgRepo)
+		wantCount   int
+		expectedErr error
+	}{
+		{
+			name: "returns all sections",
+			setupFake: func(f *fake.SsgRepo) {
+				f.CreateSection(context.Background(), ssg.Section{ID: uuid.New(), Name: "Blog"})
+				f.CreateSection(context.Background(), ssg.Section{ID: uuid.New(), Name: "News"})
+			},
+			wantCount:   2,
+			expectedErr: nil,
+		},
+		{
+			name:        "returns empty slice when no sections",
+			setupFake:   func(f *fake.SsgRepo) {},
+			wantCount:   0,
+			expectedErr: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			f := fake.NewSsgRepo()
+			tt.setupFake(f)
+
+			sections, err := f.GetSections(context.Background())
+
+			if tt.expectedErr != nil {
+				if err == nil || err.Error() != tt.expectedErr.Error() {
+					t.Errorf("expected error %v, got %v", tt.expectedErr, err)
+				}
+			} else if err != nil {
+				t.Errorf("expected no error, got %v", err)
+			}
+
+			if len(sections) != tt.wantCount {
+				t.Errorf("expected %d sections, got %d", tt.wantCount, len(sections))
+			}
+		})
+	}
+}
+
+func TestSsgRepoUpdateSection(t *testing.T) {
+	sectionID := uuid.New()
+
+	tests := []struct {
+		name        string
+		setupFake   func(f *fake.SsgRepo)
+		section     ssg.Section
+		expectedErr error
+	}{
+		{
+			name: "updates section successfully",
+			setupFake: func(f *fake.SsgRepo) {
+				f.CreateSection(context.Background(), ssg.Section{ID: sectionID, Name: "Old Name"})
+			},
+			section:     ssg.Section{ID: sectionID, Name: "New Name"},
+			expectedErr: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			f := fake.NewSsgRepo()
+			tt.setupFake(f)
+
+			err := f.UpdateSection(context.Background(), tt.section)
+
+			if tt.expectedErr != nil {
+				if err == nil || err.Error() != tt.expectedErr.Error() {
+					t.Errorf("expected error %v, got %v", tt.expectedErr, err)
+				}
+			} else if err != nil {
+				t.Errorf("expected no error, got %v", err)
+			}
+		})
+	}
+}
+
+func TestSsgRepoDeleteSection(t *testing.T) {
+	sectionID := uuid.New()
+
+	tests := []struct {
+		name        string
+		setupFake   func(f *fake.SsgRepo)
+		id          uuid.UUID
+		expectedErr error
+	}{
+		{
+			name: "deletes section successfully",
+			setupFake: func(f *fake.SsgRepo) {
+				f.CreateSection(context.Background(), ssg.Section{ID: sectionID, Name: "Blog"})
+			},
+			id:          sectionID,
+			expectedErr: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			f := fake.NewSsgRepo()
+			tt.setupFake(f)
+
+			err := f.DeleteSection(context.Background(), tt.id)
+
+			if tt.expectedErr != nil {
+				if err == nil || err.Error() != tt.expectedErr.Error() {
+					t.Errorf("expected error %v, got %v", tt.expectedErr, err)
+				}
+			} else if err != nil {
+				t.Errorf("expected no error, got %v", err)
+			}
+		})
+	}
+}
+
+func TestSsgRepoCreateLayout(t *testing.T) {
+	tests := []struct {
+		name        string
+		setupFake   func(f *fake.SsgRepo)
+		layout      ssg.Layout
+		expectedErr error
+	}{
+		{
+			name:        "creates layout successfully",
+			setupFake:   func(f *fake.SsgRepo) {},
+			layout:      ssg.Layout{ID: uuid.New(), Name: "Default"},
+			expectedErr: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			f := fake.NewSsgRepo()
+			tt.setupFake(f)
+
+			err := f.CreateLayout(context.Background(), tt.layout)
+
+			if tt.expectedErr != nil {
+				if err == nil || err.Error() != tt.expectedErr.Error() {
+					t.Errorf("expected error %v, got %v", tt.expectedErr, err)
+				}
+			} else if err != nil {
+				t.Errorf("expected no error, got %v", err)
+			}
+		})
+	}
+}
+
+func TestSsgRepoGetLayout(t *testing.T) {
+	layoutID := uuid.New()
+
+	tests := []struct {
+		name           string
+		setupFake      func(f *fake.SsgRepo)
+		id             uuid.UUID
+		expectedLayout ssg.Layout
+		expectedErr    error
+	}{
+		{
+			name: "gets existing layout",
+			setupFake: func(f *fake.SsgRepo) {
+				f.CreateLayout(context.Background(), ssg.Layout{ID: layoutID, Name: "Default"})
+			},
+			id:             layoutID,
+			expectedLayout: ssg.Layout{ID: layoutID, Name: "Default"},
+			expectedErr:    nil,
+		},
+		{
+			name:           "returns error when layout not found",
+			setupFake:      func(f *fake.SsgRepo) {},
+			id:             uuid.New(),
+			expectedLayout: ssg.Layout{},
+			expectedErr:    errors.New("layout not found"),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			f := fake.NewSsgRepo()
+			tt.setupFake(f)
+
+			layout, err := f.GetLayout(context.Background(), tt.id)
+
+			if tt.expectedErr != nil {
+				if err == nil || err.Error() != tt.expectedErr.Error() {
+					t.Errorf("expected error %v, got %v", tt.expectedErr, err)
+				}
+			} else if err != nil {
+				t.Errorf("expected no error, got %v", err)
+			}
+
+			if layout.ID != tt.expectedLayout.ID || layout.Name != tt.expectedLayout.Name {
+				t.Errorf("expected layout %+v, got %+v", tt.expectedLayout, layout)
+			}
+		})
+	}
+}
+
+func TestSsgRepoGetAllLayouts(t *testing.T) {
+	tests := []struct {
+		name        string
+		setupFake   func(f *fake.SsgRepo)
+		wantCount   int
+		expectedErr error
+	}{
+		{
+			name: "returns all layouts",
+			setupFake: func(f *fake.SsgRepo) {
+				f.CreateLayout(context.Background(), ssg.Layout{ID: uuid.New(), Name: "Default"})
+				f.CreateLayout(context.Background(), ssg.Layout{ID: uuid.New(), Name: "Alternative"})
+			},
+			wantCount:   2,
+			expectedErr: nil,
+		},
+		{
+			name:        "returns empty slice when no layouts",
+			setupFake:   func(f *fake.SsgRepo) {},
+			wantCount:   0,
+			expectedErr: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			f := fake.NewSsgRepo()
+			tt.setupFake(f)
+
+			layouts, err := f.GetAllLayouts(context.Background())
+
+			if tt.expectedErr != nil {
+				if err == nil || err.Error() != tt.expectedErr.Error() {
+					t.Errorf("expected error %v, got %v", tt.expectedErr, err)
+				}
+			} else if err != nil {
+				t.Errorf("expected no error, got %v", err)
+			}
+
+			if len(layouts) != tt.wantCount {
+				t.Errorf("expected %d layouts, got %d", tt.wantCount, len(layouts))
+			}
+		})
+	}
+}
+
+func TestSsgRepoUpdateLayout(t *testing.T) {
+	layoutID := uuid.New()
+
+	tests := []struct {
+		name        string
+		setupFake   func(f *fake.SsgRepo)
+		layout      ssg.Layout
+		expectedErr error
+	}{
+		{
+			name: "updates layout successfully",
+			setupFake: func(f *fake.SsgRepo) {
+				f.CreateLayout(context.Background(), ssg.Layout{ID: layoutID, Name: "Old"})
+			},
+			layout:      ssg.Layout{ID: layoutID, Name: "New"},
+			expectedErr: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			f := fake.NewSsgRepo()
+			tt.setupFake(f)
+
+			err := f.UpdateLayout(context.Background(), tt.layout)
+
+			if tt.expectedErr != nil {
+				if err == nil || err.Error() != tt.expectedErr.Error() {
+					t.Errorf("expected error %v, got %v", tt.expectedErr, err)
+				}
+			} else if err != nil {
+				t.Errorf("expected no error, got %v", err)
+			}
+		})
+	}
+}
+
+func TestSsgRepoDeleteLayout(t *testing.T) {
+	layoutID := uuid.New()
+
+	tests := []struct {
+		name        string
+		setupFake   func(f *fake.SsgRepo)
+		id          uuid.UUID
+		expectedErr error
+	}{
+		{
+			name: "deletes layout successfully",
+			setupFake: func(f *fake.SsgRepo) {
+				f.CreateLayout(context.Background(), ssg.Layout{ID: layoutID, Name: "Default"})
+			},
+			id:          layoutID,
+			expectedErr: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			f := fake.NewSsgRepo()
+			tt.setupFake(f)
+
+			err := f.DeleteLayout(context.Background(), tt.id)
+
+			if tt.expectedErr != nil {
+				if err == nil || err.Error() != tt.expectedErr.Error() {
+					t.Errorf("expected error %v, got %v", tt.expectedErr, err)
+				}
+			} else if err != nil {
+				t.Errorf("expected no error, got %v", err)
+			}
+		})
+	}
+}
+
+func TestSsgRepoGetTag(t *testing.T) {
+	tagID := uuid.New()
+
+	tests := []struct {
+		name        string
+		setupFake   func(f *fake.SsgRepo)
+		id          uuid.UUID
+		expectedTag ssg.Tag
+		expectedErr error
+	}{
+		{
+			name: "gets existing tag",
+			setupFake: func(f *fake.SsgRepo) {
+				f.CreateTag(context.Background(), ssg.Tag{ID: tagID, Name: "tech"})
+			},
+			id:          tagID,
+			expectedTag: ssg.Tag{ID: tagID, Name: "tech"},
+			expectedErr: nil,
+		},
+		{
+			name:        "returns error when tag not found",
+			setupFake:   func(f *fake.SsgRepo) {},
+			id:          uuid.New(),
+			expectedTag: ssg.Tag{},
+			expectedErr: errors.New("tag not found"),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			f := fake.NewSsgRepo()
+			tt.setupFake(f)
+
+			tag, err := f.GetTag(context.Background(), tt.id)
+
+			if tt.expectedErr != nil {
+				if err == nil || err.Error() != tt.expectedErr.Error() {
+					t.Errorf("expected error %v, got %v", tt.expectedErr, err)
+				}
+			} else if err != nil {
+				t.Errorf("expected no error, got %v", err)
+			}
+
+			if tag.ID != tt.expectedTag.ID || tag.Name != tt.expectedTag.Name {
+				t.Errorf("expected tag %+v, got %+v", tt.expectedTag, tag)
+			}
+		})
+	}
+}
+
+func TestSsgRepoGetAllTags(t *testing.T) {
+	tests := []struct {
+		name        string
+		setupFake   func(f *fake.SsgRepo)
+		wantCount   int
+		expectedErr error
+	}{
+		{
+			name: "returns all tags",
+			setupFake: func(f *fake.SsgRepo) {
+				f.CreateTag(context.Background(), ssg.Tag{ID: uuid.New(), Name: "tech"})
+				f.CreateTag(context.Background(), ssg.Tag{ID: uuid.New(), Name: "news"})
+			},
+			wantCount:   2,
+			expectedErr: nil,
+		},
+		{
+			name:        "returns empty slice when no tags",
+			setupFake:   func(f *fake.SsgRepo) {},
+			wantCount:   0,
+			expectedErr: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			f := fake.NewSsgRepo()
+			tt.setupFake(f)
+
+			tags, err := f.GetAllTags(context.Background())
+
+			if tt.expectedErr != nil {
+				if err == nil || err.Error() != tt.expectedErr.Error() {
+					t.Errorf("expected error %v, got %v", tt.expectedErr, err)
+				}
+			} else if err != nil {
+				t.Errorf("expected no error, got %v", err)
+			}
+
+			if len(tags) != tt.wantCount {
+				t.Errorf("expected %d tags, got %d", tt.wantCount, len(tags))
+			}
+		})
+	}
+}
+
+func TestSsgRepoUpdateTag(t *testing.T) {
+	tagID := uuid.New()
+
+	tests := []struct {
+		name        string
+		setupFake   func(f *fake.SsgRepo)
+		tag         ssg.Tag
+		expectedErr error
+	}{
+		{
+			name: "updates tag successfully",
+			setupFake: func(f *fake.SsgRepo) {
+				f.CreateTag(context.Background(), ssg.Tag{ID: tagID, Name: "old"})
+			},
+			tag:         ssg.Tag{ID: tagID, Name: "new"},
+			expectedErr: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			f := fake.NewSsgRepo()
+			tt.setupFake(f)
+
+			err := f.UpdateTag(context.Background(), tt.tag)
+
+			if tt.expectedErr != nil {
+				if err == nil || err.Error() != tt.expectedErr.Error() {
+					t.Errorf("expected error %v, got %v", tt.expectedErr, err)
+				}
+			} else if err != nil {
+				t.Errorf("expected no error, got %v", err)
+			}
+		})
+	}
+}
+
+func TestSsgRepoGetParam(t *testing.T) {
+	paramID := uuid.New()
+
+	tests := []struct {
+		name          string
+		setupFake     func(f *fake.SsgRepo)
+		id            uuid.UUID
+		expectedParam ssg.Param
+		expectedErr   error
+	}{
+		{
+			name: "gets existing param",
+			setupFake: func(f *fake.SsgRepo) {
+				f.CreateParam(context.Background(), &ssg.Param{ID: paramID, Name: "title"})
+			},
+			id:            paramID,
+			expectedParam: ssg.Param{ID: paramID, Name: "title"},
+			expectedErr:   nil,
+		},
+		{
+			name:          "returns error when param not found",
+			setupFake:     func(f *fake.SsgRepo) {},
+			id:            uuid.New(),
+			expectedParam: ssg.Param{},
+			expectedErr:   errors.New("param not found"),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			f := fake.NewSsgRepo()
+			tt.setupFake(f)
+
+			param, err := f.GetParam(context.Background(), tt.id)
+
+			if tt.expectedErr != nil {
+				if err == nil || err.Error() != tt.expectedErr.Error() {
+					t.Errorf("expected error %v, got %v", tt.expectedErr, err)
+				}
+			} else if err != nil {
+				t.Errorf("expected no error, got %v", err)
+			}
+
+			if param.ID != tt.expectedParam.ID || param.Name != tt.expectedParam.Name {
+				t.Errorf("expected param %+v, got %+v", tt.expectedParam, param)
+			}
+		})
+	}
+}
+
+func TestSsgRepoListParams(t *testing.T) {
+	tests := []struct {
+		name        string
+		setupFake   func(f *fake.SsgRepo)
+		wantCount   int
+		expectedErr error
+	}{
+		{
+			name: "returns all params",
+			setupFake: func(f *fake.SsgRepo) {
+				f.CreateParam(context.Background(), &ssg.Param{ID: uuid.New(), Name: "title"})
+				f.CreateParam(context.Background(), &ssg.Param{ID: uuid.New(), Name: "desc"})
+			},
+			wantCount:   2,
+			expectedErr: nil,
+		},
+		{
+			name:        "returns empty slice when no params",
+			setupFake:   func(f *fake.SsgRepo) {},
+			wantCount:   0,
+			expectedErr: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			f := fake.NewSsgRepo()
+			tt.setupFake(f)
+
+			params, err := f.ListParams(context.Background())
+
+			if tt.expectedErr != nil {
+				if err == nil || err.Error() != tt.expectedErr.Error() {
+					t.Errorf("expected error %v, got %v", tt.expectedErr, err)
+				}
+			} else if err != nil {
+				t.Errorf("expected no error, got %v", err)
+			}
+
+			if len(params) != tt.wantCount {
+				t.Errorf("expected %d params, got %d", tt.wantCount, len(params))
+			}
+		})
+	}
+}
+
+func TestSsgRepoUpdateParam(t *testing.T) {
+	paramID := uuid.New()
+
+	tests := []struct {
+		name        string
+		setupFake   func(f *fake.SsgRepo)
+		param       *ssg.Param
+		expectedErr error
+	}{
+		{
+			name: "updates param successfully",
+			setupFake: func(f *fake.SsgRepo) {
+				f.CreateParam(context.Background(), &ssg.Param{ID: paramID, Name: "old"})
+			},
+			param:       &ssg.Param{ID: paramID, Name: "new"},
+			expectedErr: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			f := fake.NewSsgRepo()
+			tt.setupFake(f)
+
+			err := f.UpdateParam(context.Background(), tt.param)
+
+			if tt.expectedErr != nil {
+				if err == nil || err.Error() != tt.expectedErr.Error() {
+					t.Errorf("expected error %v, got %v", tt.expectedErr, err)
+				}
+			} else if err != nil {
+				t.Errorf("expected no error, got %v", err)
+			}
+		})
+	}
+}
