@@ -323,6 +323,20 @@ func TestClioRepoUpdateContent(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name: "updates content with meta successfully",
+			content: &ssg.Content{
+				ID:      content.ID,
+				SiteID:  content.SiteID,
+				Heading: "Updated with Meta",
+				Meta: ssg.Meta{
+					ID:        uuid.New(),
+					ContentID: content.ID,
+					Summary:   "Test summary",
+				},
+			},
+			wantErr: false,
+		},
 	}
 
 	for _, tt := range tests {
@@ -1328,6 +1342,21 @@ func TestClioRepoCreateImage(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name: "creates image with all fields",
+			image: &ssg.Image{
+				ID:       uuid.New(),
+				SiteID:   siteID,
+				ShortID:  "img001",
+				FileName: "full-test.jpg",
+				FilePath: "/images/full-test.jpg",
+				AltText:  "Full Test Image",
+				Title:    "Test Title",
+				Width:    1920,
+				Height:   1080,
+			},
+			wantErr: false,
+		},
 	}
 
 	for _, tt := range tests {
@@ -1443,6 +1472,20 @@ func TestClioRepoUpdateImage(t *testing.T) {
 				FileName: image.FileName,
 				FilePath: image.FilePath,
 				AltText:  "Updated Alt Text",
+			},
+			wantErr: false,
+		},
+		{
+			name: "updates image with title and dimensions",
+			image: &ssg.Image{
+				ID:       image.ID,
+				SiteID:   image.SiteID,
+				FileName: image.FileName,
+				FilePath: image.FilePath,
+				AltText:  "Updated Alt Text",
+				Title:    "New Title",
+				Width:    800,
+				Height:   600,
 			},
 			wantErr: false,
 		},
@@ -1841,18 +1884,47 @@ func TestClioRepoCreateImageVariant(t *testing.T) {
 	}
 	repo.CreateImage(ctx, image)
 
-	variant := &ssg.ImageVariant{
-		ID:      uuid.New(),
-		ImageID: image.ID,
-		Kind:    "thumbnail",
-		Width:   150,
-		Height:  150,
-		BlobRef: "test_thumb.jpg",
+	tests := []struct {
+		name    string
+		variant *ssg.ImageVariant
+		wantErr bool
+	}{
+		{
+			name: "creates thumbnail variant successfully",
+			variant: &ssg.ImageVariant{
+				ID:      uuid.New(),
+				ImageID: image.ID,
+				Kind:    "thumbnail",
+				Width:   150,
+				Height:  150,
+				BlobRef: "test_thumb.jpg",
+			},
+			wantErr: false,
+		},
+		{
+			name: "creates original variant with full fields",
+			variant: &ssg.ImageVariant{
+				ID:            uuid.New(),
+				ShortID:       "var001",
+				ImageID:       image.ID,
+				Kind:          "original",
+				Width:         1920,
+				Height:        1080,
+				FilesizeByte:  2048000,
+				Mime:          "image/jpeg",
+				BlobRef:       "test_original.jpg",
+			},
+			wantErr: false,
+		},
 	}
 
-	err := repo.CreateImageVariant(ctx, variant)
-	if err != nil {
-		t.Errorf("CreateImageVariant() error = %v", err)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := repo.CreateImageVariant(ctx, tt.variant)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("CreateImageVariant() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
 	}
 }
 
@@ -1950,10 +2022,44 @@ func TestClioRepoUpdateImageVariant(t *testing.T) {
 	}
 	repo.CreateImageVariant(ctx, variant)
 
-	variant.Kind = "updated"
-	err := repo.UpdateImageVariant(ctx, variant)
-	if err != nil {
-		t.Errorf("UpdateImageVariant() error = %v", err)
+	tests := []struct {
+		name    string
+		variant *ssg.ImageVariant
+		wantErr bool
+	}{
+		{
+			name: "updates variant kind successfully",
+			variant: &ssg.ImageVariant{
+				ID:      variant.ID,
+				ImageID: variant.ImageID,
+				Kind:    "updated",
+				BlobRef: variant.BlobRef,
+			},
+			wantErr: false,
+		},
+		{
+			name: "updates variant with full fields",
+			variant: &ssg.ImageVariant{
+				ID:            variant.ID,
+				ImageID:       variant.ImageID,
+				Kind:          "web",
+				BlobRef:       "test_web.jpg",
+				Width:         800,
+				Height:        600,
+				FilesizeByte:  512000,
+				Mime:          "image/jpeg",
+			},
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := repo.UpdateImageVariant(ctx, tt.variant)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("UpdateImageVariant() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
 	}
 }
 

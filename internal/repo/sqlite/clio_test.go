@@ -76,3 +76,40 @@ func TestClioRepoBeginTx(t *testing.T) {
 	// Clean up transaction
 	tx.Rollback()
 }
+
+func TestClioRepoSetup(t *testing.T) {
+	tests := []struct {
+		name    string
+		setup   func() *ClioRepo
+		wantErr bool
+	}{
+		{
+			name: "returns early when database already set",
+			setup: func() *ClioRepo {
+				repo, _ := setupTestSsgRepo(t)
+				return repo
+			},
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			repo := tt.setup()
+			defer func() {
+				if repo.db != nil {
+					repo.db.Close()
+				}
+			}()
+
+			err := repo.Setup(context.Background())
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Setup() error = %v, wantErr %v", err, tt.wantErr)
+			}
+
+			if !tt.wantErr && repo.db == nil {
+				t.Error("Setup() database is nil after setup")
+			}
+		})
+	}
+}
