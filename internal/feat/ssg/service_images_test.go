@@ -218,7 +218,8 @@ func TestServiceUploadContentImage(t *testing.T) {
 				}
 			}
 
-			ctx := context.Background()
+			siteID := uuid.New()
+			ctx := NewContextWithSite("test-site", siteID)
 			_, err := svc.UploadContentImage(ctx, tt.contentID, nil, nil, ImageTypeContent, "alt text", "caption")
 
 			if (err != nil) != tt.wantErr {
@@ -342,7 +343,8 @@ func TestServiceDeleteContentImage(t *testing.T) {
 			tt.setupIM(im)
 			svc := newTestServiceWithImageManager(repo, im)
 
-			ctx := context.Background()
+			siteID := uuid.New()
+			ctx := NewContextWithSite("test-site", siteID)
 			err := svc.DeleteContentImage(ctx, contentID, tt.imagePath)
 
 			if (err != nil) != tt.wantErr {
@@ -423,7 +425,8 @@ func TestServiceUploadSectionImage(t *testing.T) {
 				}
 			}
 
-			ctx := context.Background()
+			siteID := uuid.New()
+			ctx := NewContextWithSite("test-site", siteID)
 			_, err := svc.UploadSectionImage(ctx, tt.sectionID, nil, nil, ImageTypeHeader, "alt", "caption")
 
 			if (err != nil) != tt.wantErr {
@@ -485,7 +488,8 @@ func TestServiceDeleteSectionImage(t *testing.T) {
 			tt.setupIM(im)
 			svc := newTestServiceWithImageManager(repo, im)
 
-			ctx := context.Background()
+			siteID := uuid.New()
+			ctx := NewContextWithSite("test-site", siteID)
 			err := svc.DeleteSectionImage(ctx, sectionID, tt.imageType)
 
 			if (err != nil) != tt.wantErr {
