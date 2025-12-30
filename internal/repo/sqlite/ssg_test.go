@@ -1415,33 +1415,61 @@ func TestClioRepoGetImage(t *testing.T) {
 }
 
 func TestClioRepoListImages(t *testing.T) {
-	repo, siteID := setupTestSsgRepo(t)
-	defer repo.db.Close()
-	ctx := ssg.NewContextWithSite("test-site", siteID)
-
-	image1 := &ssg.Image{
-		ID:       uuid.New(),
-		SiteID:   siteID,
-		FileName: "test1.jpg",
-		FilePath: "/images/test1.jpg",
+	tests := []struct {
+		name       string
+		setup      func(*ClioRepo, uuid.UUID)
+		wantCount  int
+		wantErr    bool
+	}{
+		{
+			name: "lists multiple images successfully",
+			setup: func(r *ClioRepo, siteID uuid.UUID) {
+				ctx := ssg.NewContextWithSite("test-site", siteID)
+				image1 := &ssg.Image{
+					ID:       uuid.New(),
+					SiteID:   siteID,
+					FileName: "test1.jpg",
+					FilePath: "/images/test1.jpg",
+				}
+				image2 := &ssg.Image{
+					ID:       uuid.New(),
+					SiteID:   siteID,
+					FileName: "test2.jpg",
+					FilePath: "/images/test2.jpg",
+				}
+				r.CreateImage(ctx, image1)
+				r.CreateImage(ctx, image2)
+			},
+			wantCount: 2,
+			wantErr:   false,
+		},
+		{
+			name: "returns empty list when no images",
+			setup: func(r *ClioRepo, siteID uuid.UUID) {
+			},
+			wantCount: 0,
+			wantErr:   false,
+		},
 	}
-	image2 := &ssg.Image{
-		ID:       uuid.New(),
-		SiteID:   siteID,
-		FileName: "test2.jpg",
-		FilePath: "/images/test2.jpg",
-	}
-	repo.CreateImage(ctx, image1)
-	repo.CreateImage(ctx, image2)
 
-	images, err := repo.ListImages(ctx)
-	if err != nil {
-		t.Errorf("ListImages() error = %v", err)
-		return
-	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			repo, siteID := setupTestSsgRepo(t)
+			defer repo.db.Close()
+			ctx := ssg.NewContextWithSite("test-site", siteID)
 
-	if len(images) != 2 {
-		t.Errorf("ListImages() got %d images, want 2", len(images))
+			tt.setup(repo, siteID)
+
+			images, err := repo.ListImages(ctx)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ListImages() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			if !tt.wantErr && len(images) != tt.wantCount {
+				t.Errorf("ListImages() got %d images, want %d", len(images), tt.wantCount)
+			}
+		})
 	}
 }
 

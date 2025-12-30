@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/hermesgen/clio/internal/feat/ssg"
+	"github.com/hermesgen/hm"
 )
 
 func TestClioRepoGetDB(t *testing.T) {
@@ -80,22 +81,46 @@ func TestClioRepoBeginTx(t *testing.T) {
 func TestClioRepoSetup(t *testing.T) {
 	tests := []struct {
 		name    string
-		setup   func() *ClioRepo
+		setup   func(*testing.T) *ClioRepo
 		wantErr bool
 	}{
 		{
 			name: "returns early when database already set",
-			setup: func() *ClioRepo {
+			setup: func(t *testing.T) *ClioRepo {
 				repo, _ := setupTestSsgRepo(t)
 				return repo
 			},
 			wantErr: false,
 		},
+		{
+			name: "sets up database with valid DSN",
+			setup: func(t *testing.T) *ClioRepo {
+				tmpDB := t.TempDir() + "/test_setup.db"
+				cfg := hm.NewConfig()
+				cfg.Set(hm.Key.DBSQLiteDSN, tmpDB)
+				log := hm.NewLogger("debug")
+				params := hm.XParams{Cfg: cfg, Log: log}
+				qm := hm.NewQueryManager(testAssetsFS, "sqlite", params)
+				return NewClioRepo(qm, params)
+			},
+			wantErr: false,
+		},
+		{
+			name: "returns error when DSN not in config",
+			setup: func(t *testing.T) *ClioRepo {
+				cfg := hm.NewConfig()
+				log := hm.NewLogger("debug")
+				params := hm.XParams{Cfg: cfg, Log: log}
+				qm := hm.NewQueryManager(testAssetsFS, "sqlite", params)
+				return NewClioRepo(qm, params)
+			},
+			wantErr: true,
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			repo := tt.setup()
+			repo := tt.setup(t)
 			defer func() {
 				if repo.db != nil {
 					repo.db.Close()
