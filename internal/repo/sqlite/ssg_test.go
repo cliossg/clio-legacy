@@ -2427,40 +2427,77 @@ func TestClioRepoCreateContentImage(t *testing.T) {
 }
 
 func TestClioRepoGetContentImagesByContentID(t *testing.T) {
-	repo, siteID := setupTestSsgRepo(t)
-	defer repo.db.Close()
-	ctx := ssg.NewContextWithSite("test-site", siteID)
+	tests := []struct {
+		name      string
+		setup     func(*ClioRepo, uuid.UUID) uuid.UUID
+		wantCount int
+		wantErr   bool
+	}{
+		{
+			name: "gets content images successfully",
+			setup: func(r *ClioRepo, siteID uuid.UUID) uuid.UUID {
+				ctx := ssg.NewContextWithSite("test-site", siteID)
+				content := &ssg.Content{
+					ID:      uuid.New(),
+					SiteID:  siteID,
+					Heading: "Content with images",
+				}
+				r.CreateContent(ctx, content)
 
-	content := &ssg.Content{
-		ID:      uuid.New(),
-		SiteID:  siteID,
-		Heading: "Content with images",
+				image := &ssg.Image{
+					ID:       uuid.New(),
+					SiteID:   siteID,
+					ShortID:  "img606",
+					FileName: "content2.jpg",
+				}
+				r.CreateImage(ctx, image)
+
+				contentImage := &ssg.ContentImage{
+					ID:        uuid.New(),
+					ContentID: content.ID,
+					ImageID:   image.ID,
+				}
+				r.CreateContentImage(ctx, contentImage)
+				return content.ID
+			},
+			wantCount: 1,
+			wantErr:   false,
+		},
+		{
+			name: "returns empty list when content has no images",
+			setup: func(r *ClioRepo, siteID uuid.UUID) uuid.UUID {
+				ctx := ssg.NewContextWithSite("test-site", siteID)
+				content := &ssg.Content{
+					ID:      uuid.New(),
+					SiteID:  siteID,
+					Heading: "Content without images",
+				}
+				r.CreateContent(ctx, content)
+				return content.ID
+			},
+			wantCount: 0,
+			wantErr:   false,
+		},
 	}
-	repo.CreateContent(ctx, content)
 
-	image := &ssg.Image{
-		ID:       uuid.New(),
-		SiteID:   siteID,
-		ShortID:  "img606",
-		FileName: "content2.jpg",
-	}
-	repo.CreateImage(ctx, image)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			repo, siteID := setupTestSsgRepo(t)
+			defer repo.db.Close()
+			ctx := ssg.NewContextWithSite("test-site", siteID)
 
-	contentImage := &ssg.ContentImage{
-		ID:        uuid.New(),
-		ContentID: content.ID,
-		ImageID:   image.ID,
-	}
-	repo.CreateContentImage(ctx, contentImage)
+			contentID := tt.setup(repo, siteID)
 
-	images, err := repo.GetContentImagesByContentID(ctx, content.ID)
-	if err != nil {
-		t.Errorf("GetContentImagesByContentID() error = %v", err)
-		return
-	}
+			images, err := repo.GetContentImagesByContentID(ctx, contentID)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetContentImagesByContentID() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
 
-	if len(images) == 0 {
-		t.Error("GetContentImagesByContentID() returned no images")
+			if len(images) != tt.wantCount {
+				t.Errorf("GetContentImagesByContentID() got %d images, want %d", len(images), tt.wantCount)
+			}
+		})
 	}
 }
 
@@ -2530,40 +2567,77 @@ func TestClioRepoCreateSectionImage(t *testing.T) {
 }
 
 func TestClioRepoGetSectionImagesBySectionID(t *testing.T) {
-	repo, siteID := setupTestSsgRepo(t)
-	defer repo.db.Close()
-	ctx := ssg.NewContextWithSite("test-site", siteID)
+	tests := []struct {
+		name      string
+		setup     func(*ClioRepo, uuid.UUID) uuid.UUID
+		wantCount int
+		wantErr   bool
+	}{
+		{
+			name: "gets section images successfully",
+			setup: func(r *ClioRepo, siteID uuid.UUID) uuid.UUID {
+				ctx := ssg.NewContextWithSite("test-site", siteID)
+				section := &ssg.Section{
+					ID:     uuid.New(),
+					SiteID: siteID,
+					Name:   "Section with images",
+				}
+				r.CreateSection(ctx, *section)
 
-	section := &ssg.Section{
-		ID:     uuid.New(),
-		SiteID: siteID,
-		Name:   "Section with images",
+				image := &ssg.Image{
+					ID:       uuid.New(),
+					SiteID:   siteID,
+					ShortID:  "img909",
+					FileName: "section2.jpg",
+				}
+				r.CreateImage(ctx, image)
+
+				sectionImage := &ssg.SectionImage{
+					ID:        uuid.New(),
+					SectionID: section.ID,
+					ImageID:   image.ID,
+				}
+				r.CreateSectionImage(ctx, sectionImage)
+				return section.ID
+			},
+			wantCount: 1,
+			wantErr:   false,
+		},
+		{
+			name: "returns empty list when section has no images",
+			setup: func(r *ClioRepo, siteID uuid.UUID) uuid.UUID {
+				ctx := ssg.NewContextWithSite("test-site", siteID)
+				section := &ssg.Section{
+					ID:     uuid.New(),
+					SiteID: siteID,
+					Name:   "Section without images",
+				}
+				r.CreateSection(ctx, *section)
+				return section.ID
+			},
+			wantCount: 0,
+			wantErr:   false,
+		},
 	}
-	repo.CreateSection(ctx, *section)
 
-	image := &ssg.Image{
-		ID:       uuid.New(),
-		SiteID:   siteID,
-		ShortID:  "img909",
-		FileName: "section2.jpg",
-	}
-	repo.CreateImage(ctx, image)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			repo, siteID := setupTestSsgRepo(t)
+			defer repo.db.Close()
+			ctx := ssg.NewContextWithSite("test-site", siteID)
 
-	sectionImage := &ssg.SectionImage{
-		ID:        uuid.New(),
-		SectionID: section.ID,
-		ImageID:   image.ID,
-	}
-	repo.CreateSectionImage(ctx, sectionImage)
+			sectionID := tt.setup(repo, siteID)
 
-	images, err := repo.GetSectionImagesBySectionID(ctx, section.ID)
-	if err != nil {
-		t.Errorf("GetSectionImagesBySectionID() error = %v", err)
-		return
-	}
+			images, err := repo.GetSectionImagesBySectionID(ctx, sectionID)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetSectionImagesBySectionID() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
 
-	if len(images) == 0 {
-		t.Error("GetSectionImagesBySectionID() returned no images")
+			if len(images) != tt.wantCount {
+				t.Errorf("GetSectionImagesBySection ID() got %d images, want %d", len(images), tt.wantCount)
+			}
+		})
 	}
 }
 
