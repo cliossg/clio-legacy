@@ -2218,3 +2218,66 @@ func TestClioRepoGetContentWithPaginationAndSearch(t *testing.T) {
 		t.Error("GetContentWithPaginationAndSearch() total = 0")
 	}
 }
+
+func TestSanitizeURLPath(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "handles simple path",
+			input:    "blog/my-post",
+			expected: "blog/my-post",
+		},
+		{
+			name:     "converts to lowercase",
+			input:    "Blog/My-Post",
+			expected: "blog/my-post",
+		},
+		{
+			name:     "replaces special characters with hyphens",
+			input:    "blog/my@post!test",
+			expected: "blog/my-post-test",
+		},
+		{
+			name:     "removes multiple consecutive hyphens",
+			input:    "blog/my---post",
+			expected: "blog/my-post",
+		},
+		{
+			name:     "removes leading and trailing hyphens",
+			input:    "blog/-my-post-",
+			expected: "blog/my-post",
+		},
+		{
+			name:     "preserves underscores and dots",
+			input:    "blog/my_post.html",
+			expected: "blog/my_post.html",
+		},
+		{
+			name:     "handles empty path",
+			input:    "",
+			expected: "",
+		},
+		{
+			name:     "preserves leading slash",
+			input:    "/blog/post",
+			expected: "/blog/post",
+		},
+		{
+			name:     "handles complex special characters",
+			input:    "blog/post with spaces & symbols!",
+			expected: "blog/post-with-spaces-symbols",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := sanitizeURLPath(tt.input)
+			if result != tt.expected {
+				t.Errorf("sanitizeURLPath(%q) = %q, want %q", tt.input, result, tt.expected)
+			}
+		})
+	}
+}
