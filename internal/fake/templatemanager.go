@@ -65,12 +65,14 @@ func (tm *TemplateManager) loadTemplate(handler, action string) (*template.Templ
 	}
 
 	tmpl := template.New("page").Funcs(funcMap)
+	parsed := false
 
 	if _, err := os.Stat(layoutPath); err == nil {
 		tmpl, err = tmpl.ParseFiles(layoutPath)
 		if err != nil {
 			return nil, err
 		}
+		parsed = true
 	}
 
 	if _, err := os.Stat(handlerPath); err == nil {
@@ -78,6 +80,11 @@ func (tm *TemplateManager) loadTemplate(handler, action string) (*template.Templ
 		if err != nil {
 			return nil, err
 		}
+		parsed = true
+	}
+
+	if !parsed {
+		return nil, os.ErrNotExist
 	}
 
 	return tmpl, nil

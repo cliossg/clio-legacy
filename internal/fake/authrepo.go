@@ -2,7 +2,6 @@ package fake
 
 import (
 	"context"
-	"database/sql"
 
 	"github.com/google/uuid"
 	"github.com/hermesgen/clio/internal/feat/auth"
@@ -109,7 +108,7 @@ func (f *AuthRepo) GetUser(ctx context.Context, id uuid.UUID) (auth.User, error)
 	if user, ok := f.users[id]; ok {
 		return user, nil
 	}
-	return auth.User{}, sql.ErrNoRows
+	return auth.User{}, nil
 }
 
 func (f *AuthRepo) CreateUser(ctx context.Context, user *auth.User) error {
