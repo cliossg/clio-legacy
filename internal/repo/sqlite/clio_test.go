@@ -78,6 +78,54 @@ func TestClioRepoBeginTx(t *testing.T) {
 	tx.Rollback()
 }
 
+func TestClioRepoGetExec(t *testing.T) {
+	tests := []struct {
+		name       string
+		setupCtx   func(*ClioRepo) context.Context
+		wantIsTx   bool
+	}{
+		{
+			name: "returns db when no transaction in context",
+			setupCtx: func(repo *ClioRepo) context.Context {
+				return context.Background()
+			},
+			wantIsTx: false,
+		},
+		{
+			name: "returns transaction when transaction in context",
+			setupCtx: func(repo *ClioRepo) context.Context {
+				ctx, _, _ := repo.BeginTx(context.Background())
+				return ctx
+			},
+			wantIsTx: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			repo, _ := setupTestSsgRepo(t)
+			defer repo.db.Close()
+
+			ctx := tt.setupCtx(repo)
+			exec := repo.getExec(ctx)
+
+			if exec == nil {
+				t.Error("getExec() returned nil")
+			}
+
+			if tt.wantIsTx {
+				if exec == repo.db {
+					t.Error("getExec() should return transaction but returned db")
+				}
+			} else {
+				if exec != repo.db {
+					t.Error("getExec() should return db but returned something else")
+				}
+			}
+		})
+	}
+}
+
 func TestClioRepoSetup(t *testing.T) {
 	tests := []struct {
 		name    string
