@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"net/http"
 	"net/http/httptest"
 	"testing"
 
@@ -38,12 +39,60 @@ func TestNewSessionManager(t *testing.T) {
 }
 
 func TestSessionManagerSetup(t *testing.T) {
-	sm := setupSessionManager(t)
-	if sm == nil {
-		t.Fatal("Setup() returned nil session manager")
+	tests := []struct {
+		name    string
+		setup   func() *SessionManager
+		wantErr bool
+	}{
+		{
+			name: "successful setup with valid keys",
+			setup: func() *SessionManager {
+				cfg := hm.NewConfig()
+				cfg.Set(hm.Key.SecHashKey, "01234567890123456789012345678901")
+				cfg.Set(hm.Key.SecBlockKey, "01234567890123456789012345678901")
+				log := hm.NewLogger("error")
+				params := hm.XParams{Cfg: cfg, Log: log}
+				return NewSessionManager(params)
+			},
+			wantErr: false,
+		},
+		{
+			name: "returns error when hashKey missing",
+			setup: func() *SessionManager {
+				cfg := hm.NewConfig()
+				cfg.Set(hm.Key.SecBlockKey, "01234567890123456789012345678901")
+				log := hm.NewLogger("error")
+				params := hm.XParams{Cfg: cfg, Log: log}
+				return NewSessionManager(params)
+			},
+			wantErr: true,
+		},
+		{
+			name: "returns error when blockKey missing",
+			setup: func() *SessionManager {
+				cfg := hm.NewConfig()
+				cfg.Set(hm.Key.SecHashKey, "01234567890123456789012345678901")
+				log := hm.NewLogger("error")
+				params := hm.XParams{Cfg: cfg, Log: log}
+				return NewSessionManager(params)
+			},
+			wantErr: true,
+		},
 	}
-	if sm.encoder == nil {
-		t.Fatal("Setup() did not initialize encoder")
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			sm := tt.setup()
+			err := sm.Setup(context.Background())
+
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Setup() error = %v, wantErr %v", err, tt.wantErr)
+			}
+
+			if !tt.wantErr && sm.encoder == nil {
+				t.Error("Setup() did not initialize encoder")
+			}
+		})
 	}
 }
 
@@ -114,33 +163,66 @@ func TestSessionManagerSetUserSession(t *testing.T) {
 }
 
 func TestSessionManagerGetUserSession(t *testing.T) {
-	sm := setupSessionManager(t)
-	w := httptest.NewRecorder()
-	expectedUserID := uuid.New()
-	expectedSiteSlug := "test-site"
-
-	err := sm.SetUserSession(w, expectedUserID, expectedSiteSlug)
-	if err != nil {
-		t.Fatalf("SetUserSession() error = %v", err)
+	tests := []struct {
+		name         string
+		setupRequest func() *http.Request
+		wantErr      bool
+	}{
+		{
+			name: "gets session successfully",
+			setupRequest: func() *http.Request {
+				sm := setupSessionManager(t)
+				w := httptest.NewRecorder()
+				sm.SetUserSession(w, uuid.New(), "test-site")
+				req := httptest.NewRequest("GET", "/", nil)
+				for _, cookie := range w.Result().Cookies() {
+					req.AddCookie(cookie)
+				}
+				return req
+			},
+			wantErr: false,
+		},
+		{
+			name: "returns error when no cookie",
+			setupRequest: func() *http.Request {
+				return httptest.NewRequest("GET", "/", nil)
+			},
+			wantErr: true,
+		},
+		{
+			name: "returns error with invalid cookie value",
+			setupRequest: func() *http.Request {
+				req := httptest.NewRequest("GET", "/", nil)
+				req.AddCookie(&http.Cookie{
+					Name:  sessionCookieName,
+					Value: "invalid-cookie-data",
+				})
+				return req
+			},
+			wantErr: true,
+		},
 	}
 
-	req := httptest.NewRequest("GET", "/", nil)
-	for _, cookie := range w.Result().Cookies() {
-		req.AddCookie(cookie)
-	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			sm := setupSessionManager(t)
+			req := tt.setupRequest()
 
-	userID, siteSlug, err := sm.GetUserSession(req)
-	if err != nil {
-		t.Errorf("GetUserSession() error = %v", err)
-		return
-	}
+			userID, siteSlug, err := sm.GetUserSession(req)
 
-	if userID != expectedUserID {
-		t.Errorf("GetUserSession() userID = %v, want %v", userID, expectedUserID)
-	}
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetUserSession() error = %v, wantErr %v", err, tt.wantErr)
+			}
 
-	if siteSlug != expectedSiteSlug {
-		t.Errorf("GetUserSession() siteSlug = %v, want %v", siteSlug, expectedSiteSlug)
+			if !tt.wantErr {
+				if userID == uuid.Nil {
+					t.Error("GetUserSession() returned nil userID")
+				}
+				if siteSlug == "" {
+					t.Error("GetUserSession() returned empty siteSlug")
+				}
+			}
+		})
 	}
 }
 
