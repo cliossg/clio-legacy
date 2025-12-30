@@ -72,6 +72,15 @@ func NewWebHandler(tm *hm.TemplateManager, flash *hm.FlashManager, paramManager 
 		"editPath": func(entityType, id string) string {
 			return fmt.Sprintf("/ssg/edit-%s?id=%s", strings.ToLower(entityType), id)
 		},
+		"EditPath": func(i hm.Identifiable) string {
+			return hm.EditPath(i, i.GetID())
+		},
+		"ShowPath": func(i hm.Identifiable) string {
+			return hm.ShowPath(i, i.GetID())
+		},
+		"DeletePath": func(i hm.Identifiable) string {
+			return hm.DeletePath(i, i.GetID())
+		},
 		"safeHTML": func(s string) template.HTML {
 			return template.HTML(s)
 		},

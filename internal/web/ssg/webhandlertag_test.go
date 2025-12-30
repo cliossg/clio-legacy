@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"strings"
 	"testing"
 
@@ -16,37 +17,37 @@ import (
 
 func newTestWebHandlerWithMockAPI(getResp interface{}, getErr error, postResp interface{}, postErr error, putErr error, deleteErr error) (*WebHandler, *httptest.Server) {
 	cfg := hm.NewConfig()
+
+	// Create temporary directory for image uploads
+	tmpDir := "/tmp/clio-test-images"
+	os.MkdirAll(tmpDir, os.ModePerm)
+	cfg.Set(feat.SSGKey.ImagesPath, tmpDir)
+
 	params := hm.XParams{Cfg: cfg}
 
 	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
+
+		// Helper to wrap response in API Response structure
+		wrapResponse := func(data interface{}) map[string]interface{} {
+			return map[string]interface{}{
+				"status": "success",
+				"data":   data,
+			}
+		}
+
 		switch r.Method {
 		case http.MethodGet:
-			// Handle specific paths needed by renderContentForm (always succeed)
-			if strings.HasPrefix(r.URL.Path, "/ssg/sections") {
-				json.NewEncoder(w).Encode(map[string]interface{}{"sections": []interface{}{}})
-				return
-			}
-			if strings.HasPrefix(r.URL.Path, "/auth/users") {
-				json.NewEncoder(w).Encode(map[string]interface{}{"users": []interface{}{}})
-				return
-			}
-			if strings.HasPrefix(r.URL.Path, "/ssg/tags") && !strings.Contains(r.URL.Path, "search") {
-				json.NewEncoder(w).Encode(map[string]interface{}{"tags": []interface{}{}})
-				return
-			}
-
-			// Apply getErr to main requests
 			if getErr != nil {
 				http.Error(w, getErr.Error(), http.StatusInternalServerError)
 				return
 			}
 
 			if getResp != nil {
-				json.NewEncoder(w).Encode(getResp)
+				json.NewEncoder(w).Encode(wrapResponse(getResp))
 			} else {
 				w.WriteHeader(http.StatusOK)
-				json.NewEncoder(w).Encode(map[string]interface{}{})
+				json.NewEncoder(w).Encode(wrapResponse(map[string]interface{}{}))
 			}
 		case http.MethodPost:
 			if postErr != nil {
@@ -54,10 +55,10 @@ func newTestWebHandlerWithMockAPI(getResp interface{}, getErr error, postResp in
 				return
 			}
 			if postResp != nil {
-				json.NewEncoder(w).Encode(postResp)
+				json.NewEncoder(w).Encode(wrapResponse(postResp))
 			} else {
 				w.WriteHeader(http.StatusOK)
-				json.NewEncoder(w).Encode(map[string]interface{}{})
+				json.NewEncoder(w).Encode(wrapResponse(map[string]interface{}{}))
 			}
 		case http.MethodPut:
 			if putErr != nil {
@@ -65,14 +66,14 @@ func newTestWebHandlerWithMockAPI(getResp interface{}, getErr error, postResp in
 				return
 			}
 			w.WriteHeader(http.StatusOK)
-			json.NewEncoder(w).Encode(map[string]interface{}{})
+			json.NewEncoder(w).Encode(wrapResponse(map[string]interface{}{}))
 		case http.MethodDelete:
 			if deleteErr != nil {
 				http.Error(w, deleteErr.Error(), http.StatusInternalServerError)
 				return
 			}
 			w.WriteHeader(http.StatusOK)
-			json.NewEncoder(w).Encode(map[string]interface{}{})
+			json.NewEncoder(w).Encode(wrapResponse(map[string]interface{}{}))
 		}
 	}))
 
@@ -91,6 +92,7 @@ func newTestWebHandlerWithMockAPI(getResp interface{}, getErr error, postResp in
 	} = sessMgr
 
 	handler := NewWebHandler(tm, flash, paramMgr, nil, smInterface, params)
+	tm.Load() // Load templates AFTER registering custom functions
 	handler.apiClient = hm.NewAPIClient("test-api", func() string { return "" }, mockServer.URL, params)
 
 	return handler, mockServer

@@ -17,7 +17,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-//go:embed testdata
+//go:embed assets
 var testAssetsFS embed.FS
 
 type mockSiteRepo struct {
