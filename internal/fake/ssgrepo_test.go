@@ -1972,3 +1972,694 @@ func TestSsgRepoUpdateParam(t *testing.T) {
 		})
 	}
 }
+
+func TestSsgRepoGetImage(t *testing.T) {
+	imageID := uuid.New()
+
+	tests := []struct {
+		name          string
+		setupFake     func(f *fake.SsgRepo)
+		id            uuid.UUID
+		expectedImage ssg.Image
+		expectedErr   error
+	}{
+		{
+			name: "gets existing image",
+			setupFake: func(f *fake.SsgRepo) {
+				f.CreateImage(context.Background(), &ssg.Image{ID: imageID, FilePath: "/path/to/image.jpg"})
+			},
+			id:            imageID,
+			expectedImage: ssg.Image{ID: imageID, FilePath: "/path/to/image.jpg"},
+			expectedErr:   nil,
+		},
+		{
+			name:          "returns error when image not found",
+			setupFake:     func(f *fake.SsgRepo) {},
+			id:            uuid.New(),
+			expectedImage: ssg.Image{},
+			expectedErr:   errors.New("image not found"),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			f := fake.NewSsgRepo()
+			tt.setupFake(f)
+
+			image, err := f.GetImage(context.Background(), tt.id)
+
+			if tt.expectedErr != nil {
+				if err == nil || err.Error() != tt.expectedErr.Error() {
+					t.Errorf("expected error %v, got %v", tt.expectedErr, err)
+				}
+			} else if err != nil {
+				t.Errorf("expected no error, got %v", err)
+			}
+
+			if image.ID != tt.expectedImage.ID || image.FilePath != tt.expectedImage.FilePath {
+				t.Errorf("expected image %+v, got %+v", tt.expectedImage, image)
+			}
+		})
+	}
+}
+
+func TestSsgRepoUpdateImage(t *testing.T) {
+	imageID := uuid.New()
+
+	tests := []struct {
+		name        string
+		setupFake   func(f *fake.SsgRepo)
+		image       *ssg.Image
+		expectedErr error
+	}{
+		{
+			name: "updates image successfully",
+			setupFake: func(f *fake.SsgRepo) {
+				f.CreateImage(context.Background(), &ssg.Image{ID: imageID, FilePath: "/old.jpg"})
+			},
+			image:       &ssg.Image{ID: imageID, FilePath: "/new.jpg"},
+			expectedErr: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			f := fake.NewSsgRepo()
+			tt.setupFake(f)
+
+			err := f.UpdateImage(context.Background(), tt.image)
+
+			if tt.expectedErr != nil {
+				if err == nil || err.Error() != tt.expectedErr.Error() {
+					t.Errorf("expected error %v, got %v", tt.expectedErr, err)
+				}
+			} else if err != nil {
+				t.Errorf("expected no error, got %v", err)
+			}
+		})
+	}
+}
+
+func TestSsgRepoListImages(t *testing.T) {
+	tests := []struct {
+		name        string
+		setupFake   func(f *fake.SsgRepo)
+		wantCount   int
+		expectedErr error
+	}{
+		{
+			name: "returns all images",
+			setupFake: func(f *fake.SsgRepo) {
+				f.CreateImage(context.Background(), &ssg.Image{ID: uuid.New(), FilePath: "/img1.jpg"})
+				f.CreateImage(context.Background(), &ssg.Image{ID: uuid.New(), FilePath: "/img2.jpg"})
+			},
+			wantCount:   2,
+			expectedErr: nil,
+		},
+		{
+			name:        "returns empty slice when no images",
+			setupFake:   func(f *fake.SsgRepo) {},
+			wantCount:   0,
+			expectedErr: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			f := fake.NewSsgRepo()
+			tt.setupFake(f)
+
+			images, err := f.ListImages(context.Background())
+
+			if tt.expectedErr != nil {
+				if err == nil || err.Error() != tt.expectedErr.Error() {
+					t.Errorf("expected error %v, got %v", tt.expectedErr, err)
+				}
+			} else if err != nil {
+				t.Errorf("expected no error, got %v", err)
+			}
+
+			if len(images) != tt.wantCount {
+				t.Errorf("expected %d images, got %d", tt.wantCount, len(images))
+			}
+		})
+	}
+}
+
+func TestSsgRepoCreateImageVariant(t *testing.T) {
+	tests := []struct {
+		name        string
+		setupFake   func(f *fake.SsgRepo)
+		variant     *ssg.ImageVariant
+		expectedErr error
+	}{
+		{
+			name:        "creates image variant successfully",
+			setupFake:   func(f *fake.SsgRepo) {},
+			variant:     &ssg.ImageVariant{ID: uuid.New(), Kind: "thumbnail"},
+			expectedErr: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			f := fake.NewSsgRepo()
+			tt.setupFake(f)
+
+			err := f.CreateImageVariant(context.Background(), tt.variant)
+
+			if tt.expectedErr != nil {
+				if err == nil || err.Error() != tt.expectedErr.Error() {
+					t.Errorf("expected error %v, got %v", tt.expectedErr, err)
+				}
+			} else if err != nil {
+				t.Errorf("expected no error, got %v", err)
+			}
+		})
+	}
+}
+
+func TestSsgRepoGetImageVariant(t *testing.T) {
+	variantID := uuid.New()
+
+	tests := []struct {
+		name            string
+		setupFake       func(f *fake.SsgRepo)
+		id              uuid.UUID
+		expectedVariant ssg.ImageVariant
+		expectedErr     error
+	}{
+		{
+			name: "gets existing image variant",
+			setupFake: func(f *fake.SsgRepo) {
+				f.CreateImageVariant(context.Background(), &ssg.ImageVariant{ID: variantID, Kind: "thumbnail"})
+			},
+			id:              variantID,
+			expectedVariant: ssg.ImageVariant{ID: variantID, Kind: "thumbnail"},
+			expectedErr:     nil,
+		},
+		{
+			name:            "returns error when variant not found",
+			setupFake:       func(f *fake.SsgRepo) {},
+			id:              uuid.New(),
+			expectedVariant: ssg.ImageVariant{},
+			expectedErr:     errors.New("image variant not found"),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			f := fake.NewSsgRepo()
+			tt.setupFake(f)
+
+			variant, err := f.GetImageVariant(context.Background(), tt.id)
+
+			if tt.expectedErr != nil {
+				if err == nil || err.Error() != tt.expectedErr.Error() {
+					t.Errorf("expected error %v, got %v", tt.expectedErr, err)
+				}
+			} else if err != nil {
+				t.Errorf("expected no error, got %v", err)
+			}
+
+			if variant.ID != tt.expectedVariant.ID || variant.Kind != tt.expectedVariant.Kind {
+				t.Errorf("expected variant %+v, got %+v", tt.expectedVariant, variant)
+			}
+		})
+	}
+}
+
+func TestSsgRepoUpdateImageVariant(t *testing.T) {
+	variantID := uuid.New()
+
+	tests := []struct {
+		name        string
+		setupFake   func(f *fake.SsgRepo)
+		variant     *ssg.ImageVariant
+		expectedErr error
+	}{
+		{
+			name: "updates image variant successfully",
+			setupFake: func(f *fake.SsgRepo) {
+				f.CreateImageVariant(context.Background(), &ssg.ImageVariant{ID: variantID, Kind: "old"})
+			},
+			variant:     &ssg.ImageVariant{ID: variantID, Kind: "new"},
+			expectedErr: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			f := fake.NewSsgRepo()
+			tt.setupFake(f)
+
+			err := f.UpdateImageVariant(context.Background(), tt.variant)
+
+			if tt.expectedErr != nil {
+				if err == nil || err.Error() != tt.expectedErr.Error() {
+					t.Errorf("expected error %v, got %v", tt.expectedErr, err)
+				}
+			} else if err != nil {
+				t.Errorf("expected no error, got %v", err)
+			}
+		})
+	}
+}
+
+func TestSsgRepoDeleteImageVariant(t *testing.T) {
+	variantID := uuid.New()
+
+	tests := []struct {
+		name        string
+		setupFake   func(f *fake.SsgRepo)
+		id          uuid.UUID
+		expectedErr error
+	}{
+		{
+			name: "deletes image variant successfully",
+			setupFake: func(f *fake.SsgRepo) {
+				f.CreateImageVariant(context.Background(), &ssg.ImageVariant{ID: variantID, Kind: "thumbnail"})
+			},
+			id:          variantID,
+			expectedErr: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			f := fake.NewSsgRepo()
+			tt.setupFake(f)
+
+			err := f.DeleteImageVariant(context.Background(), tt.id)
+
+			if tt.expectedErr != nil {
+				if err == nil || err.Error() != tt.expectedErr.Error() {
+					t.Errorf("expected error %v, got %v", tt.expectedErr, err)
+				}
+			} else if err != nil {
+				t.Errorf("expected no error, got %v", err)
+			}
+		})
+	}
+}
+
+func TestSsgRepoListImageVariantsByImageID(t *testing.T) {
+	imageID := uuid.New()
+
+	tests := []struct {
+		name        string
+		setupFake   func(f *fake.SsgRepo)
+		imageID     uuid.UUID
+		wantCount   int
+		expectedErr error
+	}{
+		{
+			name: "returns variants for image",
+			setupFake: func(f *fake.SsgRepo) {
+				f.CreateImageVariant(context.Background(), &ssg.ImageVariant{ID: uuid.New(), ImageID: imageID, Kind: "thumb"})
+				f.CreateImageVariant(context.Background(), &ssg.ImageVariant{ID: uuid.New(), ImageID: imageID, Kind: "medium"})
+			},
+			imageID:     imageID,
+			wantCount:   2,
+			expectedErr: nil,
+		},
+		{
+			name:        "returns empty slice when no variants",
+			setupFake:   func(f *fake.SsgRepo) {},
+			imageID:     uuid.New(),
+			wantCount:   0,
+			expectedErr: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			f := fake.NewSsgRepo()
+			tt.setupFake(f)
+
+			variants, err := f.ListImageVariantsByImageID(context.Background(), tt.imageID)
+
+			if tt.expectedErr != nil {
+				if err == nil || err.Error() != tt.expectedErr.Error() {
+					t.Errorf("expected error %v, got %v", tt.expectedErr, err)
+				}
+			} else if err != nil {
+				t.Errorf("expected no error, got %v", err)
+			}
+
+			if len(variants) != tt.wantCount {
+				t.Errorf("expected %d variants, got %d", tt.wantCount, len(variants))
+			}
+		})
+	}
+}
+
+func TestSsgRepoCreateContentImage(t *testing.T) {
+	tests := []struct {
+		name        string
+		setupFake   func(f *fake.SsgRepo)
+		ci          *ssg.ContentImage
+		expectedErr error
+	}{
+		{
+			name:        "creates content image successfully",
+			setupFake:   func(f *fake.SsgRepo) {},
+			ci:          &ssg.ContentImage{ID: uuid.New(), ContentID: uuid.New(), ImageID: uuid.New()},
+			expectedErr: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			f := fake.NewSsgRepo()
+			tt.setupFake(f)
+
+			err := f.CreateContentImage(context.Background(), tt.ci)
+
+			if tt.expectedErr != nil {
+				if err == nil || err.Error() != tt.expectedErr.Error() {
+					t.Errorf("expected error %v, got %v", tt.expectedErr, err)
+				}
+			} else if err != nil {
+				t.Errorf("expected no error, got %v", err)
+			}
+		})
+	}
+}
+
+func TestSsgRepoDeleteContentImage(t *testing.T) {
+	ciID := uuid.New()
+
+	tests := []struct {
+		name        string
+		setupFake   func(f *fake.SsgRepo)
+		id          uuid.UUID
+		expectedErr error
+	}{
+		{
+			name: "deletes content image successfully",
+			setupFake: func(f *fake.SsgRepo) {
+				f.CreateContentImage(context.Background(), &ssg.ContentImage{ID: ciID})
+			},
+			id:          ciID,
+			expectedErr: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			f := fake.NewSsgRepo()
+			tt.setupFake(f)
+
+			err := f.DeleteContentImage(context.Background(), tt.id)
+
+			if tt.expectedErr != nil {
+				if err == nil || err.Error() != tt.expectedErr.Error() {
+					t.Errorf("expected error %v, got %v", tt.expectedErr, err)
+				}
+			} else if err != nil {
+				t.Errorf("expected no error, got %v", err)
+			}
+		})
+	}
+}
+
+func TestSsgRepoGetContentImagesByContentID(t *testing.T) {
+	contentID := uuid.New()
+
+	tests := []struct {
+		name        string
+		setupFake   func(f *fake.SsgRepo)
+		contentID   uuid.UUID
+		wantCount   int
+		expectedErr error
+	}{
+		{
+			name: "returns content images",
+			setupFake: func(f *fake.SsgRepo) {
+				f.CreateContentImage(context.Background(), &ssg.ContentImage{ID: uuid.New(), ContentID: contentID})
+				f.CreateContentImage(context.Background(), &ssg.ContentImage{ID: uuid.New(), ContentID: contentID})
+			},
+			contentID:   contentID,
+			wantCount:   2,
+			expectedErr: nil,
+		},
+		{
+			name:        "returns empty slice when no content images",
+			setupFake:   func(f *fake.SsgRepo) {},
+			contentID:   uuid.New(),
+			wantCount:   0,
+			expectedErr: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			f := fake.NewSsgRepo()
+			tt.setupFake(f)
+
+			cis, err := f.GetContentImagesByContentID(context.Background(), tt.contentID)
+
+			if tt.expectedErr != nil {
+				if err == nil || err.Error() != tt.expectedErr.Error() {
+					t.Errorf("expected error %v, got %v", tt.expectedErr, err)
+				}
+			} else if err != nil {
+				t.Errorf("expected no error, got %v", err)
+			}
+
+			if len(cis) != tt.wantCount {
+				t.Errorf("expected %d content images, got %d", tt.wantCount, len(cis))
+			}
+		})
+	}
+}
+
+func TestSsgRepoCreateSectionImage(t *testing.T) {
+	tests := []struct {
+		name        string
+		setupFake   func(f *fake.SsgRepo)
+		si          *ssg.SectionImage
+		expectedErr error
+	}{
+		{
+			name:        "creates section image successfully",
+			setupFake:   func(f *fake.SsgRepo) {},
+			si:          &ssg.SectionImage{ID: uuid.New(), SectionID: uuid.New(), ImageID: uuid.New()},
+			expectedErr: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			f := fake.NewSsgRepo()
+			tt.setupFake(f)
+
+			err := f.CreateSectionImage(context.Background(), tt.si)
+
+			if tt.expectedErr != nil {
+				if err == nil || err.Error() != tt.expectedErr.Error() {
+					t.Errorf("expected error %v, got %v", tt.expectedErr, err)
+				}
+			} else if err != nil {
+				t.Errorf("expected no error, got %v", err)
+			}
+		})
+	}
+}
+
+func TestSsgRepoDeleteSectionImage(t *testing.T) {
+	siID := uuid.New()
+
+	tests := []struct {
+		name        string
+		setupFake   func(f *fake.SsgRepo)
+		id          uuid.UUID
+		expectedErr error
+	}{
+		{
+			name: "deletes section image successfully",
+			setupFake: func(f *fake.SsgRepo) {
+				f.CreateSectionImage(context.Background(), &ssg.SectionImage{ID: siID})
+			},
+			id:          siID,
+			expectedErr: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			f := fake.NewSsgRepo()
+			tt.setupFake(f)
+
+			err := f.DeleteSectionImage(context.Background(), tt.id)
+
+			if tt.expectedErr != nil {
+				if err == nil || err.Error() != tt.expectedErr.Error() {
+					t.Errorf("expected error %v, got %v", tt.expectedErr, err)
+				}
+			} else if err != nil {
+				t.Errorf("expected no error, got %v", err)
+			}
+		})
+	}
+}
+
+func TestSsgRepoGetSectionImagesBySectionID(t *testing.T) {
+	sectionID := uuid.New()
+
+	tests := []struct {
+		name        string
+		setupFake   func(f *fake.SsgRepo)
+		sectionID   uuid.UUID
+		wantCount   int
+		expectedErr error
+	}{
+		{
+			name: "returns section images",
+			setupFake: func(f *fake.SsgRepo) {
+				f.CreateSectionImage(context.Background(), &ssg.SectionImage{ID: uuid.New(), SectionID: sectionID})
+				f.CreateSectionImage(context.Background(), &ssg.SectionImage{ID: uuid.New(), SectionID: sectionID})
+			},
+			sectionID:   sectionID,
+			wantCount:   2,
+			expectedErr: nil,
+		},
+		{
+			name:        "returns empty slice when no section images",
+			setupFake:   func(f *fake.SsgRepo) {},
+			sectionID:   uuid.New(),
+			wantCount:   0,
+			expectedErr: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			f := fake.NewSsgRepo()
+			tt.setupFake(f)
+
+			sis, err := f.GetSectionImagesBySectionID(context.Background(), tt.sectionID)
+
+			if tt.expectedErr != nil {
+				if err == nil || err.Error() != tt.expectedErr.Error() {
+					t.Errorf("expected error %v, got %v", tt.expectedErr, err)
+				}
+			} else if err != nil {
+				t.Errorf("expected no error, got %v", err)
+			}
+
+			if len(sis) != tt.wantCount {
+				t.Errorf("expected %d section images, got %d", tt.wantCount, len(sis))
+			}
+		})
+	}
+}
+
+func TestSsgRepoGetSectionWithCustomFn(t *testing.T) {
+	f := fake.NewSsgRepo()
+	f.GetSectionFn = func(ctx context.Context, id uuid.UUID) (ssg.Section, error) {
+		return ssg.Section{}, errors.New("custom error")
+	}
+
+	_, err := f.GetSection(context.Background(), uuid.New())
+	if err == nil || err.Error() != "custom error" {
+		t.Errorf("expected custom error, got %v", err)
+	}
+}
+
+func TestSsgRepoGetLayoutWithCustomFn(t *testing.T) {
+	f := fake.NewSsgRepo()
+	f.GetLayoutFn = func(ctx context.Context, id uuid.UUID) (ssg.Layout, error) {
+		return ssg.Layout{}, errors.New("custom error")
+	}
+
+	_, err := f.GetLayout(context.Background(), uuid.New())
+	if err == nil || err.Error() != "custom error" {
+		t.Errorf("expected custom error, got %v", err)
+	}
+}
+
+func TestSsgRepoGetTagWithCustomFn(t *testing.T) {
+	f := fake.NewSsgRepo()
+	f.GetTagFn = func(ctx context.Context, id uuid.UUID) (ssg.Tag, error) {
+		return ssg.Tag{}, errors.New("custom error")
+	}
+
+	_, err := f.GetTag(context.Background(), uuid.New())
+	if err == nil || err.Error() != "custom error" {
+		t.Errorf("expected custom error, got %v", err)
+	}
+}
+
+func TestSsgRepoUpdateTagWithCustomFn(t *testing.T) {
+	f := fake.NewSsgRepo()
+	f.UpdateTagFn = func(ctx context.Context, tag ssg.Tag) error {
+		return errors.New("custom error")
+	}
+
+	err := f.UpdateTag(context.Background(), ssg.Tag{})
+	if err == nil || err.Error() != "custom error" {
+		t.Errorf("expected custom error, got %v", err)
+	}
+}
+
+func TestSsgRepoGetParamWithCustomFn(t *testing.T) {
+	f := fake.NewSsgRepo()
+	f.GetParamFn = func(ctx context.Context, id uuid.UUID) (ssg.Param, error) {
+		return ssg.Param{}, errors.New("custom error")
+	}
+
+	_, err := f.GetParam(context.Background(), uuid.New())
+	if err == nil || err.Error() != "custom error" {
+		t.Errorf("expected custom error, got %v", err)
+	}
+}
+
+func TestSsgRepoGetImageWithCustomFn(t *testing.T) {
+	f := fake.NewSsgRepo()
+	f.GetImageFn = func(ctx context.Context, id uuid.UUID) (ssg.Image, error) {
+		return ssg.Image{}, errors.New("custom error")
+	}
+
+	_, err := f.GetImage(context.Background(), uuid.New())
+	if err == nil || err.Error() != "custom error" {
+		t.Errorf("expected custom error, got %v", err)
+	}
+}
+
+func TestSsgRepoGetImageVariantWithCustomFn(t *testing.T) {
+	f := fake.NewSsgRepo()
+	f.GetImageVariantFn = func(ctx context.Context, id uuid.UUID) (ssg.ImageVariant, error) {
+		return ssg.ImageVariant{}, errors.New("custom error")
+	}
+
+	_, err := f.GetImageVariant(context.Background(), uuid.New())
+	if err == nil || err.Error() != "custom error" {
+		t.Errorf("expected custom error, got %v", err)
+	}
+}
+
+func TestSsgRepoGetUserByUsernameWithCustomFn(t *testing.T) {
+	f := fake.NewSsgRepo()
+	f.GetUserByUsernameFn = func(ctx context.Context, username string) (auth.User, error) {
+		return auth.User{}, errors.New("custom error")
+	}
+
+	_, err := f.GetUserByUsername(context.Background(), "testuser")
+	if err == nil || err.Error() != "custom error" {
+		t.Errorf("expected custom error, got %v", err)
+	}
+}
+
+func TestSsgRepoGetSiteBySlugWithCustomFn(t *testing.T) {
+	f := fake.NewSsgRepo()
+	f.GetSiteBySlugFn = func(ctx context.Context, slug string) (ssg.Site, error) {
+		return ssg.Site{}, errors.New("custom error")
+	}
+
+	_, err := f.GetSiteBySlug(context.Background(), "test-site")
+	if err == nil || err.Error() != "custom error" {
+		t.Errorf("expected custom error, got %v", err)
+	}
+}
