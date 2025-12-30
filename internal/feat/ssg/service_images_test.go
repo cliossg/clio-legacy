@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"mime/multipart"
 	"testing"
-	"unsafe"
 
 	"github.com/google/uuid"
 	"github.com/hermesgen/hm"
@@ -58,7 +57,7 @@ func newTestServiceWithImageManager(repo Repo, im *mockImageManager) *BaseServic
 	svc := &BaseService{
 		Service: hm.NewService("test-service", params),
 		repo:    repo,
-		im:      (*ImageManager)(unsafe.Pointer(im)),
+		im:      im,
 	}
 
 	return svc

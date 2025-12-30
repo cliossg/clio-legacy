@@ -92,6 +92,11 @@ type Service interface {
 	Plan(ctx context.Context) (PlanReport, error)
 }
 
+type ImageManagerInterface interface {
+	ProcessUpload(ctx context.Context, file multipart.File, header *multipart.FileHeader, content *Content, section *Section, imageType ImageType, altText, caption string) (*ImageProcessResult, error)
+	DeleteImage(ctx context.Context, path string) error
+}
+
 // BaseService is the concrete implementation of the Service interface.
 type BaseService struct {
 	*hm.Service
@@ -100,7 +105,7 @@ type BaseService struct {
 	gen      *Generator
 	pub      Publisher
 	pm       *ParamManager
-	im       *ImageManager
+	im       ImageManagerInterface
 }
 
 func NewService(assetsFS embed.FS, repo Repo, gen *Generator, publisher Publisher, pm *ParamManager, im *ImageManager, params hm.XParams) *BaseService {

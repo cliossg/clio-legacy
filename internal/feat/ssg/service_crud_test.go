@@ -529,6 +529,9 @@ func (m *mockServiceRepo) CreateContentImage(ctx context.Context, contentImage *
 }
 
 func (m *mockServiceRepo) DeleteContentImage(ctx context.Context, id uuid.UUID) error {
+	if m.deleteContentImageErr != nil {
+		return m.deleteContentImageErr
+	}
 	return nil
 }
 
