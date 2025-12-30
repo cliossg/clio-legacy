@@ -191,6 +191,7 @@ func TestAPIHandlerUpdateLayout(t *testing.T) {
 		name           string
 		setupRepo      func(*mockServiceRepo) uuid.UUID
 		requestBody    interface{}
+		layoutID       string
 		wantStatusCode int
 	}{
 		{
@@ -204,6 +205,19 @@ func TestAPIHandlerUpdateLayout(t *testing.T) {
 				"name": "New Name",
 			},
 			wantStatusCode: http.StatusOK,
+		},
+		{
+			name:           "fails with invalid UUID",
+			layoutID:       "invalid-uuid",
+			setupRepo:      func(m *mockServiceRepo) uuid.UUID { return uuid.Nil },
+			requestBody:    map[string]string{"name": "Test"},
+			wantStatusCode: http.StatusBadRequest,
+		},
+		{
+			name:           "fails with invalid JSON body",
+			setupRepo:      func(m *mockServiceRepo) uuid.UUID { return uuid.New() },
+			requestBody:    "invalid json",
+			wantStatusCode: http.StatusBadRequest,
 		},
 		{
 			name: "fails when service returns error",
@@ -227,13 +241,24 @@ func TestAPIHandlerUpdateLayout(t *testing.T) {
 			cfg := hm.NewConfig()
 			handler := NewAPIHandler("test-api", svc, nil, hm.XParams{Cfg: cfg})
 
-			body, err := json.Marshal(tt.requestBody)
-			if err != nil {
-				t.Fatal(err)
+			var body []byte
+			if str, ok := tt.requestBody.(string); ok {
+				body = []byte(str)
+			} else {
+				var err error
+				body, err = json.Marshal(tt.requestBody)
+				if err != nil {
+					t.Fatal(err)
+				}
 			}
 
-			req := httptest.NewRequest(http.MethodPut, "/ssg/layouts/"+layoutID.String(), bytes.NewReader(body))
-			req.SetPathValue("id", layoutID.String())
+			idStr := tt.layoutID
+			if idStr == "" {
+				idStr = layoutID.String()
+			}
+
+			req := httptest.NewRequest(http.MethodPut, "/ssg/layouts/"+idStr, bytes.NewReader(body))
+			req.SetPathValue("id", idStr)
 			req.Header.Set("Content-Type", "application/json")
 			w := httptest.NewRecorder()
 
