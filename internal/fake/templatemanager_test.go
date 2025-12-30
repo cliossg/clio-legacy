@@ -2,6 +2,7 @@ package fake
 
 import (
 	"bytes"
+	"html/template"
 	"testing"
 )
 
@@ -83,5 +84,46 @@ func TestTemplateManagerCaching(t *testing.T) {
 
 	if tmpl1 != tmpl2 {
 		t.Error("Get() should return same template instance for same key")
+	}
+}
+
+func TestTemplateManagerRegisterFunctions(t *testing.T) {
+	tests := []struct {
+		name      string
+		funcs     template.FuncMap
+		wantFuncs int
+	}{
+		{
+			name: "registers single function",
+			funcs: template.FuncMap{
+				"upper": func(s string) string { return s },
+			},
+			wantFuncs: 1,
+		},
+		{
+			name: "registers multiple functions",
+			funcs: template.FuncMap{
+				"upper": func(s string) string { return s },
+				"lower": func(s string) string { return s },
+			},
+			wantFuncs: 2,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tm := NewTemplateManager()
+			tm.RegisterFunctions(tt.funcs)
+
+			if len(tm.customFuncMap) != tt.wantFuncs {
+				t.Errorf("expected %d functions, got %d", tt.wantFuncs, len(tm.customFuncMap))
+			}
+
+			for name := range tt.funcs {
+				if _, ok := tm.customFuncMap[name]; !ok {
+					t.Errorf("function %q not registered", name)
+				}
+			}
+		})
 	}
 }
