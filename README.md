@@ -29,3 +29,7 @@ For a complete overview of plans, see the [roadmap](docs/roadmap.md).
 ### Changelog
 
 All notable changes to this project are documented in the [changelog file](docs/changelog.md).
+
+---
+
+> **Note:** This repository has been archived to preserve its current state. The original namespace is now used to continue working on the same conceptual goals, but with a streamlined architecture built from the ground up.
